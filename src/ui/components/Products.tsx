@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Select, { SingleValue } from 'react-select';
 import './Products.css';
+import Search from "../assets/search.svg";
+import Discount from "../assets/discount.svg";
+import Company from "../assets/company.svg";
 
 type SelectOption<T> = {
   value: T;
@@ -136,7 +139,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     // search filter - check product name and generic name
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         (product.productName ?? '').toLowerCase().includes(term) ||
         (product.genericName ?? '').toLowerCase().includes(term) ||
         (product.company_name ?? '').toLowerCase().includes(term) ||
@@ -146,7 +149,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
     // company filter
     if (selectedCompany) {
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         product.company_id === selectedCompany
       );
     }
@@ -308,16 +311,16 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   return (
     <div className="products-container">
       <div className="products-welcome">
-        <h1>pharmacy products</h1>
+        <h1>All Stock</h1>
         <div className="products-welcome-meta">
           <span>welcome, {user.user_name}</span>
           {lastSync && <span className="products-last-sync">last sync: {lastSync}</span>}
         </div>
       </div>
 
-      {/* filters */}
       <div className="filters">
         <div className="filter-group">
+          <img src={Search} alt="search" />
           <input
             type="text"
             placeholder="search products..."
@@ -327,7 +330,8 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
           />
         </div>
 
-        <div className="filter-group filter-select-group">
+        <div className="filter-group filter-discount filter-select-group">
+          <img src={Discount} alt="search" />
           <Select
             className="react-select-container"
             classNamePrefix="react-select"
@@ -342,20 +346,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         </div>
 
         <div className="filter-group filter-select-group">
-          <Select
-            className="react-select-container"
-            classNamePrefix="react-select"
-            options={billModeOptions}
-            value={billModeOptions.find(option => option.value === billMode) ?? null}
-            onChange={(option: SingleValue<SelectOption<PriceMode>>) => {
-              setBillMode(option?.value ?? 'discount');
-            }}
-            isSearchable={false}
-            placeholder="Bill Mode"
-          />
-        </div>
-
-        <div className="filter-group filter-select-group">
+          <img src={Company} alt="search" />
           <Select
             className="react-select-container"
             classNamePrefix="react-select"
@@ -363,7 +354,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             value={selectedCompanyOption}
             onChange={handleCompanyChange}
             isClearable
-            placeholder="Company"
+            placeholder="All Company"
             noOptionsMessage={() => 'No companies found'}
           />
         </div>
