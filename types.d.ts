@@ -43,7 +43,14 @@ type Product = {
   sale_price?: number;
   status?: string;
   cover_image?: string;
+  coverImage?: string;
+  product_cover_image_path?: string;
   last_sync_at?: string;
+};
+
+type ProductPriceUpdate = {
+  discount_price: number;
+  peak_hour_price: number;
 };
 
 type AuthToken = {
@@ -69,6 +76,7 @@ type EventPayloadMapping = {
   getUniqueTypes: Array<{type: string}>;
   getUniqueCategories: Array<{category_id: number, category_name: string}>;
   updateProductStock: void;
+  updateProductPrices: Product | undefined;
 };
 
 type UnsubscribeFunction = () => void;
@@ -91,5 +99,9 @@ interface Window {
     getUniqueTypes: () => Promise<Array<{type: string}>>;
     getUniqueCategories: () => Promise<Array<{category_id: number, category_name: string}>>;
     updateProductStock: (productId: number, newStock: number) => Promise<void>;
+    updateProductPrices: (
+      productId: number,
+      payload: ProductPriceUpdate
+    ) => Promise<Product | undefined>;
   };
 }

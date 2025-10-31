@@ -17,6 +17,7 @@ electron.contextBridge.exposeInMainWorld('electron', {
   getUniqueTypes: () => ipcInvoke('getUniqueTypes'),
   getUniqueCategories: () => ipcInvoke('getUniqueCategories'),
   updateProductStock: (productId, newStock) => ipcInvoke('updateProductStock', productId, newStock),
+  updateProductPrices: (productId, payload) => ipcInvoke('updateProductPrices', productId, payload),
 } satisfies Window['electron']);
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(

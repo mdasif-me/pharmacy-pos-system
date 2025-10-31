@@ -48,7 +48,15 @@ export interface Product {
   sale_price?: number;
   status?: string;
   cover_image?: string;
+  coverImage?: string;
+  product_cover_image_path?: string;
   last_sync_at?: string;
+}
+
+export interface UpdatePriceRequest {
+  product_id: number;
+  discount_price: number;
+  peak_hour_price: number;
 }
 
 export class ApiService {
@@ -152,6 +160,36 @@ export class ApiService {
       }
     } catch (error) {
       console.error('get products error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * update product pricing and broadcast changes
+   */
+  async updateProductPrices(payload: UpdatePriceRequest): Promise<any> {
+    try {
+      const response = await fetch(
+        `${BASE_URL}/pharmacy/real-time-update-price-and-broadcast`,
+        {
+          method: 'POST',
+          headers: this.getAuthHeaders(),
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`failed to update product prices: ${response.statusText}`);
+      }
+
+      try {
+        return await response.json();
+      } catch (error) {
+        // api may return empty body on success
+        return undefined;
+      }
+    } catch (error) {
+      console.error('update product prices error:', error);
       throw error;
     }
   }

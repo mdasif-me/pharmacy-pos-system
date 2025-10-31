@@ -23,6 +23,7 @@ export const createProductsTable = `
 		sale_price REAL,
 		status TEXT,
 		cover_image TEXT,
+		product_cover_image_path TEXT,
 		last_sync_at TEXT
 	);
 `;
@@ -75,7 +76,7 @@ export const alterProductsTableStatements = [
 	"ALTER TABLE products ADD COLUMN category_name TEXT",
 	"ALTER TABLE products ADD COLUMN sale_price REAL",
 	"ALTER TABLE products ADD COLUMN status TEXT",
-	"ALTER TABLE products ADD COLUMN cover_image TEXT"
+	"ALTER TABLE products ADD COLUMN product_cover_image_path TEXT"
 ];
 
 // indices for performance (add as needed)

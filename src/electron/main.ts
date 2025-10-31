@@ -117,6 +117,26 @@ app.on('ready', () => {
     return await dbOperations.updateProductStock(productId, newStock);
   });
 
+  ipcMainHandle(
+    'updateProductPrices',
+    async (
+      productId: number,
+      payload: { discount_price: number; peak_hour_price: number }
+    ) => {
+      await apiService.updateProductPrices({
+        product_id: productId,
+        discount_price: payload.discount_price,
+        peak_hour_price: payload.peak_hour_price,
+      });
+
+      return await dbOperations.updateProductPrices(
+        productId,
+        payload.discount_price,
+        payload.peak_hour_price
+      );
+    }
+  );
+
   // removed frame action handlers - no close/maximize/minimize functionality
   // removed tray and menu - not needed for pharmacy pos
 

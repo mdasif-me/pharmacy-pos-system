@@ -68,7 +68,7 @@ export class DatabaseOperations {
         cart_text, unit_in_pack, type, quantity, prescription, feature,
         company_id, company_name, category_id, category_name, in_stock,
         discount_price, peak_hour_price, mediboy_offer_price, sale_price,
-        status, cover_image, last_sync_at
+        status, product_cover_image_path, last_sync_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
@@ -107,7 +107,7 @@ export class DatabaseOperations {
         product.mediboy_offer_price,
         product.sale_price,
         product.status,
-        product.cover_image,
+        product.product_cover_image_path,
         product.last_sync_at ?? new Date().toISOString()
       ]);
     }
@@ -175,6 +175,25 @@ export class DatabaseOperations {
     await dbManager.run(
       'UPDATE products SET in_stock = ?, last_sync_at = ? WHERE id = ?',
       [newStock, new Date().toISOString(), productId]
+    );
+  }
+
+  /**
+   * update product pricing information locally
+   */
+  async updateProductPrices(
+    productId: number,
+    discountPrice: number,
+    peakHourPrice: number
+  ): Promise<Product | undefined> {
+    await dbManager.run(
+      'UPDATE products SET discount_price = ?, peak_hour_price = ?, last_sync_at = ? WHERE id = ?',
+      [discountPrice, peakHourPrice, new Date().toISOString(), productId]
+    );
+
+    return await dbManager.get<Product>(
+      'SELECT * FROM products WHERE id = ?',
+      [productId]
     );
   }
 
@@ -254,7 +273,7 @@ export class DatabaseOperations {
       mediboy_offer_price: toNumber(currentStock?.mediboy_offer_price ?? raw?.mediboy_offer_price ?? raw?.offerPrice),
       sale_price: toNumber(currentStock?.sale_price ?? raw?.sale_price),
       status: raw?.status ?? '',
-      cover_image: raw?.product_cover_image_path ?? raw?.coverImage ?? '',
+      product_cover_image_path: raw?.product_cover_image_path ?? raw?.coverImage ?? '',
       last_sync_at: raw?.last_sync_at ?? currentStock?.updated_at ?? undefined,
     };
   }
