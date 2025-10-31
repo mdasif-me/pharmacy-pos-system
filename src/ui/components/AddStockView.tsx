@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import Rotate from '../assets/rotate.svg'
 import Wifi from '../assets/wifi.svg'
+import Search from '../assets/search.svg'
 import { broadcastStockUpdate, StockBroadcastPayload } from '../services/broadcastService'
-
+import './AddStockView.css'
 type AddStockForm = {
   productId: string
   inStock: string
@@ -140,106 +141,199 @@ export const AddStockView: React.FC = () => {
   }, [loadLastSync])
 
   return (
-    <div className="add-stock-view">
+    <div className="full-view">
       {syncError && (
         <div className="form-status">
           {syncError && <p className="form-status-error">{syncError}</p>}
         </div>
       )}
-
-      <section className="panel">
-        <div className="panel-header">
-          <h3>add stock broadcast</h3>
-          <p>push inventory changes to connected devices in real time</p>
+      <section className="add-stock-panel">
+        <div className="add-stock-panel-header">
+          <h3>Add Stock</h3>
         </div>
-        <form className="form-grid" onSubmit={handleSubmit}>
-          <label>
-            product id
+       <div className='add-stock-header'>
+      <form className="form-grid">
+           <div className='formSearch'>
+             <div className='searchIcon'>
+              <img src={Search} alt="" />
+            </div>
             <input
-              type="number"
-              min="0"
-              placeholder="enter product id"
-              value={formState.productId}
-              onChange={handleChange('productId')}
+              type="text"
+              placeholder="Search product..."
               required
             />
-          </label>
-
-          <label>
-            in stock
-            <input
-              type="number"
-              min="0"
-              placeholder="available units"
-              value={formState.inStock}
-              onChange={handleChange('inStock')}
-              required
-            />
-          </label>
-
-          <label>
-            discount price
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="discount price"
-              value={formState.discountPrice}
-              onChange={handleChange('discountPrice')}
-              required
-            />
-          </label>
-
-          <label>
-            peak-hour price
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="peak-hour price"
-              value={formState.peakHourPrice}
-              onChange={handleChange('peakHourPrice')}
-              required
-            />
-          </label>
-
-          <label>
-            mediboy offer price
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder="mediboy offer price"
-              value={formState.mediboyOfferPrice}
-              onChange={handleChange('mediboyOfferPrice')}
-              required
-            />
-          </label>
-
-          <label>
-            sync at
-            <input
-              type="datetime-local"
-              value={formState.syncAt}
-              onChange={handleChange('syncAt')}
-              required
-            />
-          </label>
-
-          <div className="form-actions">
-            <button
-              type="button"
-              className="form-reset"
-              onClick={handleReset}
-              disabled={isBroadcasting}
-            >
-              clear
-            </button>
-            <button type="submit" className="form-submit" disabled={isBroadcasting}>
-              {isBroadcasting ? 'broadcasting...' : 'broadcast stock'}
-            </button>
+           </div>
+        <div className="products-table-wrapper">
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th>Product Description</th>
+                <th>Company Name</th>
+                <th>MRP</th>
+              </tr>
+            </thead>
+            <tbody>
+                  <tr>
+                    <td>
+                      <div className="product-name-cell">
+                        <span className="Product Description">Product Description	text</span>
+                      </div>
+                    </td>
+                    <td>Company Name	text</td>
+                    <td>MRP text</td>
+                  </tr>
+            </tbody>
+          </table>
+        </div>
+      </form>
+      <section className='full-input-section'>
+        <form className="input-row">
+        <div className='input-heder'>
+          <div className='input-heder-stock'>Bulk Stock Helper</div>
+          <div className='input-heder-note'>
+            Note :
           </div>
-        </form>
+        </div>
+         <div className='input-section'>
+          <div className='add-stock-input'>
+            <h2>Buy%</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+          <div className='add-stock-input'>
+            <h2>Sale%</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+          <div className='add-stock-input'>
+            <h2>P-Sale%</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+          <div className='add-stock-input-offer'>
+            <h2>M-Offer %</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+         <div className='add-stock-input'>
+         </div>
+         </div>
+
+           <div className='input-date-section'>
+            <div className='add-stock-input-date'>
+            <h2>Exp</h2>
+            <input
+              type="date"
+              min="0"
+              required
+            />
+         </div>
+            <div className='add-stock-input-date'>
+            <h2>BTC</h2>
+            <input
+              type="date"
+              min="0"
+              required
+            />
+         </div>
+          </div>
+      </form>
+      <form className="input-row">
+        <div className='input-heder'>
+          <div className='input-heder-stock'>Single Stock</div>
+          <div className='input-heder-note'>
+            Note :
+          </div>
+        </div>
+         <div className='input-section'>
+          <div className='add-stock-input'>
+            <h2>Buy*</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+          <div className='add-stock-input'>
+            <h2>Sale*</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+          <div className='add-stock-input'>
+            <h2>P-Sale*</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+          <div className='add-stock-input-offer'>
+            <h2>M-Offer*</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+         </div>
+         </div>
+
+           <div className='input-date-section'>
+            <div className='add-stock-bottom-input-date'>
+            <h2>Exp*</h2>
+            <input
+              type="date"
+              min="0"
+              required
+            />
+         </div>
+            <div className='add-stock-bottom-input-date'>
+            <h2>BTC</h2>
+            <input
+              type="date"
+              min="0"
+              required
+            />
+            </div>
+          </div>
+          <div className='add-stock-input-checkbox'>
+            <input
+              type="checkbox"
+              required
+            />
+              <h2>Auto BTC</h2>
+         </div>
+         <div className='add-stock-input-date'>
+            <h2>QTY*</h2>
+            <input
+              type="number"
+              min="0"
+              required
+            />
+            </div>
+      </form>
+      <div className='add-input-stock'>
+        <button>ADD STOCK</button>
+      </div>
+      </section>
+       </div>
+
+
+
         {(statusMessage || errorMessage) && (
           <div className="form-status">
             {statusMessage && <p className="form-status-success">{statusMessage}</p>}

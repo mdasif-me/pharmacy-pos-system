@@ -1,0 +1,264 @@
+.add-stock-panel {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.add-stock-panel-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.add-stock-panel-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1f2937;
+  text-transform: capitalize;
+}
+
+.add-stock-panel-header p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.add-stock-header {
+  gap: 107px;
+  display: flex;
+  align-items: center;
+}
+
+.form-grid {
+  width: 600px;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.formSearch {
+  margin-bottom: -16px !important;
+  display: flex;
+  align-items: center;
+  background-color: #9C9191;
+  padding: 12px 13px;
+}
+
+.formSearch input {
+  border-radius: 0 !important;
+  height: 30px;
+  width: 357px;
+  background-color: #FFFBFB;
+  color: black;
+}
+
+.searchIcon img {
+  height: 25px;
+  width: 25px;
+  background-color: #CFCFCF;
+  padding: 14px;
+  margin-top: 6.5px;
+}
+
+.products-table-wrapper {
+  margin-top: 0;
+  overflow-x: auto;
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+
+.products-table thead {
+  background: #0c0b0b;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: 0.85rem;
+}
+
+.products-table th,
+.products-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.products-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.full-input-section {
+  width: 700px;
+}
+
+.input-heder {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.input-heder-stock {
+  padding: 6px;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 700;
+  width: 155px;
+  text-align: center;
+  height: 28px;
+  background-color: #150F0F;
+}
+
+.input-heder-note {
+  padding: 5px 9px;
+  width: 509px;
+  height: 28px;
+  background-color: #150F0F;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.add-stock-input {
+  display: flex;
+  align-items: center;
+}
+
+.add-stock-input input {
+  border: 1px solid #A89797;
+  justify-content: center;
+  height: 35px;
+  width: 78px;
+  background: #FFFBFB;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.add-stock-input h2 {
+  padding: 6.5px 9px;
+  width: 56px;
+  background-color: #CFCFCF;
+  color: #000;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input-section {
+  display: flex;
+  align-items: center;
+  gap: 6px !important;
+}
+
+.add-stock-input-offer {
+  display: flex;
+  align-items: center;
+}
+
+.add-stock-input-offer input {
+  width: 124px;
+  height: 35px;
+  border: 1px solid #A89797;
+  justify-content: center;
+  background: #FFFBFB;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.add-stock-input-offer h2 {
+  padding: 6.5px 9px;
+  width: 76px;
+  background-color: #CFCFCF;
+  color: #000;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.add-stock-bottom-input-date {
+  display: flex;
+  align-items: center;
+}
+
+.add-stock-bottom-input-date input {
+  width: 295px;
+  height: 35px;
+  border: 1px solid #A89797;
+  justify-content: center;
+  background: #FFFBFB;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.add-stock-bottom-input-date h2 {
+  padding: 6.5px 9px;
+  background-color: #CFCFCF;
+  color: #000;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.add-stock-input-date {
+  display: flex;
+  align-items: center;
+}
+
+.add-stock-input-date input {
+  width: 298px;
+  height: 35px;
+  border: 1px solid #A89797;
+  justify-content: center;
+  background: #FFFBFB;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.add-stock-input-date h2 {
+  padding: 6.5px 9px;
+  background-color: #CFCFCF;
+  color: #000;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.input-date-section {
+  display: flex;
+  align-items: center;
+  gap: 11px !important;
+}
+
+.add-stock-input-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.add-stock-input-checkbox input {
+  width: 19px;
+  height: 17px;
+  background-color: #D9D9D9;
+}
+
+.add-stock-input-checkbox h2 {
+  color: #100C0C;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.add-input-stock {
+  text-align: center;
+}
+
+.add-input-stock button {
+  padding: 11px 90px;
+  text-align: center;
+  width: 264px;
+  height: 39px;
+  color: #FFF;
+  font-size: 14px;
+  font-weight: 700;
+  background-color: #0E8E07;
+}

@@ -126,10 +126,12 @@
   background-color: #0f0f14;
   overflow: hidden;
 }
+
 .dashboard-header article {
   background: white;
   padding: 0px 28px;
 }
+
 .dashboard-header button {
   background: #0f0f14;
   border: none;
@@ -152,6 +154,7 @@
   font-size: 0.85rem;
   color: #6b7280;
 }
+
 .dashboard-content {
   flex: 1;
   overflow-y: auto;
