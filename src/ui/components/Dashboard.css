@@ -31,6 +31,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
 .sidebar-brand img {
   width: 46px;
   height: 46px;
@@ -66,7 +67,7 @@
 
 .sidebar-link:hover {
   background-color: rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
+  border-radius: 6px;
 }
 
 .sidebar-link.is-active {
@@ -88,8 +89,8 @@
 }
 
 .sidebar-logout {
-   display: flex;
-   flex-direction: column;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-top: auto;
@@ -111,41 +112,70 @@
 
 .dashboard-header {
   position: absolute;
-  bottom: 0px;
-  right: 0px;
-  width: fit-content;
+  bottom: 0;
+  right: 0;
+  width: 325px;
+  height: 65px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: #0F0F14 1px solid;
+  border: 1px solid #0F0F14;
+  background-color: #0F0F14;
+  overflow: hidden;
 }
+
+/* Middle gray section (Updated At box) */
+.dashboard-header div {
+  flex: 1;
+  text-align: left;
+  color: #0F0F14;
+  background-color: #D9D9D9;
+  padding: 0px 0 4px 4px;
+  margin: 0;
+}
+
+/* Optional title text (Updated At) */
+.dashboard-header p {
+  color: #0F0F14;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.dashboard-header h3 {
+  font-size: 14px;
+}
+
 .dashboard-header button {
-  background: #14111159;
+  background: #0F0F14;
   border: none;
-  border-radius: 8px;
+  width: 75px;
+  height: 65px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.spin {
-  animation: spin 2s linear infinite;
-}
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-.dashboard-header div {
-  display: flex;
-  padding: 12px 10px;
-  margin-right: 1rem;
-  color: #0F0F14;
-  background-color: #D9D9D9;
+
+.wifi-icon img {
+  width: 24px;
+  height: 24px;
 }
 
-.dashboard-header h2 {
-  font-size: 1.5rem;
-  color: #111827;
+.dashboard-header .wifi-icon {
+  background: #0F0F14;
+  width: 75px;
+  height: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 2px;
+}
+
+.spin {
+  animation: spin 2s linear infinite;
 }
 
 .dashboard-sync-meta {
@@ -159,7 +189,8 @@
   height: 65px;
   flex-shrink: 0;
 }
-.dashboard-sync-button svg{
+
+.dashboard-sync-button svg {
   width: 24.625px;
   height: 24.609px;
   flex-shrink: 0;
