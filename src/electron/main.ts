@@ -12,6 +12,7 @@ app.on('ready', () => {
     webPreferences: {
       preload: getPreloadPath(),
     },
+    autoHideMenuBar: true,
     frame: true,
     titleBarStyle: 'default',
   });

@@ -1,4 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import addStock from '../assets/add-stock.svg';
+import logo from "../assets/logo.png";
+import logout from '../assets/logout.svg';
+import pos from '../assets/pos.svg';
+import stock from '../assets/stock.svg';
 import { AddStockView } from './AddStockView';
 import './Dashboard.css';
 import { PosView } from './PosView';
@@ -13,9 +18,9 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-  { id: 'pos', label: 'POS', icon: 'P' },
-  { id: 'all-stock', label: 'All Stock', icon: 'S' },
-  { id: 'add-stock', label: 'Add Stock', icon: '+' },
+  { id: 'pos', label: 'POS', icon: pos },
+  { id: 'all-stock', label: 'All Stock', icon: stock },
+  { id: 'add-stock', label: 'Add Stock', icon: addStock },
 ];
 
 interface DashboardProps {
@@ -84,7 +89,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     <div className="dashboard-root">
       <aside className="dashboard-sidebar">
         <div className="sidebar-header">
-          <div className="sidebar-brand">pharmacy pos</div>
+          <div className="sidebar-brand">
+            <img src={logo} alt="logo" />
+          </div>
           <div className="sidebar-user">{user.user_name}</div>
         </div>
         <nav className="sidebar-nav">
@@ -95,14 +102,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               className={`sidebar-link ${activeView === item.id ? 'is-active' : ''}`}
               onClick={() => handleMenuClick(item.id)}
             >
-              <span className="sidebar-icon">{item.icon}</span>
+              <img className="sidebar-icon" src={item.icon} alt={item.label} />
               <span className="sidebar-label">{item.label}</span>
             </button>
           ))}
         </nav>
-        <button type="button" className="sidebar-logout" onClick={handleLogout}>
-          logout
+        <div>
+        <button type="button" className="sidebar-logout" onClick={() => {
+          const confirmLogout = window.confirm('Are you sure you want to logout?');
+          if (confirmLogout) {
+            handleLogout();
+          }
+        }}>
+          <img className="sidebar-icon" src={logout} alt="Log-out" />
+          Log-out
         </button>
+        </div>
       </aside>
 
       <div className="dashboard-main">

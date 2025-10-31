@@ -72,7 +72,7 @@ function App() {
     );
   }
 
-  // show login or products based on auth status
+
   return (
     <div className="App">
       {currentUser ? (
@@ -83,7 +83,5 @@ function App() {
     </div>
   );
 }
-
-// main pharmacy pos app component
 
 export default App;

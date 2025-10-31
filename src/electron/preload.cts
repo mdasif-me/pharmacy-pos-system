@@ -26,5 +26,3 @@ function ipcInvoke<Key extends keyof EventPayloadMapping>(
 ): Promise<EventPayloadMapping[Key]> {
   return electron.ipcRenderer.invoke(key, ...args);
 }
-
-// removed unused ipcOn and ipcSend functions
