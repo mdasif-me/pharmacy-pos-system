@@ -152,7 +152,8 @@
 }
 
 .products-table thead {
-  background: #f5f5f5;
+  background: #0C0B0B;
+  color: white;
   text-transform: uppercase;
   letter-spacing: 0.02em;
   font-size: 0.85rem;
@@ -163,7 +164,7 @@
   padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #eee;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .products-table tbody tr:hover {
