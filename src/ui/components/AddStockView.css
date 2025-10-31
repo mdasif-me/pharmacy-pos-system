@@ -262,3 +262,85 @@
   font-weight: 700;
   background-color: #0E8E07;
 }
+
+/* Responsive adjustments for small devices - do not change large-device styles above */
+@media (max-width: 768px) {
+  .add-stock-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .form-grid {
+    width: 100%;
+    padding: 0 12px;
+  }
+
+  .formSearch {
+    margin-bottom: 0 !important;
+    padding: 8px 10px;
+  }
+
+  .formSearch input {
+    width: 100%;
+    height: 36px;
+  }
+
+  .searchIcon img {
+    padding: 8px;
+    margin-top: 0;
+  }
+
+  .products-table {
+    font-size: 0.85rem;
+  }
+
+  .products-table th,
+  .products-table td {
+    padding: 0.5rem;
+  }
+
+  .full-input-section,
+  .add-stock-panel,
+  .products-table-wrapper {
+    width: 100%;
+  }
+
+  .input-heder-note {
+    width: auto;
+  }
+
+  .add-stock-input input,
+  .add-stock-input-offer input,
+  .add-stock-bottom-input-date input,
+  .add-stock-input-date input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .input-section,
+  .input-date-section,
+  .add-stock-bottom-input-date,
+  .add-stock-input-offer {
+    flex-direction: column;
+    gap: 8px !important;
+    align-items: stretch;
+  }
+
+  .add-stock-input h2,
+  .add-stock-input-offer h2,
+  .add-stock-bottom-input-date h2,
+  .add-stock-input-date h2 {
+    width: 100%;
+    text-align: left;
+  }
+
+  .add-input-stock button {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .add-stock-panel {
+    padding: 12px;
+  }
+}
