@@ -9,11 +9,18 @@
 .dashboard-sidebar {
   width: 90px;
   text-align: center;
-  background: #0F0F14;
-  color: #FFFFFF;
+  background: #0f0f14;
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   padding: 13px;
+}
+
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .sidebar-header {
@@ -61,12 +68,14 @@
   text-align: center;
   font-size: 0.95rem;
   padding: 0.65rem 0.5rem;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.3s ease;
 }
 
 .sidebar-link:hover {
   background-color: rgba(255, 255, 255, 0.08);
-    border-radius: 6px;
+  border-radius: 6px;
 }
 
 .sidebar-link.is-active {
@@ -88,20 +97,22 @@
 }
 
 .sidebar-logout {
-   display: flex;
-   flex-direction: column;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-top: auto;
   margin-bottom: 0.5rem;
   padding: 0.65rem 1rem;
-  border: 1px solid #0F0F14;
+  border: 1px solid #0f0f14;
   background: transparent;
   color: inherit;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.95rem;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .sidebar-logout:hover {
@@ -110,14 +121,22 @@
 }
 
 .dashboard-header {
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  width: fit-content;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: #0F0F14 1px solid;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+.dashboard-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 .dashboard-header button {
   background: #14111159;
@@ -131,18 +150,14 @@
 .spin {
   animation: spin 2s linear infinite;
 }
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
-.dashboard-header div {
-  display: flex;
-  padding: 12px 10px;
-  margin-right: 1rem;
-  color: #0F0F14;
-  background-color: #D9D9D9;
+  100% {
+    transform: rotate(360deg);
+  }
 }
-
 .dashboard-header h2 {
   font-size: 1.5rem;
   color: #111827;
@@ -158,12 +173,13 @@
   width: 75px;
   height: 65px;
   flex-shrink: 0;
+  background: #14111159;
 }
-.dashboard-sync-button svg{
+.dashboard-sync-button svg {
   width: 24.625px;
   height: 24.609px;
   flex-shrink: 0;
-  fill: #F5F5F5;
+  fill: #f5f5f5;
 }
 
 .dashboard-sync-button:disabled {
@@ -175,6 +191,38 @@
   background: #141111d0;
 }
 
+.socket-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(20, 17, 17, 0.08);
+  color: #0f0f14;
+}
+
+.socket-indicator-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff6b6b;
+}
+
+.socket-indicator-label {
+  white-space: nowrap;
+}
+
+.socket-connected .socket-indicator-dot {
+  background: #16a34a;
+}
+
+.socket-connecting .socket-indicator-dot {
+  background: #fbbf24;
+}
+
 .dashboard-content {
   flex: 1;
   overflow-y: auto;
@@ -182,6 +230,42 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+.sale-mode-panel {
+  border-left: 4px solid #2563eb;
+}
+
+.sale-mode-body {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.sale-mode-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 140px;
+}
+
+.sale-mode-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+}
+
+.sale-mode-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.sale-mode-error {
+  margin: 0.25rem 0 0;
+  color: #b91c1c;
+  font-size: 0.85rem;
 }
 
 .panel {
@@ -301,7 +385,9 @@
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 0.95rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .form-grid input:focus,
@@ -326,7 +412,9 @@
   color: #ffffff;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .form-submit:hover {
@@ -342,12 +430,33 @@
   color: #374151;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .form-reset:hover {
   background: #e5e7eb;
   border-color: #cbd5f5;
+}
+
+.form-status {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-status-success {
+  margin: 0;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.form-status-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 900px) {

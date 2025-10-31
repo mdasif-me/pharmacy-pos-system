@@ -1,11 +1,12 @@
-import { app, BrowserWindow, dialog } from 'electron';
-import { apiService, LoginRequest } from './api/apiService.js';
-import { dbManager } from './database/manager.js';
-import { dbOperations } from './database/operations.js';
-import { getPreloadPath, getUIPath } from './pathResolver.js';
-import { ipcMainHandle, isDev } from './util.js';
+import 'dotenv/config'
+import { app, BrowserWindow, dialog } from 'electron'
+import { apiService, LoginRequest } from './api/apiService.js'
+import { dbManager } from './database/manager.js'
+import { dbOperations } from './database/operations.js'
+import { getPreloadPath, getUIPath } from './pathResolver.js'
+import { ipcMainHandle, isDev } from './util.js'
 
-setupGlobalErrorHandlers();
+setupGlobalErrorHandlers()
 
 app.on('ready', () => {
   const mainWindow = new BrowserWindow({
@@ -15,163 +16,160 @@ app.on('ready', () => {
     autoHideMenuBar: true,
     frame: true,
     titleBarStyle: 'default',
-  });
+  })
   if (isDev()) {
-    mainWindow.loadURL('http://localhost:5123');
+    mainWindow.loadURL('http://localhost:5123')
   } else {
-    mainWindow.loadFile(getUIPath());
+    mainWindow.loadFile(getUIPath())
   }
 
   // initialize database
-  dbManager.init().catch(console.error);
+  dbManager.init().catch(console.error)
 
   // authentication handlers
   ipcMainHandle('login', async (credentials: LoginRequest) => {
     try {
-      const response = await apiService.login(credentials);
+      const response = await apiService.login(credentials)
       if (response.token) {
-        const userName = `${response.user.firstName} ${response.user.lastName}`;
-        await dbOperations.saveAuthToken(response.token, response.user.id, userName);
+        const userName = `${response.user.firstName} ${response.user.lastName}`
+        await dbOperations.saveAuthToken(response.token, response.user.id, userName)
       }
-      return response;
+      return response
     } catch (error) {
-      throw error;
+      throw error
     }
-  });
+  })
 
   ipcMainHandle('logout', async () => {
     try {
-      await apiService.logout();
-      await dbOperations.clearAuthToken();
+      await apiService.logout()
+      await dbOperations.clearAuthToken()
     } catch (error) {
-      throw error;
+      throw error
     }
-  });
+  })
 
   ipcMainHandle('getAuthToken', async () => {
-    const auth = await dbOperations.getAuthToken();
+    const auth = await dbOperations.getAuthToken()
     if (auth?.token) {
-      apiService.setToken(auth.token);
+      apiService.setToken(auth.token)
     }
-    return auth;
-  });
+    return auth
+  })
 
   // product handlers
   ipcMainHandle('syncProducts', async () => {
     try {
-      console.log('starting product sync...');
-      const products = await apiService.getProducts();
-      console.log('received products from api:', products?.length || 0);
-      
+      console.log('starting product sync...')
+      const products = await apiService.getProducts()
+      console.log('received products from api:', products?.length || 0)
+
       if (!Array.isArray(products)) {
-        console.error('api did not return an array:', products);
-        throw new Error('invalid products data from api');
+        console.error('api did not return an array:', products)
+        throw new Error('invalid products data from api')
       }
-      
-      await dbOperations.saveProducts(products);
-      const localProducts = await dbOperations.getAllProducts();
-      console.log('products saved to database successfully');
-      return localProducts;
+
+      await dbOperations.saveProducts(products)
+      const localProducts = await dbOperations.getAllProducts()
+      console.log('products saved to database successfully')
+      return localProducts
     } catch (error) {
-      console.error('sync products error:', error);
-      throw error;
+      console.error('sync products error:', error)
+      throw error
     }
-  });
+  })
 
   ipcMainHandle('getAllProducts', async () => {
-    return await dbOperations.getAllProducts();
-  });
+    return await dbOperations.getAllProducts()
+  })
 
   ipcMainHandle('searchProducts', async (searchTerm: string) => {
-    return await dbOperations.searchProducts(searchTerm);
-  });
+    return await dbOperations.searchProducts(searchTerm)
+  })
 
   ipcMainHandle('getProductsByCompany', async (companyId: number) => {
-    return await dbOperations.getProductsByCompany(companyId);
-  });
+    return await dbOperations.getProductsByCompany(companyId)
+  })
 
   ipcMainHandle('getProductsByType', async (type: string) => {
-    return await dbOperations.getProductsByType(type);
-  });
+    return await dbOperations.getProductsByType(type)
+  })
 
   ipcMainHandle('getProductsByCategory', async (categoryId: number) => {
-    return await dbOperations.getProductsByCategory(categoryId);
-  });
+    return await dbOperations.getProductsByCategory(categoryId)
+  })
 
   ipcMainHandle('getUniqueCompanies', async () => {
-    return await dbOperations.getUniqueCompanies();
-  });
+    return await dbOperations.getUniqueCompanies()
+  })
 
   ipcMainHandle('getUniqueTypes', async () => {
-    return await dbOperations.getUniqueTypes();
-  });
+    return await dbOperations.getUniqueTypes()
+  })
 
   ipcMainHandle('getUniqueCategories', async () => {
-    return await dbOperations.getUniqueCategories();
-  });
+    return await dbOperations.getUniqueCategories()
+  })
 
   ipcMainHandle('updateProductStock', async (productId: number, newStock: number) => {
-    return await dbOperations.updateProductStock(productId, newStock);
-  });
+    return await dbOperations.updateProductStock(productId, newStock)
+  })
 
   ipcMainHandle(
     'updateProductPrices',
-    async (
-      productId: number,
-      payload: { discount_price: number; peak_hour_price: number }
-    ) => {
+    async (productId: number, payload: { discount_price: number; peak_hour_price: number }) => {
       await apiService.updateProductPrices({
         product_id: productId,
         discount_price: payload.discount_price,
         peak_hour_price: payload.peak_hour_price,
-      });
+      })
 
       return await dbOperations.updateProductPrices(
         productId,
         payload.discount_price,
         payload.peak_hour_price
-      );
+      )
     }
-  );
-});
+  )
+})
 
 function setupGlobalErrorHandlers() {
-  let showingDialog = false;
+  let showingDialog = false
 
   const logError = (label: string, payload: unknown) => {
-    console.error(`[global-error] ${label}:`, payload);
-  };
+    console.error(`[global-error] ${label}:`, payload)
+  }
 
   const showDialog = (message: string) => {
     if (showingDialog) {
-      return;
+      return
     }
-    showingDialog = true;
-    const detail = message || 'no details available';
+    showingDialog = true
+    const detail = message || 'no details available'
     if (app.isReady()) {
-      dialog.showErrorBox('unexpected application error', detail);
+      dialog.showErrorBox('unexpected application error', detail)
     }
-    showingDialog = false;
-  };
+    showingDialog = false
+  }
 
   process.on('uncaughtException', (error: Error) => {
-    logError('uncaught exception', error);
-    showDialog(error?.message ?? 'uncaught exception');
-  });
+    logError('uncaught exception', error)
+    showDialog(error?.message ?? 'uncaught exception')
+  })
 
   process.on('unhandledRejection', (reason: unknown) => {
-    logError('unhandled rejection', reason);
-    const message = reason instanceof Error ? reason.message : String(reason);
-    showDialog(message);
-  });
+    logError('unhandled rejection', reason)
+    const message = reason instanceof Error ? reason.message : String(reason)
+    showDialog(message)
+  })
 
   app.on('render-process-gone', (_event, details: any) => {
-    logError('render process gone', details);
-    showDialog(`renderer process terminated (${details?.reason ?? 'unknown'})`);
-  });
+    logError('render process gone', details)
+    showDialog(`renderer process terminated (${details?.reason ?? 'unknown'})`)
+  })
 
   app.on('child-process-gone', (_event, details: any) => {
-    logError('child process gone', details);
-    showDialog(`supporting process terminated (${details?.reason ?? 'unknown'})`);
-  });
+    logError('child process gone', details)
+    showDialog(`supporting process terminated (${details?.reason ?? 'unknown'})`)
+  })
 }
