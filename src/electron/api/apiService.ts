@@ -179,7 +179,19 @@ export class ApiService {
       );
 
       if (!response.ok) {
-        throw new Error(`failed to update product prices: ${response.statusText}`);
+        let message = `failed to update product prices: ${response.statusText}`;
+        try {
+          const errorPayload = await response.json();
+          const extracted =
+            (errorPayload && (errorPayload.message || errorPayload.error)) ?? undefined;
+          if (extracted) {
+            message = String(extracted);
+          }
+        } catch (parseError) {
+          console.warn('failed to parse update price error payload:', parseError);
+        }
+
+        throw new Error(message);
       }
 
       try {

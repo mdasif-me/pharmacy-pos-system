@@ -201,6 +201,11 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
       return;
     }
 
+    if (discountPrice <= 0 || peakHourPrice <= 0) {
+      alert('prices must be greater than zero');
+      return;
+    }
+
     const offerPrice = selectedProduct.mediboy_offer_price;
     if (
       offerPrice !== null &&
@@ -232,7 +237,8 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
       closePriceModal();
     } catch (error) {
       console.error('failed to update prices:', error);
-      alert('failed to update prices');
+      const message = error instanceof Error ? error.message : 'failed to update prices';
+      alert(message);
     } finally {
       setIsSavingPrices(false);
     }
