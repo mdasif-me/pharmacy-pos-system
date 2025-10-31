@@ -12,12 +12,8 @@ app.on('ready', () => {
     webPreferences: {
       preload: getPreloadPath(),
     },
-    // disable window control buttons
     frame: true,
     titleBarStyle: 'default',
-    minimizable: false,
-    maximizable: false,
-    closable: false,
   });
   if (isDev()) {
     mainWindow.loadURL('http://localhost:5123');
@@ -136,35 +132,7 @@ app.on('ready', () => {
       );
     }
   );
-
-  // removed frame action handlers - no close/maximize/minimize functionality
-  // removed tray and menu - not needed for pharmacy pos
-
-  handleCloseEvents(mainWindow);
 });
-
-function handleCloseEvents(mainWindow: BrowserWindow) {
-  let willClose = false;
-
-  mainWindow.on('close', (e) => {
-    if (willClose) {
-      return;
-    }
-    e.preventDefault();
-    mainWindow.hide();
-    if (app.dock) {
-      app.dock.hide();
-    }
-  });
-
-  app.on('before-quit', () => {
-    willClose = true;
-  });
-
-  mainWindow.on('show', () => {
-    willClose = false;
-  });
-}
 
 function setupGlobalErrorHandlers() {
   let showingDialog = false;

@@ -1,5 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Select, { SingleValue } from 'react-select';
 import './Products.css';
+
+type SelectOption<T> = {
+  value: T;
+  label: string;
+};
+
+type PriceMode = 'discount' | 'peak-hour';
+
+const priceTypeOptions: SelectOption<PriceMode>[] = [
+  { value: 'discount', label: 'Discount' },
+  { value: 'peak-hour', label: 'Peak-Hour' },
+];
+
+const billModeOptions: SelectOption<PriceMode>[] = [
+  { value: 'discount', label: 'Discount' },
+  { value: 'peak-hour', label: 'Peak-Hour' },
+];
 
 interface ProductsProps {
   user: AuthToken;
@@ -12,10 +30,8 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<number | ''>('');
   const [selectedType, setSelectedType] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<number | ''>('');
   const [companies, setCompanies] = useState<Array<{company_id: number, company_name: string}>>([]);
   const [types, setTypes] = useState<Array<{type: string}>>([]);
-  const [categories, setCategories] = useState<Array<{category_id: number, category_name: string}>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string>('');
@@ -24,6 +40,8 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
   const [discountInput, setDiscountInput] = useState('');
   const [peakHourInput, setPeakHourInput] = useState('');
   const [isSavingPrices, setIsSavingPrices] = useState(false);
+  const [priceType, setPriceType] = useState<PriceMode>('discount');
+  const [billMode, setBillMode] = useState<PriceMode>('discount');
   const hasLoadedRef = useRef(false);
 
   // load products and filter data on component mount
@@ -38,7 +56,7 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
   // apply filters when search or filter values change
   useEffect(() => {
     applyFilters();
-  }, [products, searchTerm, selectedCompany, selectedType, selectedCategory]);
+  }, [products, searchTerm, selectedCompany, selectedType]);
 
   const loadInitialData = async () => {
     try {
@@ -49,15 +67,13 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
       setProducts(localProducts ?? []);
 
       // load filter options
-      const [companiesData, typesData, categoriesData] = await Promise.all([
+      const [companiesData, typesData] = await Promise.all([
         window.electron.getUniqueCompanies(),
         window.electron.getUniqueTypes(),
-        window.electron.getUniqueCategories(),
       ]);
 
       setCompanies(companiesData ?? []);
       setTypes(typesData ?? []);
-      setCategories(categoriesData ?? []);
 
       // if no local products, sync from api
       if (localProducts.length === 0) {
@@ -79,15 +95,13 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
       setProducts(apiProducts ?? []);
 
       // refresh filter options after sync
-      const [companiesData, typesData, categoriesData] = await Promise.all([
+      const [companiesData, typesData] = await Promise.all([
         window.electron.getUniqueCompanies(),
         window.electron.getUniqueTypes(),
-        window.electron.getUniqueCategories(),
       ]);
 
       setCompanies(companiesData ?? []);
       setTypes(typesData ?? []);
-      setCategories(categoriesData ?? []);
       setLastSync(new Date().toLocaleString());
 
     } catch (error) {
@@ -107,7 +121,9 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(product => 
         (product.productName ?? '').toLowerCase().includes(term) ||
-        (product.genericName ?? '').toLowerCase().includes(term)
+        (product.genericName ?? '').toLowerCase().includes(term) ||
+        (product.company_name ?? '').toLowerCase().includes(term) ||
+        String(product.in_stock ?? '').toLowerCase().includes(term)
       );
     }
 
@@ -125,14 +141,33 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
       );
     }
 
-    // category filter
-    if (selectedCategory) {
-      filtered = filtered.filter(product => 
-        product.category_id === selectedCategory
-      );
-    }
-
     setFilteredProducts(filtered);
+  };
+
+  const companyOptions = useMemo<SelectOption<number>[]>(
+    () =>
+      companies.map(company => ({
+        value: company.company_id,
+        label: company.company_name,
+      })),
+    [companies]
+  );
+
+  const selectedCompanyOption = useMemo<SelectOption<number> | null>(() => {
+    if (typeof selectedCompany !== 'number') {
+      return null;
+    }
+    return companyOptions.find(option => option.value === selectedCompany) ?? null;
+  }, [selectedCompany, companyOptions]);
+
+  const handleCompanyChange = (
+    option: SingleValue<SelectOption<number>>
+  ) => {
+    if (!option) {
+      setSelectedCompany('');
+      return;
+    }
+    setSelectedCompany(option.value);
   };
 
   const formatCurrency = (value?: number | null) => {
@@ -146,6 +181,13 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
     }
 
     return `৳${numeric.toFixed(2)}`;
+  };
+
+  const getDisplayedRate = (product: Product) => {
+    if (priceType === 'discount') {
+      return product.discount_price ?? product.sale_price ?? product.peak_hour_price;
+    }
+    return product.peak_hour_price ?? product.sale_price ?? product.discount_price;
   };
 
   const openPriceModal = (product: Product) => {
@@ -300,20 +342,46 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
             className="search-input"
           />
         </div>
-        
-        <div className="filter-group">
-          <select
-            value={selectedCompany}
-            onChange={(e) => setSelectedCompany(e.target.value ? Number(e.target.value) : '')}
-            className="filter-select"
-          >
-            <option value="">all companies</option>
-            {companies.map(company => (
-              <option key={company.company_id} value={company.company_id}>
-                {company.company_name}
-              </option>
-            ))}
-          </select>
+
+        <div className="filter-group filter-select-group">
+          <Select
+            className="react-select-container"
+            classNamePrefix="react-select"
+            options={priceTypeOptions}
+            value={priceTypeOptions.find(option => option.value === priceType) ?? null}
+            onChange={(option: SingleValue<SelectOption<PriceMode>>) => {
+              setPriceType(option?.value ?? 'discount');
+            }}
+            isSearchable={false}
+            placeholder="Price Type"
+          />
+        </div>
+
+        <div className="filter-group filter-select-group">
+          <Select
+            className="react-select-container"
+            classNamePrefix="react-select"
+            options={billModeOptions}
+            value={billModeOptions.find(option => option.value === billMode) ?? null}
+            onChange={(option: SingleValue<SelectOption<PriceMode>>) => {
+              setBillMode(option?.value ?? 'discount');
+            }}
+            isSearchable={false}
+            placeholder="Bill Mode"
+          />
+        </div>
+
+        <div className="filter-group filter-select-group">
+          <Select
+            className="react-select-container"
+            classNamePrefix="react-select"
+            options={companyOptions}
+            value={selectedCompanyOption}
+            onChange={handleCompanyChange}
+            isClearable
+            placeholder="Company"
+            noOptionsMessage={() => 'No companies found'}
+          />
         </div>
 
         <div className="filter-group">
@@ -326,21 +394,6 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
             {types.map(type => (
               <option key={type.type} value={type.type}>
                 {type.type}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value ? Number(e.target.value) : '')}
-            className="filter-select"
-          >
-            <option value="">all categories</option>
-            {categories.map(category => (
-              <option key={category.category_id} value={category.category_id}>
-                {category.category_name || `Category ${category.category_id}`}
               </option>
             ))}
           </select>
@@ -359,7 +412,11 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
                 <th>Product Name</th>
                 <th>Type</th>
                 <th>MRP/UNIT</th>
-                <th>Rate/UNIT</th>
+                <th>
+                  {priceType === 'discount'
+                    ? 'Discount Price/UNIT'
+                    : 'Peak-Hour Price/UNIT'}
+                </th>
                 <th>Company Name</th>
                 <th>Current Stock</th>
                 <th>Action</th>
@@ -386,11 +443,7 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
                     </td>
                     <td>{product.type || '—'}</td>
                     <td>{formatCurrency(product.retail_max_price)}</td>
-                    <td>
-                      {formatCurrency(
-                        product.discount_price ?? product.peak_hour_price ?? product.sale_price
-                      )}
-                    </td>
+                    <td>{formatCurrency(getDisplayedRate(product))}</td>
                     <td>{product.company_name || '—'}</td>
                     <td>{product.in_stock ?? 0}</td>
                     <td>
