@@ -1,11 +1,11 @@
-const electron = require('electron');
+const electron = require('electron')
 
 electron.contextBridge.exposeInMainWorld('electron', {
   // authentication methods
   login: (credentials) => ipcInvoke('login', credentials),
   logout: () => ipcInvoke('logout'),
   getAuthToken: () => ipcInvoke('getAuthToken'),
-  
+
   // product methods
   syncProducts: () => ipcInvoke('syncProducts'),
   getAllProducts: () => ipcInvoke('getAllProducts'),
@@ -18,11 +18,12 @@ electron.contextBridge.exposeInMainWorld('electron', {
   getUniqueCategories: () => ipcInvoke('getUniqueCategories'),
   updateProductStock: (productId, newStock) => ipcInvoke('updateProductStock', productId, newStock),
   updateProductPrices: (productId, payload) => ipcInvoke('updateProductPrices', productId, payload),
-} satisfies Window['electron']);
+  getLastSync: () => ipcInvoke('getLastSync'),
+} satisfies Window['electron'])
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(
   key: Key,
   ...args: any[]
 ): Promise<EventPayloadMapping[Key]> {
-  return electron.ipcRenderer.invoke(key, ...args);
+  return electron.ipcRenderer.invoke(key, ...args)
 }

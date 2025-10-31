@@ -1,303 +1,293 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Select, { SingleValue } from 'react-select';
-import './Products.css';
-import Search from "../assets/search.svg";
-import Discount from "../assets/discount.svg";
-import Company from "../assets/company.svg";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Select, { SingleValue } from 'react-select'
+import Company from '../assets/company.svg'
+import Discount from '../assets/discount.svg'
+import Search from '../assets/search.svg'
+import './Products.css'
 
 type SelectOption<T> = {
-  value: T;
-  label: string;
-};
+  value: T
+  label: string
+}
 
-type PriceMode = 'discount' | 'peak-hour';
+type PriceMode = 'discount' | 'peak-hour'
 
 const priceTypeOptions: SelectOption<PriceMode>[] = [
   { value: 'discount', label: 'Discount' },
   { value: 'peak-hour', label: 'Peak-Hour' },
-];
+]
 
 const billModeOptions: SelectOption<PriceMode>[] = [
   { value: 'discount', label: 'Discount' },
   { value: 'peak-hour', label: 'Peak-Hour' },
-];
+]
 
 interface ProductsProps {
-  user: AuthToken;
-  syncRequestId?: number;
-  onSyncStatusChange?: (status: { isSyncing: boolean; lastSync: string }) => void;
+  user: AuthToken
+  syncRequestId?: number
+  onSyncStatusChange?: (status: { isSyncing: boolean; lastSync: string }) => void
 }
 
 export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncStatusChange }) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCompany, setSelectedCompany] = useState<number | ''>('');
-  const [companies, setCompanies] = useState<Array<{company_id: number, company_name: string}>>([]);
-  const [types, setTypes] = useState<Array<{type: string}>>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState<string>('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [discountInput, setDiscountInput] = useState('');
-  const [peakHourInput, setPeakHourInput] = useState('');
-  const [isSavingPrices, setIsSavingPrices] = useState(false);
-  const [priceType, setPriceType] = useState<PriceMode>('discount');
-  const [billMode, setBillMode] = useState<PriceMode>('discount');
-  const hasLoadedRef = useRef(false);
-  const latestSyncRequestRef = useRef(syncRequestId);
+  const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [searchTerm, setSearchTerm] = useState('')
+  const [selectedCompany, setSelectedCompany] = useState<number | ''>('')
+  const [companies, setCompanies] = useState<Array<{ company_id: number; company_name: string }>>(
+    []
+  )
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSync, setLastSync] = useState<string>('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [discountInput, setDiscountInput] = useState('')
+  const [peakHourInput, setPeakHourInput] = useState('')
+  const [isSavingPrices, setIsSavingPrices] = useState(false)
+  const [priceType, setPriceType] = useState<PriceMode>('discount')
+  const hasLoadedRef = useRef(false)
+  const latestSyncRequestRef = useRef(syncRequestId)
 
   // apply filters when search or filter values change
   useEffect(() => {
-    applyFilters();
-  }, [products, searchTerm, selectedCompany]);
+    applyFilters()
+  }, [products, searchTerm, selectedCompany])
 
   useEffect(() => {
-    onSyncStatusChange?.({ isSyncing, lastSync });
-  }, [isSyncing, lastSync, onSyncStatusChange]);
+    onSyncStatusChange?.({ isSyncing, lastSync })
+  }, [isSyncing, lastSync, onSyncStatusChange])
 
   const syncProducts = useCallback(async () => {
     try {
-      setIsSyncing(true);
+      setIsSyncing(true)
 
       // fetch latest products from api and store locally
-      const apiProducts = await window.electron.syncProducts();
-      setProducts(apiProducts ?? []);
+      const apiProducts = await window.electron.syncProducts()
+      setProducts(apiProducts ?? [])
 
       // refresh filter options after sync
-      const [companiesData, typesData] = await Promise.all([
-        window.electron.getUniqueCompanies(),
-        window.electron.getUniqueTypes(),
-      ]);
+      const [companiesData] = await Promise.all([window.electron.getUniqueCompanies()])
 
-      setCompanies(companiesData ?? []);
-      setTypes(typesData ?? []);
-      setLastSync(new Date().toLocaleString());
-
+      setCompanies(companiesData ?? [])
+      setLastSync(new Date().toLocaleString())
     } catch (error) {
-      console.error('sync failed:', error);
-      const message = error instanceof Error ? error.message : 'failed to sync products from server';
-      alert(`failed to sync products: ${message}`);
+      console.error('sync failed:', error)
+      const message = error instanceof Error ? error.message : 'failed to sync products from server'
+      alert(`failed to sync products: ${message}`)
     } finally {
-      setIsSyncing(false);
+      setIsSyncing(false)
     }
-  }, []);
+  }, [])
 
   const loadInitialData = useCallback(async () => {
     try {
-      setIsLoading(true);
+      setIsLoading(true)
 
       // load products from local database first
-      const localProducts = await window.electron.getAllProducts();
-      setProducts(localProducts ?? []);
+      const localProducts = await window.electron.getAllProducts()
+      setProducts(localProducts ?? [])
 
       // load filter options
       const [companiesData, typesData] = await Promise.all([
         window.electron.getUniqueCompanies(),
         window.electron.getUniqueTypes(),
-      ]);
+      ])
 
-      setCompanies(companiesData ?? []);
-      setTypes(typesData ?? []);
+      setCompanies(companiesData ?? [])
 
       // if no local products, sync from api
       if (localProducts.length === 0) {
-        await syncProducts();
+        await syncProducts()
       }
     } catch (error) {
-      console.error('failed to load initial data:', error);
+      console.error('failed to load initial data:', error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [syncProducts]);
+  }, [syncProducts])
 
   // load products and filter data on first render
   useEffect(() => {
     if (hasLoadedRef.current) {
-      return;
+      return
     }
-    hasLoadedRef.current = true;
-    loadInitialData();
-  }, [loadInitialData]);
+    hasLoadedRef.current = true
+    loadInitialData()
+  }, [loadInitialData])
 
   // trigger sync when dashboard requests it
   useEffect(() => {
     if (syncRequestId === undefined) {
-      return;
+      return
     }
     if (latestSyncRequestRef.current === syncRequestId) {
-      return;
+      return
     }
-    latestSyncRequestRef.current = syncRequestId;
-    syncProducts();
-  }, [syncRequestId, syncProducts]);
+    latestSyncRequestRef.current = syncRequestId
+    syncProducts()
+  }, [syncRequestId, syncProducts])
 
   const applyFilters = () => {
-    let filtered = [...products];
+    let filtered = [...products]
 
     // search filter - check product name and generic name
     if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(product =>
-        (product.productName ?? '').toLowerCase().includes(term) ||
-        (product.genericName ?? '').toLowerCase().includes(term) ||
-        (product.company_name ?? '').toLowerCase().includes(term) ||
-        String(product.in_stock ?? '').toLowerCase().includes(term)
-      );
+      const term = searchTerm.toLowerCase()
+      filtered = filtered.filter(
+        (product) =>
+          (product.productName ?? '').toLowerCase().includes(term) ||
+          (product.genericName ?? '').toLowerCase().includes(term) ||
+          (product.company_name ?? '').toLowerCase().includes(term) ||
+          String(product.in_stock ?? '')
+            .toLowerCase()
+            .includes(term)
+      )
     }
 
     // company filter
     if (selectedCompany) {
-      filtered = filtered.filter(product =>
-        product.company_id === selectedCompany
-      );
+      filtered = filtered.filter((product) => product.company_id === selectedCompany)
     }
 
-    setFilteredProducts(filtered);
-  };
+    setFilteredProducts(filtered)
+  }
 
   const companyOptions = useMemo<SelectOption<number>[]>(
     () =>
-      companies.map(company => ({
+      companies.map((company) => ({
         value: company.company_id,
         label: company.company_name,
       })),
     [companies]
-  );
+  )
 
   const selectedCompanyOption = useMemo<SelectOption<number> | null>(() => {
     if (typeof selectedCompany !== 'number') {
-      return null;
+      return null
     }
-    return companyOptions.find(option => option.value === selectedCompany) ?? null;
-  }, [selectedCompany, companyOptions]);
+    return companyOptions.find((option) => option.value === selectedCompany) ?? null
+  }, [selectedCompany, companyOptions])
 
-  const handleCompanyChange = (
-    option: SingleValue<SelectOption<number>>
-  ) => {
+  const handleCompanyChange = (option: SingleValue<SelectOption<number>>) => {
     if (!option) {
-      setSelectedCompany('');
-      return;
+      setSelectedCompany('')
+      return
     }
-    setSelectedCompany(option.value);
-  };
+    setSelectedCompany(option.value)
+  }
 
   const formatCurrency = (value?: number | null) => {
     if (value === null || value === undefined) {
-      return '—';
+      return '—'
     }
 
-    const numeric = Number(value);
+    const numeric = Number(value)
     if (Number.isNaN(numeric)) {
-      return '—';
+      return '—'
     }
 
-    return `৳${numeric.toFixed(2)}`;
-  };
+    return `৳${numeric.toFixed(2)}`
+  }
 
   const getDisplayedRate = (product: Product) => {
     if (priceType === 'discount') {
-      return product.discount_price ?? product.sale_price ?? product.peak_hour_price;
+      return product.discount_price ?? product.sale_price ?? product.peak_hour_price
     }
-    return product.peak_hour_price ?? product.sale_price ?? product.discount_price;
-  };
+    return product.peak_hour_price ?? product.sale_price ?? product.discount_price
+  }
 
   const openPriceModal = (product: Product) => {
-    setSelectedProduct(product);
+    setSelectedProduct(product)
     setDiscountInput(
       product.discount_price !== null && product.discount_price !== undefined
         ? product.discount_price.toString()
         : ''
-    );
+    )
     setPeakHourInput(
       product.peak_hour_price !== null && product.peak_hour_price !== undefined
         ? product.peak_hour_price.toString()
         : ''
-    );
-    setIsModalOpen(true);
-  };
+    )
+    setIsModalOpen(true)
+  }
 
   const closePriceModal = () => {
-    setIsModalOpen(false);
-    setSelectedProduct(null);
-    setDiscountInput('');
-    setPeakHourInput('');
-  };
+    setIsModalOpen(false)
+    setSelectedProduct(null)
+    setDiscountInput('')
+    setPeakHourInput('')
+  }
 
   const parsePriceInput = (value: string): number | undefined => {
-    const trimmed = value.trim();
+    const trimmed = value.trim()
     if (trimmed === '') {
-      return undefined;
+      return undefined
     }
 
-    const parsed = Number.parseFloat(trimmed);
+    const parsed = Number.parseFloat(trimmed)
     if (Number.isNaN(parsed) || parsed < 0) {
-      return undefined;
+      return undefined
     }
 
-    return parsed;
-  };
+    return parsed
+  }
 
   const handlePriceUpdate = async () => {
     if (!selectedProduct) {
-      return;
+      return
     }
 
-    const discountPrice = parsePriceInput(discountInput);
+    const discountPrice = parsePriceInput(discountInput)
     if (discountPrice === undefined) {
-      alert('enter a valid discount price');
-      return;
+      alert('enter a valid discount price')
+      return
     }
 
-    const peakHourPrice = parsePriceInput(peakHourInput);
+    const peakHourPrice = parsePriceInput(peakHourInput)
     if (peakHourPrice === undefined) {
-      alert('enter a valid peak-hour price');
-      return;
+      alert('enter a valid peak-hour price')
+      return
     }
 
     if (discountPrice <= 0 || peakHourPrice <= 0) {
-      alert('prices must be greater than zero');
-      return;
+      alert('prices must be greater than zero')
+      return
     }
 
-    const offerPrice = selectedProduct.mediboy_offer_price;
+    const offerPrice = selectedProduct.mediboy_offer_price
     if (
       offerPrice !== null &&
       offerPrice !== undefined &&
       (discountPrice <= offerPrice || peakHourPrice <= offerPrice)
     ) {
-      alert('discount and peak-hour prices must be greater than the Mediboy offer price');
-      return;
+      alert('discount and peak-hour prices must be greater than the Mediboy offer price')
+      return
     }
 
-    setIsSavingPrices(true);
+    setIsSavingPrices(true)
     try {
-      const updatedProduct = await window.electron.updateProductPrices(
-        selectedProduct.id,
-        {
-          discount_price: discountPrice,
-          peak_hour_price: peakHourPrice,
-        }
-      );
+      const updatedProduct = await window.electron.updateProductPrices(selectedProduct.id, {
+        discount_price: discountPrice,
+        peak_hour_price: peakHourPrice,
+      })
 
       if (updatedProduct) {
-        setProducts(prevProducts =>
-          prevProducts.map(product =>
+        setProducts((prevProducts) =>
+          prevProducts.map((product) =>
             product.id === updatedProduct.id ? { ...product, ...updatedProduct } : product
           )
-        );
+        )
       }
 
-      closePriceModal();
+      closePriceModal()
     } catch (error) {
-      console.error('failed to update prices:', error);
-      const message = error instanceof Error ? error.message : 'failed to update prices';
-      alert(message);
+      console.error('failed to update prices:', error)
+      const message = error instanceof Error ? error.message : 'failed to update prices'
+      alert(message)
     } finally {
-      setIsSavingPrices(false);
+      setIsSavingPrices(false)
     }
-  };
+  }
 
   if (isLoading) {
     return (
@@ -305,7 +295,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         <div className="loading-spinner"></div>
         <p>loading products...</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -313,7 +303,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       <div className="products-welcome">
         <h1>All Stock</h1>
         <div className="products-welcome-meta">
-          <span>welcome, {user.user_name}</span>
           {lastSync && <span className="products-last-sync">last sync: {lastSync}</span>}
         </div>
       </div>
@@ -336,9 +325,9 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             className="react-select-container"
             classNamePrefix="react-select"
             options={priceTypeOptions}
-            value={priceTypeOptions.find(option => option.value === priceType) ?? null}
+            value={priceTypeOptions.find((option) => option.value === priceType) ?? null}
             onChange={(option: SingleValue<SelectOption<PriceMode>>) => {
-              setPriceType(option?.value ?? 'discount');
+              setPriceType(option?.value ?? 'discount')
             }}
             isSearchable={false}
             placeholder="Price Type"
@@ -359,7 +348,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
           />
         </div>
         <div className="filter-info">
-          showing {filteredProducts.length} of {products.length} products
+          Showing {filteredProducts.length} of {products.length} Products
         </div>
       </div>
 
@@ -371,21 +360,17 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
                 <th>Product Name</th>
                 <th>Type</th>
                 <th>MRP/UNIT</th>
-                <th>
-                  {priceType === 'discount'
-                    ? 'Discount Price/UNIT'
-                    : 'Peak-Hour Price/UNIT'}
-                </th>
+                <th>{priceType === 'discount' ? 'Discount Price/UNIT' : 'Peak-Hour Price/UNIT'}</th>
                 <th>Company Name</th>
                 <th>Current Stock</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              {filteredProducts.map(product => {
+              {filteredProducts.map((product) => {
                 const categoryLabel =
                   product.category_name ||
-                  (product.category_id ? `Category ${product.category_id}` : '');
+                  (product.category_id ? `Category ${product.category_id}` : '')
 
                 return (
                   <tr key={product.id}>
@@ -395,9 +380,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
                         {product.genericName && (
                           <span className="product-generic">{product.genericName}</span>
                         )}
-                        {categoryLabel && (
-                          <span className="product-category">{categoryLabel}</span>
-                        )}
+                        {categoryLabel && <span className="product-category">{categoryLabel}</span>}
                       </div>
                     </td>
                     <td>{product.type || '—'}</td>
@@ -406,15 +389,12 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
                     <td>{product.company_name || '—'}</td>
                     <td>{product.in_stock ?? 0}</td>
                     <td>
-                      <button
-                        className="edit-button"
-                        onClick={() => openPriceModal(product)}
-                      >
+                      <button className="edit-button" onClick={() => openPriceModal(product)}>
                         Edit
                       </button>
                     </td>
                   </tr>
-                );
+                )
               })}
             </tbody>
           </table>
@@ -437,7 +417,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
           aria-modal="true"
           onClick={(event: React.MouseEvent<HTMLDivElement>) => {
             if (event.target === event.currentTarget && !isSavingPrices) {
-              closePriceModal();
+              closePriceModal()
             }
           }}
         >
@@ -475,11 +455,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
               </label>
             </div>
             <div className="modal-actions">
-              <button
-                className="modal-close"
-                onClick={closePriceModal}
-                disabled={isSavingPrices}
-              >
+              <button className="modal-close" onClick={closePriceModal} disabled={isSavingPrices}>
                 Close
               </button>
               <button
@@ -494,5 +470,5 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         </div>
       )}
     </div>
-  );
-};
+  )
+}

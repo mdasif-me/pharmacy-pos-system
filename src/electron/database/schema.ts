@@ -24,9 +24,10 @@ export const createProductsTable = `
 		status TEXT,
 		cover_image TEXT,
 		product_cover_image_path TEXT,
-		last_sync_at TEXT
+		last_sync_at TEXT,
+		raw_payload TEXT
 	);
-`;
+`
 
 // auth tokens and user info table
 export const createAuthTokensTable = `
@@ -37,7 +38,7 @@ export const createAuthTokensTable = `
 		user_name TEXT,
 		created_at TEXT DEFAULT CURRENT_TIMESTAMP
 	);
-`;
+`
 
 // sync status table for tracking last sync
 export const createSyncStatusTable = `
@@ -45,21 +46,21 @@ export const createSyncStatusTable = `
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		last_product_sync TEXT
 	);
-`;
+`
 
 // make stock_products, stocks, mfg_data nullable in their respective tables
 // if these tables exist, alter them; otherwise, create with nullable fields
 export const alterStockProductsNullable = `
 	-- this is a placeholder, run ALTER TABLE if needed
-`;
+`
 
 export const alterStocksNullable = `
 	-- this is a placeholder, run ALTER TABLE if needed
-`;
+`
 
 export const alterMfgDataNullable = `
 	-- this is a placeholder, run ALTER TABLE if needed
-`;
+`
 
 // pharmacy_business_setups table with new fields
 export const createPharmacyBusinessSetupsTable = `
@@ -69,17 +70,18 @@ export const createPharmacyBusinessSetupsTable = `
 		bill_mode INTEGER DEFAULT 0, -- 0 = discount, 1 = peak hour
 		sale_mode INTEGER DEFAULT 0  -- 0 = discount, 1 = peak hour
 	);
-`;
+`
 
 export const alterProductsTableStatements = [
-	"ALTER TABLE products ADD COLUMN category_id INTEGER",
-	"ALTER TABLE products ADD COLUMN category_name TEXT",
-	"ALTER TABLE products ADD COLUMN sale_price REAL",
-	"ALTER TABLE products ADD COLUMN status TEXT",
-	"ALTER TABLE products ADD COLUMN product_cover_image_path TEXT"
-];
+  'ALTER TABLE products ADD COLUMN category_id INTEGER',
+  'ALTER TABLE products ADD COLUMN category_name TEXT',
+  'ALTER TABLE products ADD COLUMN sale_price REAL',
+  'ALTER TABLE products ADD COLUMN status TEXT',
+  'ALTER TABLE products ADD COLUMN product_cover_image_path TEXT',
+  'ALTER TABLE products ADD COLUMN raw_payload TEXT',
+]
 
 // indices for performance (add as needed)
 export const createIndices = [
-	// 'CREATE INDEX IF NOT EXISTS idx_products_company_id ON products(company_id);',
-];
+  // 'CREATE INDEX IF NOT EXISTS idx_products_company_id ON products(company_id);',
+]

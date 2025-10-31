@@ -120,33 +120,6 @@
   border-color: rgba(255, 0, 0, 0.705);
 }
 
-.dashboard-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.25rem 1.5rem;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-}
-.dashboard-header-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-.dashboard-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.dashboard-header button {
-  background: #14111159;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 .spin {
   animation: spin 2s linear infinite;
 }
@@ -189,38 +162,6 @@
 
 .dashboard-sync-button:not(:disabled):hover {
   background: #141111d0;
-}
-
-.socket-indicator {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: rgba(20, 17, 17, 0.08);
-  color: #0f0f14;
-}
-
-.socket-indicator-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #ff6b6b;
-}
-
-.socket-indicator-label {
-  white-space: nowrap;
-}
-
-.socket-connected .socket-indicator-dot {
-  background: #16a34a;
-}
-
-.socket-connecting .socket-indicator-dot {
-  background: #fbbf24;
 }
 
 .dashboard-content {

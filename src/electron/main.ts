@@ -111,6 +111,10 @@ app.on('ready', () => {
     return await dbOperations.getUniqueCategories()
   })
 
+  ipcMainHandle('getLastSync', async () => {
+    return await dbOperations.getLastSync()
+  })
+
   ipcMainHandle('updateProductStock', async (productId: number, newStock: number) => {
     return await dbOperations.updateProductStock(productId, newStock)
   })

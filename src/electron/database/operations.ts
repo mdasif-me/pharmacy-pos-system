@@ -3,31 +3,31 @@
  * handles local storage and sync with api
  */
 
-import { Product } from '../api/apiService.js';
-import { dbManager } from '../database/manager.js';
+import { Product } from '../api/apiService.js'
+import { dbManager } from '../database/manager.js'
 
 export interface AuthToken {
-  id?: number;
-  token: string;
-  user_id: number;
-  user_name: string;
-  created_at?: string;
+  id?: number
+  token: string
+  user_id: number
+  user_name: string
+  created_at?: string
 }
 
 export class DatabaseOperations {
-  
   /**
    * save auth token and user info to database
    */
   async saveAuthToken(token: string, userId: number, userName: string): Promise<void> {
     // clear existing tokens first
-    await dbManager.run('DELETE FROM auth_tokens');
-    
+    await dbManager.run('DELETE FROM auth_tokens')
+
     // insert new token
-    await dbManager.run(
-      'INSERT INTO auth_tokens (token, user_id, user_name) VALUES (?, ?, ?)',
-      [token, userId, userName]
-    );
+    await dbManager.run('INSERT INTO auth_tokens (token, user_id, user_name) VALUES (?, ?, ?)', [
+      token,
+      userId,
+      userName,
+    ])
   }
 
   /**
@@ -36,14 +36,14 @@ export class DatabaseOperations {
   async getAuthToken(): Promise<AuthToken | undefined> {
     return await dbManager.get<AuthToken>(
       'SELECT * FROM auth_tokens ORDER BY created_at DESC LIMIT 1'
-    );
+    )
   }
 
   /**
    * clear auth token (logout)
    */
   async clearAuthToken(): Promise<void> {
-    await dbManager.run('DELETE FROM auth_tokens');
+    await dbManager.run('DELETE FROM auth_tokens')
   }
 
   /**
@@ -52,37 +52,48 @@ export class DatabaseOperations {
   async saveProducts(products: Product[]): Promise<void> {
     // validate input
     if (!Array.isArray(products)) {
-      console.error('saveProducts called with non-array:', products);
-      throw new Error('products must be an array');
+      console.error('saveProducts called with non-array:', products)
+      throw new Error('products must be an array')
     }
 
-    console.log(`saving ${products.length} products to database`);
-    
+    console.log(`saving ${products.length} products to database`)
+
     // clear existing products
-    await dbManager.run('DELETE FROM products');
-    
+    await dbManager.run('DELETE FROM products')
+
     // insert all products
     const insertSQL = `
-      INSERT INTO products (
+      INSERT OR REPLACE INTO products (
         id, productName, genericName, retail_max_price, cart_qty_inc,
         cart_text, unit_in_pack, type, quantity, prescription, feature,
         company_id, company_name, category_id, category_name, in_stock,
         discount_price, peak_hour_price, mediboy_offer_price, sale_price,
-        status, product_cover_image_path, last_sync_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `;
+        status, cover_image, product_cover_image_path, last_sync_at, raw_payload
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `
+
+    const seenProductIds = new Set<number>()
 
     for (const rawProduct of products) {
-      const product = this.normalizeProduct(rawProduct);
+      const product = this.normalizeProduct(rawProduct)
 
       if (product.id === undefined || product.id === null) {
-        console.warn('skipping product without id', rawProduct);
-        continue;
+        console.warn('skipping product without id', rawProduct)
+        continue
       }
 
-      if (!product.in_stock || product.in_stock <= 0) {
-        // skip products with no stock to honour inventory requirements
-        continue;
+      if (typeof product.id === 'number') {
+        if (seenProductIds.has(product.id)) {
+          console.warn('duplicate product id encountered; replacing existing row', product.id)
+        }
+        seenProductIds.add(product.id)
+      }
+
+      let rawPayload = '{}'
+      try {
+        rawPayload = JSON.stringify(rawProduct)
+      } catch (error) {
+        console.warn('failed to stringify raw product payload', error)
       }
 
       await dbManager.run(insertSQL, [
@@ -107,75 +118,84 @@ export class DatabaseOperations {
         product.mediboy_offer_price,
         product.sale_price,
         product.status,
+        product.cover_image,
         product.product_cover_image_path,
-        product.last_sync_at ?? new Date().toISOString()
-      ]);
+        product.last_sync_at ?? new Date().toISOString(),
+        rawPayload,
+      ])
     }
 
     // update sync status
-    await this.updateLastSync();
+    await this.updateLastSync()
   }
 
   /**
-   * get all products from database - only show products with stock
+   * get all products from database with available stock
    */
   async getAllProducts(): Promise<Product[]> {
-    return await dbManager.all<Product>(
-      'SELECT * FROM products WHERE in_stock > 0 ORDER BY productName'
-    );
+    const rows = await dbManager.all<any>(
+      'SELECT * FROM products WHERE COALESCE(in_stock, 0) > 0 ORDER BY productName'
+    )
+    return rows.map((row) => this.hydrateProductRow(row))
   }
 
   /**
-   * search products by name or generic name - only show products with stock
+   * search products by name or generic name with available stock
    */
   async searchProducts(searchTerm: string): Promise<Product[]> {
     const sql = `
-      SELECT * FROM products 
-      WHERE (productName LIKE ? OR genericName LIKE ?) AND in_stock > 0
+      SELECT * FROM products
+      WHERE COALESCE(in_stock, 0) > 0
+        AND (productName LIKE ? OR genericName LIKE ?)
       ORDER BY productName
-    `;
-    const term = `%${searchTerm}%`;
-    return await dbManager.all<Product>(sql, [term, term]);
+    `
+    const term = `%${searchTerm}%`
+    const rows = await dbManager.all<any>(sql, [term, term])
+    return rows.map((row) => this.hydrateProductRow(row))
   }
 
   /**
-   * filter products by company - only show products with stock
+   * filter products by company with available stock
    */
   async getProductsByCompany(companyId: number): Promise<Product[]> {
-    return await dbManager.all<Product>(
-      'SELECT * FROM products WHERE company_id = ? AND in_stock > 0 ORDER BY productName',
+    const rows = await dbManager.all<any>(
+      'SELECT * FROM products WHERE company_id = ? AND COALESCE(in_stock, 0) > 0 ORDER BY productName',
       [companyId]
-    );
+    )
+    return rows.map((row) => this.hydrateProductRow(row))
   }
 
   /**
-   * filter products by type - only show products with stock
+   * filter products by type with available stock
    */
   async getProductsByType(type: string): Promise<Product[]> {
-    return await dbManager.all<Product>(
-      'SELECT * FROM products WHERE type = ? AND in_stock > 0 ORDER BY productName',
+    const rows = await dbManager.all<any>(
+      'SELECT * FROM products WHERE type = ? AND COALESCE(in_stock, 0) > 0 ORDER BY productName',
       [type]
-    );
+    )
+    return rows.map((row) => this.hydrateProductRow(row))
   }
 
   /**
-   * filter products by category - only show products with stock
+   * filter products by category with available stock
    */
   async getProductsByCategory(categoryId: number): Promise<Product[]> {
-    return await dbManager.all<Product>(
-      'SELECT * FROM products WHERE category_id = ? AND in_stock > 0 ORDER BY productName',
+    const rows = await dbManager.all<any>(
+      'SELECT * FROM products WHERE category_id = ? AND COALESCE(in_stock, 0) > 0 ORDER BY productName',
       [categoryId]
-    );
+    )
+    return rows.map((row) => this.hydrateProductRow(row))
   }
 
   /**
    * update product stock locally
    */
   async updateProductStock(productId: number, newStock: number): Promise<void> {
-    await dbManager.run(
-      'UPDATE products SET in_stock = ?, last_sync_at = ? WHERE id = ?',
-      [newStock, new Date().toISOString(), productId]
-    );
+    await dbManager.run('UPDATE products SET in_stock = ?, last_sync_at = ? WHERE id = ?', [
+      newStock,
+      new Date().toISOString(),
+      productId,
+    ])
   }
 
   /**
@@ -189,39 +209,37 @@ export class DatabaseOperations {
     await dbManager.run(
       'UPDATE products SET discount_price = ?, peak_hour_price = ?, last_sync_at = ? WHERE id = ?',
       [discountPrice, peakHourPrice, new Date().toISOString(), productId]
-    );
+    )
 
-    return await dbManager.get<Product>(
-      'SELECT * FROM products WHERE id = ?',
-      [productId]
-    );
+    const row = await dbManager.get<any>('SELECT * FROM products WHERE id = ?', [productId])
+    return row ? this.hydrateProductRow(row) : undefined
   }
 
   /**
-   * get unique companies for filter dropdown - only companies with stock
+   * get unique companies for filter dropdown with available stock
    */
-  async getUniqueCompanies(): Promise<Array<{company_id: number, company_name: string}>> {
-    return await dbManager.all<{company_id: number, company_name: string}>(
-      'SELECT DISTINCT company_id, company_name FROM products WHERE in_stock > 0 ORDER BY company_name'
-    );
+  async getUniqueCompanies(): Promise<Array<{ company_id: number; company_name: string }>> {
+    return await dbManager.all<{ company_id: number; company_name: string }>(
+      'SELECT DISTINCT company_id, company_name FROM products WHERE COALESCE(in_stock, 0) > 0 ORDER BY company_name'
+    )
   }
 
   /**
-   * get unique product types for filter dropdown - only types with stock
+   * get unique product types for filter dropdown with available stock
    */
-  async getUniqueTypes(): Promise<Array<{type: string}>> {
-    return await dbManager.all<{type: string}>(
-      'SELECT DISTINCT type FROM products WHERE type IS NOT NULL AND in_stock > 0 ORDER BY type'
-    );
+  async getUniqueTypes(): Promise<Array<{ type: string }>> {
+    return await dbManager.all<{ type: string }>(
+      'SELECT DISTINCT type FROM products WHERE type IS NOT NULL AND COALESCE(in_stock, 0) > 0 ORDER BY type'
+    )
   }
 
   /**
-   * get unique product categories for filter dropdown
+   * get unique product categories for filter dropdown with available stock
    */
-  async getUniqueCategories(): Promise<Array<{category_id: number, category_name: string}>> {
-    return await dbManager.all<{category_id: number, category_name: string}>(
-      'SELECT DISTINCT category_id, category_name FROM products WHERE category_id IS NOT NULL ORDER BY category_name'
-    );
+  async getUniqueCategories(): Promise<Array<{ category_id: number; category_name: string }>> {
+    return await dbManager.all<{ category_id: number; category_name: string }>(
+      'SELECT DISTINCT category_id, category_name FROM products WHERE category_id IS NOT NULL AND COALESCE(in_stock, 0) > 0 ORDER BY category_name'
+    )
   }
 
   /**
@@ -230,23 +248,51 @@ export class DatabaseOperations {
   private normalizeProduct(raw: any): Product {
     const toNumber = (value: any): number | undefined => {
       if (value === null || value === undefined || value === '') {
-        return undefined;
+        return undefined
       }
-      const num = Number(value);
-      return Number.isFinite(num) ? num : undefined;
-    };
+      const num = Number(value)
+      return Number.isFinite(num) ? num : undefined
+    }
 
     const toInt = (value: any): number | undefined => {
       if (value === null || value === undefined || value === '') {
-        return undefined;
+        return undefined
       }
-      const num = parseInt(value, 10);
-      return Number.isNaN(num) ? undefined : num;
-    };
+      const num = parseInt(value, 10)
+      return Number.isNaN(num) ? undefined : num
+    }
 
-    const company = raw?.company ?? {};
-    const category = raw?.category ?? {};
-    const currentStock = raw?.current_stock ?? {};
+    const company = raw?.company ?? {}
+    const category = raw?.category ?? {}
+    const currentStock = raw?.current_stock ?? {}
+
+    const normalizedCompany =
+      company && Object.keys(company).length > 0
+        ? {
+            id: toInt(company?.id) ?? company?.id,
+            name: company?.name ?? raw?.company_name ?? '',
+            created_at: company?.created_at ?? undefined,
+            updated_at: company?.updated_at ?? undefined,
+          }
+        : undefined
+
+    const normalizedCurrentStock =
+      currentStock && Object.keys(currentStock).length > 0
+        ? {
+            ...currentStock,
+            id: toInt(currentStock?.id) ?? currentStock?.id,
+            pharmacy_id: toInt(currentStock?.pharmacy_id) ?? currentStock?.pharmacy_id,
+            product_id: toInt(currentStock?.product_id) ?? currentStock?.product_id ?? raw?.id,
+            in_stock: toInt(currentStock?.in_stock) ?? currentStock?.in_stock,
+            stock_alert: toInt(currentStock?.stock_alert) ?? currentStock?.stock_alert,
+            sale_price: toNumber(currentStock?.sale_price) ?? currentStock?.sale_price,
+            discount_price: toNumber(currentStock?.discount_price) ?? currentStock?.discount_price,
+            peak_hour_price:
+              toNumber(currentStock?.peak_hour_price) ?? currentStock?.peak_hour_price,
+            mediboy_offer_price:
+              toNumber(currentStock?.mediboy_offer_price) ?? currentStock?.mediboy_offer_price,
+          }
+        : undefined
 
     return {
       id: raw?.id ?? raw?.product_id ?? raw?.productId,
@@ -267,15 +313,87 @@ export class DatabaseOperations {
       company_name: company?.name ?? raw?.company_name ?? '',
       category_id: toInt(raw?.category_id ?? category?.id),
       category_name: category?.name ?? raw?.category_name ?? '',
-      in_stock: toInt(currentStock?.in_stock ?? raw?.in_stock ?? raw?.stock ?? raw?.availableStock) ?? 0,
-      discount_price: toNumber(currentStock?.discount_price ?? raw?.discount_price ?? raw?.discountPrice),
-      peak_hour_price: toNumber(currentStock?.peak_hour_price ?? raw?.peak_hour_price ?? raw?.peakHourPrice),
-      mediboy_offer_price: toNumber(currentStock?.mediboy_offer_price ?? raw?.mediboy_offer_price ?? raw?.offerPrice),
+      in_stock:
+        toInt(currentStock?.in_stock ?? raw?.in_stock ?? raw?.stock ?? raw?.availableStock) ?? 0,
+      discount_price: toNumber(
+        currentStock?.discount_price ?? raw?.discount_price ?? raw?.discountPrice
+      ),
+      peak_hour_price: toNumber(
+        currentStock?.peak_hour_price ?? raw?.peak_hour_price ?? raw?.peakHourPrice
+      ),
+      mediboy_offer_price: toNumber(
+        currentStock?.mediboy_offer_price ?? raw?.mediboy_offer_price ?? raw?.offerPrice
+      ),
       sale_price: toNumber(currentStock?.sale_price ?? raw?.sale_price),
       status: raw?.status ?? '',
+      cover_image: raw?.cover_image ?? raw?.coverImage ?? '',
+      coverImage: raw?.coverImage ?? raw?.cover_image ?? '',
       product_cover_image_path: raw?.product_cover_image_path ?? raw?.coverImage ?? '',
       last_sync_at: raw?.last_sync_at ?? currentStock?.updated_at ?? undefined,
-    };
+      company: normalizedCompany,
+      current_stock: normalizedCurrentStock,
+    }
+  }
+
+  /**
+   * hydrate a raw database row back into a full product object
+   */
+  private hydrateProductRow(row: any): Product {
+    const normalizedFromRow = this.normalizeProduct(row)
+
+    const rawPayloadValue = row?.raw_payload
+    if (typeof rawPayloadValue !== 'string' || rawPayloadValue.trim() === '') {
+      return normalizedFromRow
+    }
+
+    let parsedPayload: unknown
+    try {
+      parsedPayload = JSON.parse(rawPayloadValue)
+    } catch (error) {
+      console.warn('failed to parse raw product payload', error)
+      return normalizedFromRow
+    }
+
+    if (!parsedPayload || typeof parsedPayload !== 'object') {
+      return normalizedFromRow
+    }
+
+    const rawRecord = parsedPayload as Record<string, unknown>
+    const normalizedFromRaw = this.normalizeProduct(rawRecord)
+
+    const hydrated: Product = {
+      ...normalizedFromRaw,
+      ...normalizedFromRow,
+    }
+
+    const rawCompany = rawRecord['company']
+    if (rawCompany && typeof rawCompany === 'object') {
+      hydrated.company = {
+        ...(rawCompany as Record<string, unknown>),
+        ...(normalizedFromRaw.company ?? {}),
+        ...(normalizedFromRow.company ?? {}),
+      }
+    } else if (normalizedFromRow.company || normalizedFromRaw.company) {
+      hydrated.company = normalizedFromRow.company ?? normalizedFromRaw.company
+    }
+
+    const rawCurrentStock = rawRecord['current_stock']
+    if (rawCurrentStock && typeof rawCurrentStock === 'object') {
+      hydrated.current_stock = {
+        ...(rawCurrentStock as Record<string, unknown>),
+        ...(normalizedFromRaw.current_stock ?? {}),
+        ...(normalizedFromRow.current_stock ?? {}),
+      }
+    } else if (normalizedFromRow.current_stock || normalizedFromRaw.current_stock) {
+      hydrated.current_stock = normalizedFromRow.current_stock ?? normalizedFromRaw.current_stock
+    }
+
+    const enriched = {
+      ...rawRecord,
+      ...hydrated,
+    } as Product
+
+    return enriched
   }
 
   /**
@@ -283,25 +401,24 @@ export class DatabaseOperations {
    */
   private async updateLastSync(): Promise<void> {
     // clear existing sync status
-    await dbManager.run('DELETE FROM sync_status');
-    
+    await dbManager.run('DELETE FROM sync_status')
+
     // insert new sync status
-    await dbManager.run(
-      'INSERT INTO sync_status (last_product_sync) VALUES (?)',
-      [new Date().toISOString()]
-    );
+    await dbManager.run('INSERT INTO sync_status (last_product_sync) VALUES (?)', [
+      new Date().toISOString(),
+    ])
   }
 
   /**
    * get last sync timestamp
    */
   async getLastSync(): Promise<string | null> {
-    const result = await dbManager.get<{last_product_sync: string}>(
+    const result = await dbManager.get<{ last_product_sync: string }>(
       'SELECT last_product_sync FROM sync_status ORDER BY id DESC LIMIT 1'
-    );
-    return result?.last_product_sync || null;
+    )
+    return result?.last_product_sync || null
   }
 }
 
 // singleton instance for app-wide use
-export const dbOperations = new DatabaseOperations();
+export const dbOperations = new DatabaseOperations()

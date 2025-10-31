@@ -38,7 +38,28 @@ export interface LoginResponse {
   }
 }
 
-export interface Product {
+export type ProductCompany = Record<string, unknown> & {
+  id?: number
+  name?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export type ProductCurrentStock = Record<string, unknown> & {
+  id?: number
+  pharmacy_id?: number
+  product_id?: number
+  in_stock?: number
+  stock_alert?: number
+  sale_price?: number
+  discount_price?: number
+  peak_hour_price?: number
+  mediboy_offer_price?: number
+  created_at?: string
+  updated_at?: string
+}
+
+export type Product = Record<string, unknown> & {
   id: number
   productName: string
   genericName: string
@@ -64,6 +85,8 @@ export interface Product {
   coverImage?: string
   product_cover_image_path?: string
   last_sync_at?: string
+  company?: ProductCompany
+  current_stock?: ProductCurrentStock
 }
 
 export interface UpdatePriceRequest {
