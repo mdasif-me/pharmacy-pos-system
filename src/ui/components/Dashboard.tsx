@@ -8,8 +8,7 @@ import { AddStockView } from './AddStockView'
 import './Dashboard.css'
 import { PosView } from './PosView'
 import { Products } from './Products'
-import Rotate from '../assets/rotate.svg'
-import Wifi from '../assets/wifi.svg'
+
 type DashboardView = 'pos' | 'all-stock' | 'add-stock'
 
 type MenuItem = {
@@ -119,22 +118,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           </button>
         </div>
       </aside>
-
-      <header className="dashboard-header">
-        <div className="wifi-icon">
-          <img src={Wifi} alt="Wi-Fi" width="40" />
-        </div>
-
-        <div className="title">
-          <h3>Updated At</h3>
-          <p>2025 /10/20 20:22:60</p>
-        </div>
-
-        <button type="button">
-          <img src={Rotate} alt="" />
-        </button>
-      </header>
-
       <main className="dashboard-content">{content}</main>
     </div>
   )

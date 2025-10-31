@@ -413,11 +413,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         ) : (
           <div className="no-products">
             <p>no products found</p>
-            {products.length === 0 && (
-              <button onClick={syncProducts} className="sync-button">
-                sync products from server
-              </button>
-            )}
           </div>
         )}
       </div>

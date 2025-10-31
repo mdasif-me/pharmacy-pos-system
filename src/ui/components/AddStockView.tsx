@@ -1,4 +1,6 @@
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
+import Rotate from '../assets/rotate.svg'
+import Wifi from '../assets/wifi.svg'
 import { broadcastStockUpdate, StockBroadcastPayload } from '../services/broadcastService'
 
 type AddStockForm = {
@@ -24,6 +26,9 @@ export const AddStockView: React.FC = () => {
   const [isBroadcasting, setIsBroadcasting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncError, setSyncError] = useState('')
+  const [lastSync, setLastSync] = useState('')
 
   const handleChange =
     (field: keyof AddStockForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,8 +106,47 @@ export const AddStockView: React.FC = () => {
     setErrorMessage('')
   }
 
+  const loadLastSync = useCallback(async () => {
+    try {
+      const value = await window.electron.getLastSync()
+      if (!value) {
+        setLastSync('')
+        return
+      }
+
+      const parsed = new Date(value)
+      setLastSync(Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString())
+    } catch (error) {
+      console.error('failed to load last sync timestamp:', error)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadLastSync()
+  }, [loadLastSync])
+
+  const handleSyncProducts = useCallback(async () => {
+    setSyncError('')
+    setIsSyncing(true)
+    try {
+      await window.electron.syncProducts()
+      await loadLastSync()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'failed to sync products'
+      setSyncError(message)
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [loadLastSync])
+
   return (
     <div className="add-stock-view">
+      {syncError && (
+        <div className="form-status">
+          {syncError && <p className="form-status-error">{syncError}</p>}
+        </div>
+      )}
+
       <section className="panel">
         <div className="panel-header">
           <h3>add stock broadcast</h3>
@@ -203,6 +247,22 @@ export const AddStockView: React.FC = () => {
           </div>
         )}
       </section>
+      <header className="dashboard-header">
+        <button>
+          <img src={Wifi} alt="Wi-Fi" width="40" />
+        </button>
+        <article>
+          <h3>Updated At</h3>
+          <p>{lastSync || 'not synced yet'}</p>
+        </article>
+        <button
+          className={isSyncing ? 'spin' : ''}
+          onClick={handleSyncProducts}
+          disabled={isSyncing}
+        >
+          <img src={Rotate} alt="Sync" />
+        </button>
+      </header>
     </div>
   )
 }
