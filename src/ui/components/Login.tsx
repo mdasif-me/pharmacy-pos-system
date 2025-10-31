@@ -84,7 +84,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             {isLoading ? 'logging in...' : 'Login'}
           </button>
           <div>
-
           </div>
         </form>
 
