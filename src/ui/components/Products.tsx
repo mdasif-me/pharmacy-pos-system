@@ -30,7 +30,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<number | ''>('');
-  const [selectedType, setSelectedType] = useState<string>('');
   const [companies, setCompanies] = useState<Array<{company_id: number, company_name: string}>>([]);
   const [types, setTypes] = useState<Array<{type: string}>>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +48,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   // apply filters when search or filter values change
   useEffect(() => {
     applyFilters();
-  }, [products, searchTerm, selectedCompany, selectedType]);
+  }, [products, searchTerm, selectedCompany]);
 
   useEffect(() => {
     onSyncStatusChange?.({ isSyncing, lastSync });
@@ -149,13 +148,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     if (selectedCompany) {
       filtered = filtered.filter(product => 
         product.company_id === selectedCompany
-      );
-    }
-
-    // type filter
-    if (selectedType) {
-      filtered = filtered.filter(product => 
-        product.type === selectedType
       );
     }
 
@@ -375,22 +367,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             noOptionsMessage={() => 'No companies found'}
           />
         </div>
-
-        <div className="filter-group">
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="filter-select"
-          >
-            <option value="">all types</option>
-            {types.map(type => (
-              <option key={type.type} value={type.type}>
-                {type.type}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <div className="filter-info">
           showing {filteredProducts.length} of {products.length} products
         </div>
