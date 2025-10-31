@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Select, { SingleValue } from 'react-select';
 import './Products.css';
 
@@ -21,10 +21,11 @@ const billModeOptions: SelectOption<PriceMode>[] = [
 
 interface ProductsProps {
   user: AuthToken;
-  onLogout: () => void;
+  syncRequestId?: number;
+  onSyncStatusChange?: (status: { isSyncing: boolean; lastSync: string }) => void;
 }
 
-export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
+export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncStatusChange }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,22 +44,45 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
   const [priceType, setPriceType] = useState<PriceMode>('discount');
   const [billMode, setBillMode] = useState<PriceMode>('discount');
   const hasLoadedRef = useRef(false);
-
-  // load products and filter data on component mount
-  useEffect(() => {
-    if (hasLoadedRef.current) {
-      return;
-    }
-    hasLoadedRef.current = true;
-    loadInitialData();
-  }, []);
+  const latestSyncRequestRef = useRef(syncRequestId);
 
   // apply filters when search or filter values change
   useEffect(() => {
     applyFilters();
   }, [products, searchTerm, selectedCompany, selectedType]);
 
-  const loadInitialData = async () => {
+  useEffect(() => {
+    onSyncStatusChange?.({ isSyncing, lastSync });
+  }, [isSyncing, lastSync, onSyncStatusChange]);
+
+  const syncProducts = useCallback(async () => {
+    try {
+      setIsSyncing(true);
+
+      // fetch latest products from api and store locally
+      const apiProducts = await window.electron.syncProducts();
+      setProducts(apiProducts ?? []);
+
+      // refresh filter options after sync
+      const [companiesData, typesData] = await Promise.all([
+        window.electron.getUniqueCompanies(),
+        window.electron.getUniqueTypes(),
+      ]);
+
+      setCompanies(companiesData ?? []);
+      setTypes(typesData ?? []);
+      setLastSync(new Date().toLocaleString());
+
+    } catch (error) {
+      console.error('sync failed:', error);
+      const message = error instanceof Error ? error.message : 'failed to sync products from server';
+      alert(`failed to sync products: ${message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  }, []);
+
+  const loadInitialData = useCallback(async () => {
     try {
       setIsLoading(true);
 
@@ -84,34 +108,28 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [syncProducts]);
 
-  const syncProducts = async () => {
-    try {
-      setIsSyncing(true);
-
-      // fetch latest products from api and store locally
-      const apiProducts = await window.electron.syncProducts();
-      setProducts(apiProducts ?? []);
-
-      // refresh filter options after sync
-      const [companiesData, typesData] = await Promise.all([
-        window.electron.getUniqueCompanies(),
-        window.electron.getUniqueTypes(),
-      ]);
-
-      setCompanies(companiesData ?? []);
-      setTypes(typesData ?? []);
-      setLastSync(new Date().toLocaleString());
-
-    } catch (error) {
-      console.error('sync failed:', error);
-      const message = error instanceof Error ? error.message : 'failed to sync products from server';
-      alert(`failed to sync products: ${message}`);
-    } finally {
-      setIsSyncing(false);
+  // load products and filter data on first render
+  useEffect(() => {
+    if (hasLoadedRef.current) {
+      return;
     }
-  };
+    hasLoadedRef.current = true;
+    loadInitialData();
+  }, [loadInitialData]);
+
+  // trigger sync when dashboard requests it
+  useEffect(() => {
+    if (syncRequestId === undefined) {
+      return;
+    }
+    if (latestSyncRequestRef.current === syncRequestId) {
+      return;
+    }
+    latestSyncRequestRef.current = syncRequestId;
+    syncProducts();
+  }, [syncRequestId, syncProducts]);
 
   const applyFilters = () => {
     let filtered = [...products];
@@ -286,19 +304,6 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
     }
   };
 
-  const handleLogout = async () => {
-    const shouldLogout = window.confirm('Are you sure you want to logout?');
-    if (!shouldLogout) {
-      return;
-    }
-    try {
-      await window.electron.logout();
-      onLogout();
-    } catch (error) {
-      console.error('logout failed:', error);
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -310,24 +315,11 @@ export const Products: React.FC<ProductsProps> = ({ user, onLogout }) => {
 
   return (
     <div className="products-container">
-      {/* header */}
-      <div className="header">
-        <div className="header-left">
-          <h1>pharmacy products</h1>
-          <p>welcome, {user.user_name}</p>
-          {lastSync && <p className="last-sync">last sync: {lastSync}</p>}
-        </div>
-        <div className="header-right">
-          <button 
-            onClick={syncProducts} 
-            disabled={isSyncing}
-            className="sync-button"
-          >
-            {isSyncing ? 'syncing...' : 'sync products'}
-          </button>
-          <button onClick={handleLogout} className="logout-button">
-            logout
-          </button>
+      <div className="products-welcome">
+        <h1>pharmacy products</h1>
+        <div className="products-welcome-meta">
+          <span>welcome, {user.user_name}</span>
+          {lastSync && <span className="products-last-sync">last sync: {lastSync}</span>}
         </div>
       </div>
 

@@ -1,72 +1,56 @@
 /* products page styles */
 .products-container {
-  padding: 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* header styles */
-.header {
+.products-welcome {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 2px solid #eee;
-  margin-bottom: 1rem;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
-.header-left h1 {
+.products-welcome h1 {
   margin: 0;
-  color: #333;
-  font-size: 1.8rem;
+  color: #1f2933;
+  font-size: 1.75rem;
+  text-transform: capitalize;
 }
 
-.header-left p {
-  margin: 0.25rem 0;
-  color: #666;
-}
-
-.last-sync {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.header-right {
+.products-welcome-meta {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: #4b5563;
+  font-size: 0.95rem;
 }
 
-.sync-button, .logout-button {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s ease;
+.products-last-sync {
+  color: #2563eb;
+  font-weight: 600;
 }
 
 .sync-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
   background: #4caf50;
-  color: white;
+  color: #fff;
 }
 
 .sync-button:hover:not(:disabled) {
-  background: #45a049;
+  background: #3e9c45;
 }
 
 .sync-button:disabled {
-  background: #ccc;
+  background: #c7c7c7;
   cursor: not-allowed;
-}
-
-.logout-button {
-  background: #f44336;
-  color: white;
-}
-
-.logout-button:hover {
-  background: #da190b;
 }
 
 /* filters styles */
