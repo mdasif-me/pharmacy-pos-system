@@ -79,10 +79,10 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       const apiProducts = await window.electron.syncProducts()
       setProducts(apiProducts ?? [])
 
-  // refresh filter options after sync
-  const companiesData = await window.electron.getUniqueCompanies()
+      // refresh filter options after sync
+      const companiesData = await window.electron.getUniqueCompanies()
 
-  setCompanies(companiesData ?? [])
+      setCompanies(companiesData ?? [])
       await updateLastSyncTimestamp()
     } catch (error) {
       console.error('sync failed:', error)

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import addStock from '../assets/add-stock.svg'
 import logo from '../assets/logo.png'
 import logout from '../assets/logout.svg'
@@ -8,6 +8,8 @@ import { AddStockView } from './AddStockView'
 import './Dashboard.css'
 import { PosView } from './PosView'
 import { Products } from './Products'
+import Rotate from '../assets/rotate.svg'
+import Wifi from '../assets/wifi.svg'
 type DashboardView = 'pos' | 'all-stock' | 'add-stock'
 
 type MenuItem = {
@@ -31,6 +33,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [activeView, setActiveView] = useState<DashboardView>('pos')
   const [syncRequestId, setSyncRequestId] = useState(0)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSync, setLastSync] = useState('')
 
   const handleMenuClick = useCallback((view: DashboardView) => {
     setActiveView(view)
@@ -45,6 +48,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const handleSyncStatusChange = useCallback((status: { isSyncing: boolean; lastSync: string }) => {
     setIsSyncing(status.isSyncing)
+    setLastSync(status.lastSync ?? '')
   }, [])
 
   const handleLogout = useCallback(async () => {
@@ -115,9 +119,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           </button>
         </div>
       </aside>
-      <div className="dashboard-main">
-        <main className="dashboard-content">{content}</main>
-      </div>
+
+      <header className="dashboard-header">
+        <div className="wifi-icon">
+          <img src={Wifi} alt="Wi-Fi" width="40" />
+        </div>
+
+        <div className="title">
+          <h3>Updated At</h3>
+          <p>2025 /10/20 20:22:60</p>
+        </div>
+
+        <button type="button">
+          <img src={Rotate} alt="" />
+        </button>
+      </header>
+
+      <main className="dashboard-content">{content}</main>
     </div>
   )
 }
