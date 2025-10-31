@@ -47,7 +47,6 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
          <img src={logo} alt="" />
          <h2 >Login to Your Account</h2>
        </div>
-        <div ></div>
 
         {error && <div className="error-message">{error}</div>}
 
