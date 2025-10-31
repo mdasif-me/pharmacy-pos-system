@@ -87,87 +87,47 @@
   gap: 0.25rem;
 }
 
-.company-filter {
-  position: relative;
-  min-width: 220px;
+.filter-select-group {
+  min-width: 200px;
 }
 
-.company-search {
-  position: relative;
-}
-
-.company-search-input {
+.react-select-container {
   width: 100%;
-  padding: 0.5rem 2rem 0.5rem 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
 }
 
-.company-search-input:focus {
-  outline: none;
+.react-select__control {
+  min-height: 38px;
+  border: 1px solid #ddd;
+  box-shadow: none;
+}
+
+.react-select__control:hover {
+  border-color: #1976d2;
+}
+
+.react-select__control--is-focused {
   border-color: #1976d2;
   box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
 }
 
-.company-search-clear {
-  position: absolute;
-  top: 50%;
-  right: 0.5rem;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: #888;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-  line-height: 1;
+.react-select__value-container {
+  padding: 0.25rem 0.5rem;
 }
 
-.company-search-clear:hover {
-  color: #555;
+.react-select__placeholder {
+  color: #777;
 }
 
-.company-dropdown {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 0.35rem);
-  left: 0;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-  max-height: 240px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.company-option {
-  padding: 0.5rem 0.75rem;
-  border: none;
-  background: transparent;
-  text-align: left;
-  font-size: 0.9rem;
-  cursor: pointer;
+.react-select__single-value {
   color: #333;
 }
 
-.company-option:hover {
-  background: #f3f8ff;
-}
-
-.company-option.active {
-  background: #e3f2fd;
-  font-weight: 600;
-}
-
-.company-dropdown-empty {
-  padding: 0.75rem;
-  font-size: 0.85rem;
+.react-select__indicator {
   color: #777;
+}
+
+.react-select__menu {
+  z-index: 25;
 }
 
 .search-input, .filter-select {
@@ -470,8 +430,8 @@
     min-width: unset;
   }
 
-  .company-filter {
-    min-width: unset;
+  .filter-select-group {
+    width: 100%;
   }
   
   .products-table {
