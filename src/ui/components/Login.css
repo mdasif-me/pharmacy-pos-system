@@ -1,4 +1,4 @@
-/* login component styles */
+
 .login-container {
   display: flex;
   justify-content: center;
@@ -42,6 +42,7 @@
   border-radius: 5px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
+  background-color: transparent;
 }
 
 .form-group input:focus {
@@ -51,9 +52,10 @@
 }
 
 .login-button {
+  text-align: center;
   width: 100%;
-  padding: 0.75rem;
-  background: #667eea;
+  padding: 6px 12px;
+  background: #0d6efd;
   color: white;
   border: none;
   border-radius: 5px;
@@ -63,7 +65,7 @@
 }
 
 .login-button:hover:not(:disabled) {
-  background: #5a6fd8;
+  background: #0b5ed8;
 }
 
 .login-button:disabled {
@@ -81,13 +83,28 @@
   text-align: center;
 }
 
-.login-info {
+.login-info p {
   margin-top: 1.5rem;
   text-align: center;
-  color: #666;
-  font-size: 0.9rem;
+  color: #666666;
+  font-size: 14px;
 }
 
-.login-info p {
-  margin: 0.25rem 0;
+.loginLogo{
+  text-align: center;
+}
+.loginLogo img{
+  height: 26px;
+  width: 120px;
+  padding: 16px 0;
+}
+
+.loginLogo h2 {
+  padding-top: 16px;
+  padding-bottom: 8px;
+  font-weight: 500;
+  color: #032970;
+}
+.loginInput{
+  background-color: transparent;
 }
