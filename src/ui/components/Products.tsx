@@ -48,6 +48,20 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   const hasLoadedRef = useRef(false)
   const latestSyncRequestRef = useRef(syncRequestId)
 
+  const updateLastSyncTimestamp = useCallback(async () => {
+    try {
+      const value = await window.electron.getLastSync()
+      if (value) {
+        const parsed = new Date(value)
+        setLastSync(Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString())
+      } else {
+        setLastSync('')
+      }
+    } catch (error) {
+      console.error('failed to load last sync timestamp:', error)
+    }
+  }, [])
+
   // apply filters when search or filter values change
   useEffect(() => {
     applyFilters()
@@ -69,7 +83,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       const [companiesData] = await Promise.all([window.electron.getUniqueCompanies()])
 
       setCompanies(companiesData ?? [])
-      setLastSync(new Date().toLocaleString())
+      await updateLastSyncTimestamp()
     } catch (error) {
       console.error('sync failed:', error)
       const message = error instanceof Error ? error.message : 'failed to sync products from server'
@@ -77,7 +91,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     } finally {
       setIsSyncing(false)
     }
-  }, [])
+  }, [updateLastSyncTimestamp])
 
   const loadInitialData = useCallback(async () => {
     try {
@@ -94,6 +108,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       ])
 
       setCompanies(companiesData ?? [])
+      await updateLastSyncTimestamp()
 
       // if no local products, sync from api
       if (localProducts.length === 0) {
@@ -104,7 +119,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     } finally {
       setIsLoading(false)
     }
-  }, [syncProducts])
+  }, [syncProducts, updateLastSyncTimestamp])
 
   // load products and filter data on first render
   useEffect(() => {
