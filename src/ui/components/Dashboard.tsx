@@ -128,16 +128,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               <p className="dashboard-sync-meta">last sync: {lastSync}</p>
             )}
           </div>
-          <div className="dashboard-header-actions">
             <button
               type="button"
               className="dashboard-sync-button"
               onClick={handleSyncClick}
               disabled={isSyncDisabled}
             >
-              {isSyncing ? 'syncing...' : 'sync'}
+              <svg className='dashboard-sync-icon' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" color="currentColor" fill="none">
+    <path d="M21 12.5V5C21 3.34315 19.6569 2 18 2H5C3.34315 2 2 3.34315 2 5V18C2 19.6569 3.34315 21 5 21H10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M12.5 6.5L16.5 6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <circle cx="7.75" cy="6.75" r="1.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></circle>
+    <circle cx="7.75" cy="16.25" r="1.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></circle>
+    <path d="M2.5 11.5H20.5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>
+    <path d="M20.6632 17C20.1014 15.8175 18.8962 15 17.5 15C15.7368 15 14.2426 16.3039 14 18L13 16M14.3368 20C14.8985 21.1825 16.1038 22 17.5 22C19.2632 22 20.7574 20.6961 21 19L22 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+         <p>     {isSyncing ? 'syncing...' : 'sync'}</p>
             </button>
-          </div>
         </header>
         <main className="dashboard-content">{content}</main>
       </div>
