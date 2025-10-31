@@ -24,9 +24,9 @@ export const PosView: React.FC = () => {
         </div>
         <div className="stat-card-grid">
           <StatCard title="total bills" value="42" helper="processed since store open" />
-          <StatCard title="gross sales" value="৳52,300" helper="across all counters" />
-          <StatCard title="discounts" value="৳1,480" helper="applied on eligible orders" />
-          <StatCard title="due payments" value="৳6,900" helper="pending customer payments" />
+          <StatCard title="gross sales" value="BDT 52,300" helper="across all counters" />
+          <StatCard title="discounts" value="BDT 1,480" helper="applied on eligible orders" />
+          <StatCard title="due payments" value="BDT 6,900" helper="pending customer payments" />
         </div>
       </section>
 

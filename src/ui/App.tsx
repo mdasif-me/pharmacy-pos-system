@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './App.css';
+import { Dashboard } from './components/Dashboard';
 import { Login } from './components/Login';
-import { Products } from './components/Products';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<AuthToken | null>(null);
@@ -76,7 +76,7 @@ function App() {
   return (
     <div className="App">
       {currentUser ? (
-        <Products user={currentUser} onLogout={handleLogout} />
+        <Dashboard user={currentUser} onLogout={handleLogout} />
       ) : (
         <Login onLoginSuccess={handleLoginSuccess} />
       )}

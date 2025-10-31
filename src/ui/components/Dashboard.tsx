@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import './Dashboard.css';
-import { Products } from './Products';
-import { PosView } from './PosView';
 import { AddStockView } from './AddStockView';
+import './Dashboard.css';
+import { PosView } from './PosView';
+import { Products } from './Products';
 
 type DashboardView = 'pos' | 'all-stock' | 'add-stock';
 
