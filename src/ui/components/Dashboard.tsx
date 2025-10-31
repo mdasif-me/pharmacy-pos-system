@@ -1,15 +1,13 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import addStock from '../assets/add-stock.svg'
 import logo from '../assets/logo.png'
 import logout from '../assets/logout.svg'
 import pos from '../assets/pos.svg'
 import stock from '../assets/stock.svg'
-import { useSaleModeSocket } from '../hooks/useSaleModeSocket'
 import { AddStockView } from './AddStockView'
 import './Dashboard.css'
 import { PosView } from './PosView'
 import { Products } from './Products'
-
 type DashboardView = 'pos' | 'all-stock' | 'add-stock'
 
 type MenuItem = {

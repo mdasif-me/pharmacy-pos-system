@@ -16,13 +16,6 @@
   padding: 13px;
 }
 
-.dashboard-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
 .sidebar-header {
   margin-bottom: 2rem;
   display: flex;
@@ -38,6 +31,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+
 .sidebar-brand img {
   width: 46px;
   height: 46px;
@@ -123,18 +117,6 @@
 .spin {
   animation: spin 2s linear infinite;
 }
-@keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-.dashboard-header h2 {
-  font-size: 1.5rem;
-  color: #111827;
-}
 
 .dashboard-sync-meta {
   margin: 0.25rem 0 0;
@@ -146,8 +128,8 @@
   width: 75px;
   height: 65px;
   flex-shrink: 0;
-  background: #14111159;
 }
+
 .dashboard-sync-button svg {
   width: 24.625px;
   height: 24.609px;
@@ -171,42 +153,6 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-}
-
-.sale-mode-panel {
-  border-left: 4px solid #2563eb;
-}
-
-.sale-mode-body {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.sale-mode-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 140px;
-}
-
-.sale-mode-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #6b7280;
-}
-
-.sale-mode-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.sale-mode-error {
-  margin: 0.25rem 0 0;
-  color: #b91c1c;
-  font-size: 0.85rem;
 }
 
 .panel {
@@ -379,25 +325,6 @@
 .form-reset:hover {
   background: #e5e7eb;
   border-color: #cbd5f5;
-}
-
-.form-status {
-  margin-top: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.form-status-success {
-  margin: 0;
-  color: #16a34a;
-  font-weight: 600;
-}
-
-.form-status-error {
-  margin: 0;
-  color: #b91c1c;
-  font-size: 0.9rem;
 }
 
 @media (max-width: 900px) {
