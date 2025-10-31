@@ -22,3 +22,17 @@ body {
 button {
   all: unset;
 }
+input {
+  all: unset;
+}
+select {
+  all: unset;
+}
+
+textarea {
+  all: unset;
+}
+
+a {
+  all: unset;
+}
