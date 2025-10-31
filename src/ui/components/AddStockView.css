@@ -263,7 +263,6 @@
   background-color: #0E8E07;
 }
 
-/* Responsive adjustments for small devices - do not change large-device styles above */
 @media (max-width: 768px) {
   .add-stock-header {
     flex-direction: column;
