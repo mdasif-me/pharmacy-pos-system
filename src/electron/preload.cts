@@ -1,29 +1,33 @@
-const electron = require('electron')
+const { contextBridge, ipcRenderer } = require('electron')
 
-electron.contextBridge.exposeInMainWorld('electron', {
-  // authentication methods
-  login: (credentials) => ipcInvoke('login', credentials),
-  logout: () => ipcInvoke('logout'),
-  getAuthToken: () => ipcInvoke('getAuthToken'),
+// Helper to invoke IPC calls
+const invoke = (channel: string, ...args: any[]): Promise<any> =>
+  ipcRenderer.invoke(channel, ...args)
 
-  // product methods
-  syncProducts: () => ipcInvoke('syncProducts'),
-  getAllProducts: () => ipcInvoke('getAllProducts'),
-  searchProducts: (searchTerm) => ipcInvoke('searchProducts', searchTerm),
-  getProductsByCompany: (companyId) => ipcInvoke('getProductsByCompany', companyId),
-  getProductsByType: (type) => ipcInvoke('getProductsByType', type),
-  getProductsByCategory: (categoryId) => ipcInvoke('getProductsByCategory', categoryId),
-  getUniqueCompanies: () => ipcInvoke('getUniqueCompanies'),
-  getUniqueTypes: () => ipcInvoke('getUniqueTypes'),
-  getUniqueCategories: () => ipcInvoke('getUniqueCategories'),
-  updateProductStock: (productId, newStock) => ipcInvoke('updateProductStock', productId, newStock),
-  updateProductPrices: (productId, payload) => ipcInvoke('updateProductPrices', productId, payload),
-  getLastSync: () => ipcInvoke('getLastSync'),
-} satisfies Window['electron'])
+// Expose electron API to renderer process
+// Maps old UI methods to new IPC channels for backward compatibility
+contextBridge.exposeInMainWorld('electron', {
+  // Authentication - backward compatible with old UI
+  login: (credentials: any) => invoke('auth:login', credentials),
+  logout: () => invoke('auth:logout'),
+  getAuthToken: () => invoke('auth:getCurrentUser'),
+  isAuthenticated: () => invoke('auth:isAuthenticated'),
 
-function ipcInvoke<Key extends keyof EventPayloadMapping>(
-  key: Key,
-  ...args: any[]
-): Promise<EventPayloadMapping[Key]> {
-  return electron.ipcRenderer.invoke(key, ...args)
-}
+  // Products - backward compatible with old UI
+  syncProducts: () => invoke('sync:pull'),
+  getAllProducts: () => invoke('product:getAll'),
+  searchProducts: (searchTerm: string) => invoke('search:search', searchTerm),
+  getProductsByCompany: (companyId: number) => invoke('product:search', { companyId }),
+  getProductsByType: (type: string) => invoke('product:search', { type }),
+  getProductsByCategory: (categoryId: number) => invoke('product:search', { categoryId }),
+  getUniqueCompanies: () => invoke('product:getStats'),
+  getUniqueTypes: () => invoke('product:getStats'),
+  getUniqueCategories: () => invoke('product:getStats'),
+
+  // Stock management - backward compatible with old UI
+  updateProductStock: (productId: number, newStock: number) =>
+    invoke('product:updateStock', productId, newStock),
+  updateProductPrices: (productId: number, payload: any) =>
+    invoke('product:update', productId, payload),
+  getLastSync: () => invoke('sync:getStatus'),
+})
