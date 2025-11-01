@@ -6,9 +6,12 @@
   "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
   "icon": "./desktopIcon.png",
   "directories": {
-    "output": "build-output",
+    "output": "release-windows",
     "buildResources": "build"
   },
+  "npmRebuild": true,
+  "buildDependenciesFromSource": true,
+  "nodeGypRebuild": true,
   "mac": {
     "target": "dmg",
     "category": "public.app-category.business"

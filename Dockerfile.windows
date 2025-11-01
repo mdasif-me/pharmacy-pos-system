@@ -1,0 +1,18 @@
+# Dockerfile for building Windows Electron app on Linux
+FROM electronuserland/builder:wine
+
+WORKDIR /project
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy project files
+COPY . .
+
+# Build for Windows
+RUN npm run transpile:electron && npm run build && npm run dist:win
+
+# Output will be in release-windows/

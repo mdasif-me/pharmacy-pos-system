@@ -1,0 +1,73 @@
+name: Build Windows Installer
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Transpile Electron code
+        run: npm run transpile:electron
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Build Windows installer
+        run: npm run dist:win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version
+        id: version
+        shell: bash
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Create ZIP archive
+        shell: bash
+        run: |
+          cd release-windows/win-unpacked
+          7z a "../Pharmacy-POS-v${{ steps.version.outputs.VERSION }}-Windows.zip" *
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-portable-zip
+          path: release-windows/*.zip
+          retention-days: 30
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: release-windows/*.exe
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release-windows/*.zip
+            release-windows/*.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
