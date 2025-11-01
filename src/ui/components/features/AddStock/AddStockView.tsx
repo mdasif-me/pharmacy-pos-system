@@ -466,7 +466,9 @@ export const AddStockView: React.FC = () => {
                             </div>
                           )}
                         </td>
-                        <td>{selectedProduct.company_name || '—'}</td>
+                        <td style={{ textAlign: 'start' }}>
+                          {selectedProduct.company_name || '—'}
+                        </td>
                         <td>{formatCurrency(selectedProduct.mrp)}</td>
                       </tr>
                     ) : (
