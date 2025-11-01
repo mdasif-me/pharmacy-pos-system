@@ -4,6 +4,7 @@ import logo from '../../../assets/logo.png'
 import logout from '../../../assets/logout.svg'
 import pos from '../../../assets/pos.svg'
 import stock from '../../../assets/stock.svg'
+import { SocketStatus } from '../../common/SocketStatus'
 import { AddStockView } from '../AddStock'
 import { Products } from '../Products'
 import './Dashboard.css'
@@ -105,6 +106,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             </button>
           ))}
         </nav>
+
+        {/* Socket Status */}
+        <div style={{ padding: '12px' }}>
+          <SocketStatus />
+        </div>
 
         {/* Logout Button */}
         <button

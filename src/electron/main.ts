@@ -1,19 +1,23 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import { API_CONFIG } from './core/config/api.config'
 import { DATABASE_CONFIG } from './core/config/database.config'
 import { DatabaseManager } from './database/core/connection.manager'
 import { MigrationManager } from './database/core/migration.manager'
+import { ProductRepository } from './database/repositories/product.repository'
 import { AuthIpcHandler } from './ipc/handlers/auth.handler'
 import { ProductIpcHandler } from './ipc/handlers/product.handler'
 import { SearchIpcHandler } from './ipc/handlers/search.handler'
+import { SocketIpcHandler } from './ipc/handlers/socket.handler'
 import { StockIpcHandler } from './ipc/handlers/stock.handler'
 import { SyncIpcHandler } from './ipc/handlers/sync.handler'
 import { getPreloadPath, getUIPath } from './pathResolver'
+import { SocketService } from './services/socket.service'
 import { isDev } from './util'
 
 let mainWindow: BrowserWindow | null = null
 let db: any = null
+let socketService: SocketService | null = null
 
 function setupGlobalErrorHandlers() {
   process.on('uncaughtException', (error) => {
@@ -46,7 +50,68 @@ function initializeIpcHandlers() {
   new SyncIpcHandler(db)
   new SearchIpcHandler(db)
   new StockIpcHandler()
-  console.log('IPC handlers initialized')
+
+  // Register a test socket handler to debug
+  console.log('[Main] Registering test socket:isConnected handler...')
+  ipcMain.handle('socket:isConnected', async () => {
+    console.log('[Main] TEST socket:isConnected handler called!')
+    return socketService?.isConnected() ?? false
+  })
+  ipcMain.handle('socket:getId', async () => {
+    console.log('[Main] TEST socket:getId handler called!')
+    return socketService?.getSocketId() ?? null
+  })
+  ipcMain.handle('socket:reconnect', async () => {
+    console.log('[Main] TEST socket:reconnect handler called!')
+    try {
+      socketService?.disconnect()
+      socketService?.connect()
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message }
+    }
+  })
+
+  console.log('IPC handlers initialized (including test socket handlers)')
+}
+
+function initializeSocketService() {
+  console.log('[Main] Initializing Socket.IO service...')
+
+  try {
+    if (!db) {
+      throw new Error('Database not initialized before socket service')
+    }
+
+    console.log('[Main] Creating ProductRepository for socket service...')
+    const productRepo = new ProductRepository(db)
+
+    console.log('[Main] Creating SocketService instance...')
+    socketService = new SocketService(productRepo)
+
+    console.log('[Main] Registering Socket IPC handlers...')
+    new SocketIpcHandler(socketService)
+
+    console.log('[Main] Attempting to connect to socket server...')
+    socketService.connect()
+
+    console.log('[Main] Socket.IO service initialized and connected')
+  } catch (error) {
+    console.error('[Main] Error during socket service initialization:', error)
+
+    // If socket service fails, still create a minimal one for IPC handler
+    if (!socketService) {
+      try {
+        console.log('[Main] Creating fallback socket service for IPC handler...')
+        const productRepo = new ProductRepository(db)
+        socketService = new SocketService(productRepo)
+        new SocketIpcHandler(socketService)
+        console.log('[Main] Socket.IO IPC handler registered (connection failed)')
+      } catch (fallbackError) {
+        console.error('[Main] Failed to create fallback socket service:', fallbackError)
+      }
+    }
+  }
 }
 
 function createMainWindow() {
@@ -80,6 +145,7 @@ app.on('ready', async () => {
     setupGlobalErrorHandlers()
     await initializeDatabase()
     initializeIpcHandlers()
+    initializeSocketService()
     createMainWindow()
     console.log('App ready')
   } catch (error) {
@@ -97,6 +163,13 @@ app.on('activate', () => {
 })
 
 app.on('before-quit', () => {
+  // Disconnect socket service
+  if (socketService) {
+    socketService.disconnect()
+    console.log('Socket.IO service disconnected')
+  }
+
+  // Close database
   if (db) {
     try {
       db.close()

@@ -53,6 +53,10 @@ export class ProductService {
     const products = this.productRepo.findAllWithRelations({ limit, offset })
     const total = this.productRepo.count()
 
+    console.log(
+      `[ProductService] getAllProducts: Returning ${products.length} products (total in DB: ${total})`
+    )
+
     return {
       products,
       total,

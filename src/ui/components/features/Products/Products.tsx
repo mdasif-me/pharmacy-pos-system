@@ -162,8 +162,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
     let filtered = [...products]
 
-    filtered = filtered.filter((product) => (product.in_stock ?? 0) > 0)
-
     // search filter - check product name and generic name
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
@@ -368,7 +366,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         key: 'mrp',
         header: 'MRP',
         width: '12%',
-        render: (product: Product) => formatCurrency(product.retail_max_price),
+        render: (product: Product) => formatCurrency(product.mrp),
       },
       {
         key: 'rate',

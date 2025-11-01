@@ -37,4 +37,11 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Add stock and broadcast to API
   addStock: (payload: any) => invoke('stock:addAndBroadcast', payload),
+
+  // Socket.IO connection status
+  socket: {
+    isConnected: () => invoke('socket:isConnected'),
+    getId: () => invoke('socket:getId'),
+    reconnect: () => invoke('socket:reconnect'),
+  },
 })

@@ -130,11 +130,15 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
       FROM ${this.tableName} p
       LEFT JOIN ${DB_TABLES.COMPANIES} c ON p.company_id = c.id
       LEFT JOIN ${DB_TABLES.CATEGORIES} cat ON p.category_id = cat.id
-      WHERE p.status = 'active'
+      WHERE p.status = 'active' AND p.in_stock > 0
       ORDER BY p.${orderBy} ${orderDir}
       LIMIT ? OFFSET ?
     `
-    return this.db.prepare(sql).all(limit, offset) as ProductWithRelations[]
+    const results = this.db.prepare(sql).all(limit, offset) as ProductWithRelations[]
+    console.log(
+      `[ProductRepository] findAllWithRelations: Found ${results.length} products with in_stock > 0`
+    )
+    return results
   }
 
   /**

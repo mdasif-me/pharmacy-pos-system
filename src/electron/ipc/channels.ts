@@ -48,6 +48,13 @@ export const IPC_CHANNELS = {
   STOCK: {
     ADD_AND_BROADCAST: 'stock:addAndBroadcast',
   },
+
+  // socket channels
+  SOCKET: {
+    IS_CONNECTED: 'socket:isConnected',
+    GET_ID: 'socket:getId',
+    RECONNECT: 'socket:reconnect',
+  },
 } as const
 
 export type IpcChannel = string

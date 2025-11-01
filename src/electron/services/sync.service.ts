@@ -173,7 +173,7 @@ export class SyncService {
         return result
       }
 
-      // Map API products to database format
+      // Map API products to database format - sync ALL products
       const mappedProducts: Partial<ProductEntity>[] = apiProducts.map((product) => {
         // Get or create company
         const company = this.companyRepo.getOrCreate(product.company?.name || 'Unknown')
@@ -204,7 +204,7 @@ export class SyncService {
         }
       })
 
-      // Bulk insert/update products
+      // Bulk insert/update products - sync ALL products from API
       this.productRepo.bulkUpsert(mappedProducts as ProductEntity[])
       result.synced = mappedProducts.length
 

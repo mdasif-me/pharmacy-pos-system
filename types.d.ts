@@ -145,5 +145,12 @@ interface Window {
 
     // stock broadcast
     addStock: (payload: any) => Promise<{ success: boolean; data?: any; error?: string }>
+
+    // socket.io connection
+    socket: {
+      isConnected: () => Promise<boolean>
+      getId: () => Promise<string | null>
+      reconnect: () => Promise<{ success: boolean; error?: string }>
+    }
   }
 }
