@@ -36,7 +36,10 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
     const { query, limit = 100, offset = 0, inStockOnly = false, categoryId, companyId } = params
 
     let sql = `
-      SELECT p.* FROM ${this.tableName} p
+      SELECT p.*, c.name as company_name, cat.name as category_name
+      FROM ${this.tableName} p
+      LEFT JOIN ${DB_TABLES.COMPANIES} c ON p.company_id = c.id
+      LEFT JOIN ${DB_TABLES.CATEGORIES} cat ON p.category_id = cat.id
       WHERE 1=1
     `
     const sqlParams: any[] = []

@@ -169,8 +169,8 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(
         (product) =>
-          (product.productName ?? '').toLowerCase().includes(term) ||
-          (product.genericName ?? '').toLowerCase().includes(term) ||
+          (product.product_name ?? '').toLowerCase().includes(term) ||
+          (product.generic_name ?? '').toLowerCase().includes(term) ||
           (product.company_name ?? '').toLowerCase().includes(term) ||
           String(product.in_stock ?? '')
             .toLowerCase()
@@ -351,8 +351,10 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         width: '30%',
         render: (product: Product) => (
           <div className="product-name-cell">
-            <span className="product-name">{product.productName}</span>
-            {product.genericName && <span className="product-generic">{product.genericName}</span>}
+            <span className="product-name">{product.product_name}</span>
+            {product.generic_name && (
+              <span className="product-generic">{product.generic_name}</span>
+            )}
           </div>
         ),
       },
@@ -493,7 +495,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
           <div className="modal-content">
             <div className="modal-header">
               <h2>Update Price</h2>
-              <p className="modal-subtitle">{selectedProduct.productName}</p>
+              <p className="modal-subtitle">{selectedProduct.product_name}</p>
             </div>
             <div className="modal-body">
               <p className="modal-offer">

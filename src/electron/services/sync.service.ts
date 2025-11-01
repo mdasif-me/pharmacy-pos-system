@@ -208,8 +208,14 @@ export class SyncService {
       this.productRepo.bulkUpsert(mappedProducts as ProductEntity[])
       result.synced = mappedProducts.length
 
-      // Save last sync timestamp
-      this.storageService.setLastSync(new Date().toISOString())
+      // Save last sync timestamp after successful sync
+      try {
+        this.storageService.setLastSync(new Date().toISOString())
+        console.log('Last sync timestamp saved successfully')
+      } catch (syncError) {
+        console.error('Error saving last sync timestamp:', syncError)
+        // Don't fail the entire sync just because timestamp save failed
+      }
     } catch (error: any) {
       result.success = false
       result.errors.push(error.message || 'Unknown error during sync')

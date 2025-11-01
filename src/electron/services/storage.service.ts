@@ -108,12 +108,16 @@ export class StorageService {
    */
   getLastSync(): string | null {
     try {
+      console.log('getLastSync: Checking file:', this.syncFilePath)
+
       if (!fs.existsSync(this.syncFilePath)) {
+        console.log('getLastSync: File does not exist')
         return null
       }
 
       const data = fs.readFileSync(this.syncFilePath, 'utf-8')
       const parsed = JSON.parse(data)
+      console.log('getLastSync: Parsed data:', parsed)
       return parsed.lastSync || null
     } catch (error) {
       console.error('Error reading sync data:', error)

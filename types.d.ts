@@ -43,9 +43,10 @@ type ProductCurrentStock = Record<string, unknown> & {
 
 type Product = Record<string, unknown> & {
   id: number
-  productName: string
-  genericName: string
+  product_name: string
+  generic_name: string
   retail_max_price: number
+  mrp: number
   cart_qty_inc: number
   cart_text: string
   unit_in_pack: string

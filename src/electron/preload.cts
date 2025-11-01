@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('electron', {
     // Extract products array from the paginated response
     return result?.products || []
   },
-  searchProducts: (searchTerm: string) => invoke('search:search', searchTerm),
+  searchProducts: (searchTerm: string) => invoke('search:search', { query: searchTerm, limit: 50 }),
   getProductsByCompany: (companyId: number) => invoke('product:search', { companyId }),
   getProductsByType: (type: string) => invoke('product:search', { type }),
   getProductsByCategory: (categoryId: number) => invoke('product:search', { categoryId }),

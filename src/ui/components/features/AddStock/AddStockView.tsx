@@ -150,7 +150,9 @@ export const AddStockView: React.FC = () => {
     searchDebounceRef.current = window.setTimeout(async () => {
       try {
         const query = searchTerm.trim()
+        console.log('Searching for:', query)
         const products = await window.electron.searchProducts(query)
+        console.log('Search results:', products)
         setSuggestions(products ?? [])
       } catch (error) {
         console.error('product search failed:', error)
@@ -238,7 +240,7 @@ export const AddStockView: React.FC = () => {
 
   const handleSelectProduct = (product: Product) => {
     setSelectedProduct(product)
-    setSearchTerm(product.productName ?? '')
+    setSearchTerm(product.product_name ?? '')
     setSuggestions([])
     setStatusMessage('')
     setErrorMessage('')
@@ -413,33 +415,36 @@ export const AddStockView: React.FC = () => {
                   onKeyDown={handleSearchKeyDown}
                   autoComplete="off"
                 />
+                {isSearchOpen && (
+                  <ul className="search-suggestions">
+                    {isSearching && suggestions.length === 0 && (
+                      <li className="search-suggestion loading">searching...</li>
+                    )}
+                    {!isSearching && suggestions.length === 0 && (
+                      <li className="search-suggestion empty">no products found</li>
+                    )}
+                    {suggestions.map((product) => {
+                      console.log('product', product)
+                      return (
+                        <li
+                          key={product.id}
+                          className="search-suggestion"
+                          onMouseDown={(event) => {
+                            event.preventDefault()
+                            handleSelectProduct(product)
+                          }}
+                        >
+                          <span className="search-suggestion-name">{product.product_name}</span>
+                          <span className="search-suggestion-meta">
+                            {product.company_name || 'Unknown Company'} ·{' '}
+                            {formatCurrency(product.mrp)}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
               </div>
-              {isSearchOpen && (
-                <ul className="search-suggestions">
-                  {isSearching && suggestions.length === 0 && (
-                    <li className="search-suggestion loading">searching...</li>
-                  )}
-                  {!isSearching && suggestions.length === 0 && (
-                    <li className="search-suggestion empty">no products found</li>
-                  )}
-                  {suggestions.map((product) => (
-                    <li
-                      key={product.id}
-                      className="search-suggestion"
-                      onMouseDown={(event) => {
-                        event.preventDefault()
-                        handleSelectProduct(product)
-                      }}
-                    >
-                      <span className="search-suggestion-name">{product.productName}</span>
-                      <span className="search-suggestion-meta">
-                        {product.company_name || 'Unknown Company'} ·{' '}
-                        {formatCurrency(product.retail_max_price)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
 
               <div className="products-table-wrapper">
                 <table className="products-table">
@@ -454,15 +459,15 @@ export const AddStockView: React.FC = () => {
                     {selectedProduct ? (
                       <tr>
                         <td>
-                          <strong>{selectedProduct.productName}</strong>
-                          {selectedProduct.genericName && (
+                          <strong>{selectedProduct.product_name}</strong>
+                          {selectedProduct.generic_name && (
                             <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                              {selectedProduct.genericName}
+                              {selectedProduct.generic_name}
                             </div>
                           )}
                         </td>
                         <td>{selectedProduct.company_name || '—'}</td>
-                        <td>{formatCurrency(selectedProduct.retail_max_price)}</td>
+                        <td>{formatCurrency(selectedProduct.mrp)}</td>
                       </tr>
                     ) : (
                       <tr>
