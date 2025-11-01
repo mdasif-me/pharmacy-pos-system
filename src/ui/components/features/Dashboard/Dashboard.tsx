@@ -31,24 +31,9 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [activeView, setActiveView] = useState<DashboardView>('pos')
-  const [syncRequestId, setSyncRequestId] = useState(0)
-  const [isSyncing, setIsSyncing] = useState(false)
-  const [lastSync, setLastSync] = useState('')
 
   const handleMenuClick = useCallback((view: DashboardView) => {
     setActiveView(view)
-  }, [])
-
-  const handleSyncClick = useCallback(() => {
-    if (activeView !== 'all-stock') {
-      return
-    }
-    setSyncRequestId((prev) => prev + 1)
-  }, [activeView])
-
-  const handleSyncStatusChange = useCallback((status: { isSyncing: boolean; lastSync: string }) => {
-    setIsSyncing(status.isSyncing)
-    setLastSync(status.lastSync ?? '')
   }, [])
 
   const handleLogout = useCallback(async () => {
@@ -68,13 +53,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       case 'add-stock':
         return <AddStockView />
       case 'all-stock':
-        return (
-          <Products
-            user={user}
-            syncRequestId={syncRequestId}
-            onSyncStatusChange={handleSyncStatusChange}
-          />
-        )
+        return <Products user={user} />
       default:
         return null
     }
