@@ -181,7 +181,7 @@ export class SyncService {
           product_name: product.productName,
           generic_name: product.genericName,
           company_id: company.id,
-          category_id: product.category_id,
+          category_id: undefined, // Set to undefined since categories aren't provided in API
           mrp: parseFloat(product.retail_max_price || 0),
           sale_price: product.current_stock?.sale_price || product.retail_max_price,
           discount_price: product.current_stock?.discount_price,
