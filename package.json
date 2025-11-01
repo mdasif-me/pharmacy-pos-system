@@ -13,6 +13,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "transpile:electron": "tsc --project src/electron/tsconfig.json",
+    "rebuild:native": "electron-rebuild --force -w better-sqlite3",
+    "postinstall": "npm run rebuild:native",
     "dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --arm64",
     "dist:win": "npm run transpile:electron && npm run build && electron-builder --win --x64",
     "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",

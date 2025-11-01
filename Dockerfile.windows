@@ -6,13 +6,27 @@ WORKDIR /project
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
+# Install dependencies including electron-rebuild
 RUN npm install
+
+# Install electron-rebuild globally for better control
+RUN npm install -g @electron/rebuild
 
 # Copy project files
 COPY . .
 
-# Build for Windows
-RUN npm run transpile:electron && npm run build && npm run dist:win
+# Transpile and build
+RUN npm run transpile:electron && npm run build
 
-# Output will be in release-windows/
+# Rebuild native modules for Windows using electron-rebuild with Wine
+RUN cd node_modules/better-sqlite3 && \
+    npx @electron/rebuild --platform=win32 --arch=x64 --force && \
+    cd ../sqlite3 && \
+    npx @electron/rebuild --platform=win32 --arch=x64 --force && \
+    cd ../..
+
+# Now build the Windows app with the correct native modules
+RUN npm run dist:win
+
+# The build output is in release-windows/ folder
+# Mount a volume to /project/release-windows to get the files
