@@ -62,7 +62,7 @@ export function SocketStatus() {
           backgroundColor: isConnected ? '#28a745' : '#dc3545',
         }}
       />
-      <span>{isConnected ? <>Connected</> : 'Disconnected'}</span>
+      <span>{isConnected && <>Connected</>}</span>
       {!isConnected && (
         <button
           onClick={handleReconnect}

@@ -1,16 +1,45 @@
 {
-  "appId": "com.n-ziermann.pharmacy-pos",
+  "appId": "com.pharmacy.pos",
+  "productName": "Pharmacy POS",
+  "copyright": "Copyright © 2025",
   "files": ["dist-electron", "dist-react"],
   "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
   "icon": "./desktopIcon.png",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
   "mac": {
-    "target": "dmg"
+    "target": "dmg",
+    "category": "public.app-category.business"
   },
   "linux": {
-    "target": "AppImage",
-    "category": "Utility"
+    "target": ["AppImage", "deb"],
+    "category": "Office"
   },
   "win": {
-    "target": ["portable", "msi"]
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64", "ia32"]
+      }
+    ],
+    "icon": "./desktopIcon.png",
+    "publisherName": "Pharmacy POS",
+    "verifyUpdateCodeSignature": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Pharmacy POS",
+    "installerIcon": "./desktopIcon.png",
+    "uninstallerIcon": "./desktopIcon.png",
+    "installerHeaderIcon": "./desktopIcon.png",
+    "license": "LICENSE.txt",
+    "warningsAsErrors": false
   }
 }
