@@ -3,7 +3,29 @@ import path from 'path'
 import { isDev } from './util.js'
 
 export function getPreloadPath() {
-  return path.join(app.getAppPath(), isDev() ? '.' : '..', '/dist-electron/preload.cjs')
+  if (isDev()) {
+    return path.join(app.getAppPath(), 'dist-electron', 'preload.cjs')
+  }
+
+  // Production: try multiple possible locations
+  const fs = require('fs')
+  const possiblePaths = [
+    path.join(process.resourcesPath, 'app.asar', 'dist-electron', 'preload.cjs'),
+    path.join(process.resourcesPath, 'app', 'dist-electron', 'preload.cjs'),
+    path.join(app.getAppPath(), 'dist-electron', 'preload.cjs'),
+  ]
+
+  for (const preloadPath of possiblePaths) {
+    if (fs.existsSync(preloadPath)) {
+      console.log('[PathResolver] Using preload path:', preloadPath)
+      return preloadPath
+    }
+  }
+
+  // Fallback
+  const fallbackPath = path.join(app.getAppPath(), 'dist-electron', 'preload.cjs')
+  console.error('[PathResolver] Preload not found, using fallback:', fallbackPath)
+  return fallbackPath
 }
 
 export function getUIPath() {

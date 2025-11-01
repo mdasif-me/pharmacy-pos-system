@@ -95,12 +95,23 @@ function initializeSocketService() {
 function createMainWindow() {
   console.log('[Main] Creating main window...')
 
+  const preloadPath = getPreloadPath()
+  console.log('[Main] Preload path:', preloadPath)
+
+  // Verify preload exists
+  const fs = require('fs')
+  if (!fs.existsSync(preloadPath)) {
+    console.error('[Main] ⚠️ WARNING: Preload script not found at:', preloadPath)
+  } else {
+    console.log('[Main] ✓ Preload script exists')
+  }
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     show: false, // Don't show until ready
     webPreferences: {
-      preload: getPreloadPath(),
+      preload: preloadPath,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
