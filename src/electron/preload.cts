@@ -44,4 +44,10 @@ contextBridge.exposeInMainWorld('electron', {
     getId: () => invoke('socket:getId'),
     reconnect: () => invoke('socket:reconnect'),
   },
+
+  // Event listeners for real-time updates
+  onStockUpdated: (callback: (data: any) => void) => {
+    ipcRenderer.on('stock-updated', (_, data) => callback(data))
+    return () => ipcRenderer.removeAllListeners('stock-updated')
+  },
 })

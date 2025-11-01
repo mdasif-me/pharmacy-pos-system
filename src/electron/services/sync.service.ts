@@ -204,6 +204,21 @@ export class SyncService {
         }
       })
 
+      // Count products with stock for logging
+      const productsWithStock = mappedProducts.filter(p => (p.in_stock ?? 0) > 0)
+      console.log(`[SyncService] Syncing ${mappedProducts.length} products (${productsWithStock.length} have stock > 0)`)
+      
+      // Log some examples
+      if (productsWithStock.length > 0) {
+        console.log('[SyncService] Sample products with stock:', 
+          productsWithStock.slice(0, 3).map(p => ({
+            id: p.id,
+            name: p.product_name,
+            in_stock: p.in_stock
+          }))
+        )
+      }
+
       // Bulk insert/update products - sync ALL products from API
       this.productRepo.bulkUpsert(mappedProducts as ProductEntity[])
       result.synced = mappedProducts.length

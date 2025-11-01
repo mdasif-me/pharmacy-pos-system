@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client'
 import { ProductRepository } from '../database/repositories/product.repository'
+import { ProductEntity } from '../types/entities/product.types'
 
 interface StockUpdateRecord {
   id: number
@@ -41,6 +42,14 @@ export class SocketService {
       return
     }
 
+    // Disconnect any existing socket first
+    if (this.socket) {
+      console.log('[SocketService] Cleaning up existing socket...')
+      this.socket.removeAllListeners()
+      this.socket.disconnect()
+      this.socket = null
+    }
+
     console.log('[SocketService] Connecting to socket server:', this.socketUrl)
 
     this.socket = io(this.socketUrl, {
@@ -49,6 +58,8 @@ export class SocketService {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: this.maxReconnectAttempts,
+      timeout: 10000,
+      autoConnect: true,
     })
 
     this.setupEventListeners()
@@ -109,6 +120,13 @@ export class SocketService {
     try {
       const { record } = data
 
+      console.log('[SocketService] Processing stock update for product:', record.product_id)
+      console.log('[SocketService] New stock data:', {
+        in_stock: record.in_stock,
+        sale_price: record.sale_price,
+        discount_price: record.discount_price,
+      })
+
       // Check if product exists in local database
       const existingProduct = this.productRepo.findById(record.product_id)
 
@@ -116,11 +134,18 @@ export class SocketService {
         console.warn(
           `[SocketService] Product ${record.product_id} not found in local database. Skipping update.`
         )
+        console.warn('[SocketService] Product may not be synced yet. Consider running a full sync.')
         return
       }
 
+      console.log('[SocketService] Found existing product:', {
+        id: existingProduct.id,
+        product_name: existingProduct.product_name,
+        current_in_stock: existingProduct.in_stock,
+      })
+
       // Update product stock and prices
-      const updated = this.productRepo.update(record.product_id, {
+      const updateData: Partial<ProductEntity> = {
         in_stock: record.in_stock,
         stock_alert: record.stock_alert,
         sale_price: record.sale_price,
@@ -129,28 +154,47 @@ export class SocketService {
         mediboy_offer_price: record.mediboy_offer_price,
         last_modified_at: record.updated_at,
         last_synced_at: new Date().toISOString(),
-      })
+      }
+
+      console.log('[SocketService] Updating product with data:', updateData)
+
+      const updated = this.productRepo.update(record.product_id, updateData)
 
       if (updated) {
         console.log(
-          `[SocketService] Updated product ${record.product_id}: in_stock=${record.in_stock}`
+          `[SocketService] ✓ Successfully updated product ${record.product_id}:`,
+          `${existingProduct.in_stock} → ${record.in_stock} stock`
         )
 
-        // Emit event to notify UI (if needed)
-        this.notifyStockUpdate(record.product_id)
+        // Notify UI about the update
+        this.notifyStockUpdate(record.product_id, existingProduct.product_name, record.in_stock)
+      } else {
+        console.error(`[SocketService] ✗ Failed to update product ${record.product_id}`)
       }
     } catch (error) {
       console.error('[SocketService] Error handling stock update:', error)
+      console.error('[SocketService] Error details:', error instanceof Error ? error.stack : error)
     }
   }
 
   /**
    * Notify UI about stock update via IPC or event emitter
    */
-  private notifyStockUpdate(productId: number): void {
-    // You can emit a custom event here if you want to notify the renderer process
-    // For now, we'll just log. The UI will get updated on next query.
-    console.log(`[SocketService] Stock updated for product ${productId}`)
+  private notifyStockUpdate(productId: number, productName: string, newStock: number): void {
+    console.log(`[SocketService] Stock updated - Product: ${productName}, New Stock: ${newStock}`)
+
+    // Send notification to all renderer windows
+    const { BrowserWindow } = require('electron')
+    const windows = BrowserWindow.getAllWindows()
+
+    windows.forEach((window) => {
+      window.webContents.send('stock-updated', {
+        productId,
+        productName,
+        newStock,
+        timestamp: new Date().toISOString(),
+      })
+    })
   }
 
   /**

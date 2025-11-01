@@ -152,5 +152,15 @@ interface Window {
       getId: () => Promise<string | null>
       reconnect: () => Promise<{ success: boolean; error?: string }>
     }
+
+    // Real-time event listeners
+    onStockUpdated: (
+      callback: (data: {
+        productId: number
+        productName: string
+        newStock: number
+        timestamp: string
+      }) => void
+    ) => () => void
   }
 }

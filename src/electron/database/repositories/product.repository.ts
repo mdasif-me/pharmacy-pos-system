@@ -130,14 +130,34 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
       FROM ${this.tableName} p
       LEFT JOIN ${DB_TABLES.COMPANIES} c ON p.company_id = c.id
       LEFT JOIN ${DB_TABLES.CATEGORIES} cat ON p.category_id = cat.id
-      WHERE p.status = 'active' AND p.in_stock > 0
+      WHERE p.status = 'active'
       ORDER BY p.${orderBy} ${orderDir}
       LIMIT ? OFFSET ?
     `
     const results = this.db.prepare(sql).all(limit, offset) as ProductWithRelations[]
+    
+    // Also get total products and stock statistics
+    const totalSql = `SELECT COUNT(*) as total FROM ${this.tableName} WHERE status = 'active'`
+    const stockSql = `SELECT COUNT(*) as with_stock FROM ${this.tableName} WHERE status = 'active' AND in_stock > 0`
+    const totalResult = this.db.prepare(totalSql).get() as { total: number }
+    const stockResult = this.db.prepare(stockSql).get() as { with_stock: number }
+    
     console.log(
-      `[ProductRepository] findAllWithRelations: Found ${results.length} products with in_stock > 0`
+      `[ProductRepository] findAllWithRelations: Returning ${results.length} products (Total: ${totalResult.total}, With stock: ${stockResult.with_stock})`
     )
+    
+    // Log first few products with stock for debugging
+    const withStock = results.filter(p => p.in_stock > 0).slice(0, 3)
+    if (withStock.length > 0) {
+      console.log('[ProductRepository] Sample products with stock:', 
+        withStock.map(p => ({
+          id: p.id, 
+          name: p.product_name, 
+          in_stock: p.in_stock
+        }))
+      )
+    }
+    
     return results
   }
 

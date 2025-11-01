@@ -140,6 +140,29 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     loadInitialData()
   }, [loadInitialData])
 
+  // Listen for real-time stock updates from socket
+  useEffect(() => {
+    const unsubscribe = window.electron.onStockUpdated(async (data) => {
+      console.log('[Products] Received real-time stock update:', data)
+      
+      // Reload products to get the updated data
+      try {
+        const localProducts = await window.electron.getAllProducts()
+        const productsArray = Array.isArray(localProducts) ? localProducts : []
+        setProducts(productsArray)
+        
+        // Show a brief notification (optional)
+        console.log(`[Products] Stock updated for ${data.productName}: ${data.newStock} units`)
+      } catch (error) {
+        console.error('[Products] Error reloading products after stock update:', error)
+      }
+    })
+
+    return () => {
+      unsubscribe()
+    }
+  }, [])
+
   // trigger sync when dashboard requests it
   useEffect(() => {
     if (syncRequestId === undefined) {
