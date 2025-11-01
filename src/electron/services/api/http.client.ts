@@ -1,6 +1,7 @@
 // http client - axios wrapper with retry logic
 
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
+import { StorageService } from '../storage.service'
 
 export interface HttpClientConfig {
   baseURL: string
@@ -8,6 +9,7 @@ export interface HttpClientConfig {
   maxRetries?: number
   retryDelay?: number
   headers?: Record<string, string>
+  storage?: StorageService
 }
 
 export interface RequestOptions extends AxiosRequestConfig {
@@ -19,10 +21,12 @@ export class HttpClient {
   private client: AxiosInstance
   private maxRetries: number
   private retryDelay: number
+  private storage?: StorageService
 
   constructor(config: HttpClientConfig) {
     this.maxRetries = config.maxRetries || 3
     this.retryDelay = config.retryDelay || 1000
+    this.storage = config.storage
 
     this.client = axios.create({
       baseURL: config.baseURL,
@@ -122,8 +126,8 @@ export class HttpClient {
    * set auth token
    */
   setAuthToken(token: string): void {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem('auth_token', token)
+    if (this.storage) {
+      // Token will be saved with full user data in AuthApiService
     }
   }
 
@@ -131,8 +135,8 @@ export class HttpClient {
    * get auth token
    */
   private getAuthToken(): string | null {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      return window.localStorage.getItem('auth_token')
+    if (this.storage) {
+      return this.storage.getToken()
     }
     return null
   }

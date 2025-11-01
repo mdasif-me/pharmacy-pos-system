@@ -23,18 +23,24 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         password,
       })
 
-      if (response.token) {
-        // get the stored token info
-        const tokenInfo = await window.electron.getAuthToken()
-        if (tokenInfo) {
-          onLoginSuccess(tokenInfo)
+      console.log('Login response:', response)
+
+      if (response && response.token && response.user) {
+        // Map API response to AuthToken format
+        const tokenInfo: AuthToken = {
+          token: response.token,
+          user_id: response.user.id,
+          user_name: `${response.user.firstName} ${response.user.lastName}`,
         }
+        onLoginSuccess(tokenInfo)
       } else {
-        setError('login failed')
+        setError('login failed - invalid response')
       }
-    } catch (err) {
-      setError('network error or invalid credentials')
+    } catch (err: any) {
       console.error('login error:', err)
+      const errorMessage =
+        err?.response?.data?.message || err?.message || 'network error or invalid credentials'
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }

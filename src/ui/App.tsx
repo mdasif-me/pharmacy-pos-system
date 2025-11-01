@@ -41,8 +41,14 @@ function App() {
 
   const checkAuthStatus = async () => {
     try {
-      const tokenInfo = await window.electron.getAuthToken()
-      if (tokenInfo) {
+      const authData = (await window.electron.getAuthToken()) as any
+      if (authData && authData.token && authData.user) {
+        // Map stored user data to AuthToken format
+        const tokenInfo: AuthToken = {
+          token: authData.token,
+          user_id: authData.user.id,
+          user_name: `${authData.user.firstName} ${authData.user.lastName}`,
+        }
         setCurrentUser(tokenInfo)
       }
     } catch (error) {

@@ -1,5 +1,6 @@
 // auth api service - authentication api calls
 
+import { StorageService } from '../storage.service'
 import { HttpClient } from './http.client'
 
 export interface LoginRequest {
@@ -30,7 +31,10 @@ export interface RegisterRequest {
 }
 
 export class AuthApiService {
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private storage: StorageService
+  ) {}
 
   /**
    * login user
@@ -38,8 +42,9 @@ export class AuthApiService {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await this.http.post<LoginResponse>('/pharmacy/login', credentials)
 
-    if (response.token) {
-      // save token
+    if (response.token && response.user) {
+      // Save token and user data
+      this.storage.saveAuth(response.token, response.user)
       this.http.setAuthToken(response.token)
     }
 
@@ -64,28 +69,29 @@ export class AuthApiService {
    * logout user
    */
   async logout(): Promise<void> {
-    await this.http.post('/auth/logout')
-
-    // clear token
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.removeItem('auth_token')
+    try {
+      await this.http.post('/auth/logout')
+    } catch (error) {
+      console.error('Error during logout API call:', error)
     }
+
+    // Clear stored auth data
+    this.storage.clearAuth()
   }
 
   /**
-   * get current user
+   * get current user - returns stored user data
    */
   async getCurrentUser(): Promise<any> {
-    try {
-      const response = await this.http.get<LoginResponse>('/auth/me')
-      return response.user
-    } catch (error: any) {
-      // If endpoint doesn't exist or user not authenticated, return null
-      if (error.response?.status === 404 || error.response?.status === 401) {
-        return null
+    // Return stored auth data instead of calling API
+    const authData = this.storage.getAuth()
+    if (authData) {
+      return {
+        token: authData.token,
+        user: authData.user,
       }
-      throw error
     }
+    return null
   }
 
   /**
@@ -94,7 +100,8 @@ export class AuthApiService {
   async refreshToken(): Promise<string> {
     const response = await this.http.post<LoginResponse>('/auth/refresh')
 
-    if (response.token) {
+    if (response.token && response.user) {
+      this.storage.saveAuth(response.token, response.user)
       this.http.setAuthToken(response.token)
       return response.token
     }
@@ -106,9 +113,6 @@ export class AuthApiService {
    * check if user is authenticated
    */
   isAuthenticated(): boolean {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      return !!window.localStorage.getItem('auth_token')
-    }
-    return false
+    return this.storage.isAuthenticated()
   }
 }

@@ -3,14 +3,20 @@
 import { ipcMain } from 'electron'
 import { AuthApiService, LoginRequest, RegisterRequest } from '../../services/api/auth.api.service'
 import { HttpClient } from '../../services/api/http.client'
+import { StorageService } from '../../services/storage.service'
 import { IPC_CHANNELS } from '../channels'
 
 export class AuthIpcHandler {
   private authService: AuthApiService
+  private storage: StorageService
 
   constructor(apiBaseUrl: string) {
-    const httpClient = new HttpClient({ baseURL: apiBaseUrl })
-    this.authService = new AuthApiService(httpClient)
+    this.storage = new StorageService()
+    const httpClient = new HttpClient({
+      baseURL: apiBaseUrl,
+      storage: this.storage,
+    })
+    this.authService = new AuthApiService(httpClient, this.storage)
     this.registerHandlers()
   }
 

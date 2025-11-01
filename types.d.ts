@@ -84,11 +84,24 @@ type AuthToken = {
   created_at?: string
 }
 
+type StoredAuthData = {
+  token: string
+  user: {
+    id: number
+    firstName: string
+    lastName: string
+    phoneNumber: string
+    email: string
+    role: string
+    pharmacy_id: number
+  }
+}
+
 type EventPayloadMapping = {
   // pharmacy pos api methods
   login: LoginResponse
   logout: void
-  getAuthToken: AuthToken | undefined
+  getAuthToken: StoredAuthData | null
   syncProducts: Product[]
   getAllProducts: Product[]
   searchProducts: Product[]
