@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld('electron', {
   // Products - backward compatible with old UI
   syncProducts: () => invoke('sync:pull'),
   getAllProducts: async () => {
-    const result = await invoke('product:getAll', 1, 100)
+    const result = await invoke('product:getAll', 1, 100000)
     // Extract products array from the paginated response
     return result?.products || []
   },

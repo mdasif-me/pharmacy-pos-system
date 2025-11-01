@@ -3,12 +3,12 @@ import { CategoryRepository } from '../database/repositories/category.repository
 import { CompanyRepository } from '../database/repositories/company.repository'
 import { ProductRepository } from '../database/repositories/product.repository'
 import {
-  EntityStatus,
-  ProductCreateDTO,
-  ProductEntity,
-  ProductSearchParams,
-  ProductUpdateDTO,
-  ProductWithRelations,
+    EntityStatus,
+    ProductCreateDTO,
+    ProductEntity,
+    ProductSearchParams,
+    ProductUpdateDTO,
+    ProductWithRelations,
 } from '../types/entities/product.types'
 
 export class ProductService {
@@ -42,7 +42,7 @@ export class ProductService {
    */
   getAllProducts(
     page = 1,
-    limit = 100
+    limit = 50000
   ): {
     products: ProductWithRelations[]
     total: number

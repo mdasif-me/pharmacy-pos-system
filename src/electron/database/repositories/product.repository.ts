@@ -120,7 +120,7 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
    * get all products with relations
    */
   findAllWithRelations(options: QueryOptions = {}): ProductWithRelations[] {
-    const { limit = 100, offset = 0, orderBy = 'product_name', orderDir = 'ASC' } = options
+    const { limit = 100000, offset = 0, orderBy = 'product_name', orderDir = 'ASC' } = options
 
     const sql = `
       SELECT 
