@@ -6,7 +6,7 @@
   "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
   "icon": "./desktopIcon.png",
   "directories": {
-    "output": "release",
+    "output": "build-output",
     "buildResources": "build"
   },
   "mac": {
@@ -20,13 +20,20 @@
   "win": {
     "target": [
       {
+        "target": "portable",
+        "arch": ["x64"]
+      },
+      {
         "target": "nsis",
-        "arch": ["x64", "ia32"]
+        "arch": ["x64"]
       }
     ],
     "icon": "./desktopIcon.png",
     "publisherName": "Pharmacy POS",
-    "verifyUpdateCodeSignature": false
+    "verifyUpdateCodeSignature": false,
+    "sign": null,
+    "signAndEditExecutable": false,
+    "signDlls": false
   },
   "nsis": {
     "oneClick": false,

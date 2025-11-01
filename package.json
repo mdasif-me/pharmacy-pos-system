@@ -1,7 +1,10 @@
 {
   "name": "pharmacy-pos",
+  "productName": "Pharmacy POS",
+  "version": "1.0.0",
+  "description": "Point of Sale system for pharmacy management with inventory, sales, and sync capabilities",
+  "author": "Pharmacy POS Team",
   "private": true,
-  "version": "0.0.0",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "npm-run-all --parallel dev:react dev:electron",

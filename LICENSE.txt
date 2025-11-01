@@ -1,0 +1,23 @@
+End-User License Agreement (EULA) for Pharmacy POS
+
+Copyright (c) 2025
+
+This software is provided for use by authorized users only.
+
+GRANT OF LICENSE
+This EULA grants you the following rights:
+- Installation and Use: You may install and use the Software on computers within your organization.
+
+RESTRICTIONS
+You may not:
+- Reverse engineer, decompile, or disassemble the Software
+- Rent, lease, or lend the Software
+- Transfer the Software without authorization
+
+DISCLAIMER OF WARRANTY
+The Software is provided "AS IS" without warranty of any kind.
+
+LIMITATION OF LIABILITY
+In no event shall the author be liable for any damages arising from the use of this software.
+
+For questions or support, please contact your system administrator.

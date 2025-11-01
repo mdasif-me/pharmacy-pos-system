@@ -93,9 +93,12 @@ function initializeSocketService() {
 }
 
 function createMainWindow() {
+  console.log('[Main] Creating main window...')
+
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
+    show: false, // Don't show until ready
     webPreferences: {
       preload: getPreloadPath(),
       nodeIntegration: false,
@@ -104,30 +107,87 @@ function createMainWindow() {
     },
     autoHideMenuBar: true,
     frame: true,
+    backgroundColor: '#ffffff',
+  })
+
+  // Show window when ready to prevent white flash
+  mainWindow.once('ready-to-show', () => {
+    console.log('[Main] Window ready to show')
+    if (mainWindow) {
+      mainWindow.show()
+      mainWindow.focus()
+    }
+  })
+
+  // Handle load errors
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('[Main] Failed to load:', errorCode, errorDescription)
   })
 
   if (isDev()) {
+    console.log('[Main] Loading dev URL: http://localhost:5123')
     mainWindow.loadURL('http://localhost:5123')
     mainWindow.webContents.openDevTools()
   } else {
-    mainWindow.loadFile(path.join(getUIPath(), 'index.html'))
+    const indexPath = path.join(getUIPath(), 'index.html')
+    console.log('[Main] Loading production HTML:', indexPath)
+    mainWindow.loadFile(indexPath).catch((err) => {
+      console.error('[Main] Error loading file:', err)
+    })
   }
 
   mainWindow.on('closed', () => {
+    console.log('[Main] Window closed')
     mainWindow = null
   })
+
+  console.log('[Main] Main window created')
 }
 
 app.on('ready', async () => {
+  console.log('[Main] ========== APP STARTING ==========')
+  console.log('[Main] Platform:', process.platform)
+  console.log('[Main] Electron version:', process.versions.electron)
+  console.log('[Main] Node version:', process.versions.node)
+  console.log('[Main] App path:', app.getAppPath())
+  console.log('[Main] User data path:', app.getPath('userData'))
+
   try {
+    console.log('[Main] Setting up error handlers...')
     setupGlobalErrorHandlers()
+
+    console.log('[Main] Initializing database...')
     await initializeDatabase()
+
+    console.log('[Main] Initializing IPC handlers...')
     initializeIpcHandlers()
-    initializeSocketService()
+
+    console.log('[Main] Initializing socket service...')
+    try {
+      initializeSocketService()
+    } catch (socketError) {
+      console.error('[Main] Socket initialization failed, but continuing:', socketError)
+      // Don't fail the entire app if socket fails
+    }
+
+    console.log('[Main] Creating main window...')
     createMainWindow()
-    console.log('App ready')
+
+    console.log('[Main] ========== APP READY ==========')
   } catch (error) {
-    console.error('Failed to start:', error)
+    console.error('[Main] ========== FATAL ERROR ==========')
+    console.error('[Main] Failed to start app:', error)
+    console.error('[Main] Stack:', error instanceof Error ? error.stack : 'No stack trace')
+
+    // Show error dialog before quitting
+    const { dialog } = require('electron')
+    dialog.showErrorBox(
+      'Pharmacy POS - Startup Error',
+      `Failed to start application:\n\n${
+        error instanceof Error ? error.message : String(error)
+      }\n\nPlease contact support.`
+    )
+
     app.quit()
   }
 })

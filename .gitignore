@@ -11,6 +11,8 @@ node_modules
 dist
 dist-react
 dist-electron
+build-output
+dist-installer
 *.local
 
 # Editor directories and files
