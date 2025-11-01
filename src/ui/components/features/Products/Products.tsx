@@ -3,6 +3,7 @@ import Select, { SingleValue } from 'react-select'
 import Company from '../../../assets/company.svg'
 import Discount from '../../../assets/discount.svg'
 import Search from '../../../assets/search.svg'
+import { Column, Pagination, Table } from '../../common'
 import './Products.css'
 
 type SelectOption<T> = {
@@ -13,11 +14,6 @@ type SelectOption<T> = {
 type PriceMode = 'discount' | 'peak-hour'
 
 const priceTypeOptions: SelectOption<PriceMode>[] = [
-  { value: 'discount', label: 'Discount' },
-  { value: 'peak-hour', label: 'Peak-Hour' },
-]
-
-const billModeOptions: SelectOption<PriceMode>[] = [
   { value: 'discount', label: 'Discount' },
   { value: 'peak-hour', label: 'Peak-Hour' },
 ]
@@ -45,6 +41,8 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   const [peakHourInput, setPeakHourInput] = useState('')
   const [isSavingPrices, setIsSavingPrices] = useState(false)
   const [priceType, setPriceType] = useState<PriceMode>('discount')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(20)
   const hasLoadedRef = useRef(false)
   const latestSyncRequestRef = useRef(syncRequestId)
 
@@ -65,6 +63,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   // apply filters when search or filter values change
   useEffect(() => {
     applyFilters()
+    setCurrentPage(1) // Reset to first page when filters change
   }, [products, searchTerm, selectedCompany])
 
   useEffect(() => {
@@ -325,6 +324,79 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     }
   }
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedProducts = filteredProducts.slice(startIndex, endIndex)
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  }
+
+  // Define table columns
+  const tableColumns: Column<Product>[] = useMemo(
+    () => [
+      {
+        key: 'productName',
+        header: 'Product Name',
+        width: '25%',
+        render: (product) => (
+          <div className="product-name-cell">
+            <span className="product-name">{product.productName}</span>
+            {product.genericName && <span className="product-generic">{product.genericName}</span>}
+            {(product.category_name || product.category_id) && (
+              <span className="product-category">
+                {product.category_name || `Category ${product.category_id}`}
+              </span>
+            )}
+          </div>
+        ),
+      },
+      {
+        key: 'type',
+        header: 'Type',
+        width: '10%',
+        render: (product) => product.type || '—',
+      },
+      {
+        key: 'mrp',
+        header: 'MRP/UNIT',
+        width: '12%',
+        render: (product) => formatCurrency(product.retail_max_price),
+      },
+      {
+        key: 'price',
+        header: priceType === 'discount' ? 'Discount Price/UNIT' : 'Peak-Hour Price/UNIT',
+        width: '15%',
+        render: (product) => formatCurrency(getDisplayedRate(product)),
+      },
+      {
+        key: 'company',
+        header: 'Company Name',
+        width: '18%',
+        render: (product) => product.company_name || '—',
+      },
+      {
+        key: 'stock',
+        header: 'Current Stock',
+        width: '10%',
+        render: (product) => product.in_stock ?? 0,
+      },
+      {
+        key: 'action',
+        header: 'Action',
+        width: '10%',
+        render: (product) => (
+          <button className="edit-button" onClick={() => openPriceModal(product)}>
+            Edit
+          </button>
+        ),
+      },
+    ],
+    [priceType]
+  )
+
   if (isLoading) {
     return (
       <div className="loading-container">
@@ -367,6 +439,8 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             }}
             isSearchable={false}
             placeholder="Price Type"
+            menuPortalTarget={document.body}
+            styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
           />
         </div>
 
@@ -381,64 +455,31 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             isClearable
             placeholder="All Company"
             noOptionsMessage={() => 'No companies found'}
+            menuPortalTarget={document.body}
+            styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
           />
         </div>
         <div className="filter-info">
-          Showing {filteredProducts.length} of {products.length} Products
+          Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of{' '}
+          {filteredProducts.length} Products
         </div>
       </div>
 
-      <div className="products-table-wrapper">
-        {filteredProducts.length > 0 ? (
-          <table className="products-table">
-            <thead>
-              <tr>
-                <th>Product Name</th>
-                <th>Type</th>
-                <th>MRP/UNIT</th>
-                <th>{priceType === 'discount' ? 'Discount Price/UNIT' : 'Peak-Hour Price/UNIT'}</th>
-                <th>Company Name</th>
-                <th>Current Stock</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredProducts.map((product) => {
-                const categoryLabel =
-                  product.category_name ||
-                  (product.category_id ? `Category ${product.category_id}` : '')
+      <div className="products-table-section">
+        <Table
+          columns={tableColumns}
+          data={paginatedProducts}
+          keyExtractor={(product) => product.id.toString()}
+          emptyMessage="no products found"
+        />
 
-                return (
-                  <tr key={product.id}>
-                    <td>
-                      <div className="product-name-cell">
-                        <span className="product-name">{product.productName}</span>
-                        {product.genericName && (
-                          <span className="product-generic">{product.genericName}</span>
-                        )}
-                        {categoryLabel && <span className="product-category">{categoryLabel}</span>}
-                      </div>
-                    </td>
-                    <td>{product.type || '—'}</td>
-                    <td>{formatCurrency(product.retail_max_price)}</td>
-                    <td>{formatCurrency(getDisplayedRate(product))}</td>
-                    <td>{product.company_name || '—'}</td>
-                    <td>{product.in_stock ?? 0}</td>
-                    <td>
-                      <button className="edit-button" onClick={() => openPriceModal(product)}>
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        ) : (
-          <div className="no-products">
-            <p>no products found</p>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+          totalItems={filteredProducts.length}
+          itemsPerPage={itemsPerPage}
+        />
       </div>
 
       {isModalOpen && selectedProduct && (
