@@ -15,15 +15,13 @@ export class ProductApiService {
    * fetch all products from api
    */
   async fetchAllProducts(page = 1, limit = 100): Promise<any[]> {
-    const response = await this.http.get<ProductApiResponse>(`/products`, {
-      params: { page, limit },
-    })
+    const response = await this.http.get<any>(`/pharmacy/get-real-time-stock-product`)
 
-    if (response.success) {
-      return response.products
+    if (response && response.data && Array.isArray(response.data)) {
+      return response.data
     }
 
-    throw new Error(response.message || 'Failed to fetch products')
+    throw new Error('Failed to fetch products')
   }
 
   /**

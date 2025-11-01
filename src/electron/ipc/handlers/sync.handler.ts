@@ -1,5 +1,9 @@
 import { Database } from 'better-sqlite3'
 import { ipcMain } from 'electron'
+import { API_CONFIG } from '../../core/config/api.config'
+import { HttpClient } from '../../services/api/http.client'
+import { ProductApiService } from '../../services/api/product.api.service'
+import { StorageService } from '../../services/storage.service'
 import { SyncService } from '../../services/sync.service'
 import { IPC_CHANNELS } from '../channels'
 
@@ -7,7 +11,13 @@ export class SyncIpcHandler {
   private syncService: SyncService
 
   constructor(db: Database) {
-    this.syncService = new SyncService(db)
+    const storageService = new StorageService()
+    const httpClient = new HttpClient({
+      baseURL: API_CONFIG.baseURL,
+      storage: storageService,
+    })
+    const productApi = new ProductApiService(httpClient)
+    this.syncService = new SyncService(db, productApi)
     this.registerHandlers()
   }
 
@@ -55,9 +65,9 @@ export class SyncIpcHandler {
     })
 
     // pull from server
-    ipcMain.handle(IPC_CHANNELS.SYNC.PULL, async (_, products: any[]) => {
+    ipcMain.handle(IPC_CHANNELS.SYNC.PULL, async () => {
       try {
-        return await this.syncService.pullProducts(products)
+        return await this.syncService.pullProducts()
       } catch (error: any) {
         console.error('Error pulling products:', error)
         throw error

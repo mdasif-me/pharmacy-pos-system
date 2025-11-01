@@ -1,4 +1,5 @@
 import { Database } from 'better-sqlite3'
+import { CompanyRepository } from '../database/repositories/company.repository'
 import { ProductRepository } from '../database/repositories/product.repository'
 import { SyncQueueRepository } from '../database/repositories/sync-queue.repository'
 import { ProductEntity } from '../types/entities/product.types'
@@ -8,6 +9,7 @@ import {
   SyncQueueAction,
   SyncQueueEntity,
 } from '../types/entities/sync.types'
+import { ProductApiService } from './api/product.api.service'
 
 export interface SyncResult {
   success: boolean
@@ -24,12 +26,17 @@ export interface SyncOptions {
 export class SyncService {
   private syncQueue: SyncQueueRepository
   private productRepo: ProductRepository
+  private companyRepo: CompanyRepository
   private isSyncing = false
   private syncInterval?: NodeJS.Timeout
 
-  constructor(private db: Database) {
+  constructor(
+    private db: Database,
+    private productApi: ProductApiService
+  ) {
     this.syncQueue = new SyncQueueRepository(db)
     this.productRepo = new ProductRepository(db)
+    this.companyRepo = new CompanyRepository(db)
   }
 
   /**
@@ -146,7 +153,7 @@ export class SyncService {
   /**
    * pull products from server
    */
-  async pullProducts(products: ProductEntity[]): Promise<SyncResult> {
+  async pullProducts(): Promise<SyncResult> {
     const result: SyncResult = {
       success: true,
       synced: 0,
@@ -155,11 +162,53 @@ export class SyncService {
     }
 
     try {
-      this.productRepo.bulkUpsert(products)
-      result.synced = products.length
+      // Fetch products from API
+      const apiProducts = await this.productApi.fetchAllProducts()
+
+      if (!Array.isArray(apiProducts) || apiProducts.length === 0) {
+        result.errors.push('No products received from API')
+        result.success = false
+        return result
+      }
+
+      // Map API products to database format
+      const mappedProducts: Partial<ProductEntity>[] = apiProducts.map((product) => {
+        // Get or create company
+        const company = this.companyRepo.getOrCreate(product.company?.name || 'Unknown')
+
+        return {
+          id: product.id,
+          product_name: product.productName,
+          generic_name: product.genericName,
+          company_id: company.id,
+          category_id: product.category_id,
+          mrp: parseFloat(product.retail_max_price || 0),
+          sale_price: product.current_stock?.sale_price || product.retail_max_price,
+          discount_price: product.current_stock?.discount_price,
+          peak_hour_price: product.current_stock?.peak_hour_price,
+          mediboy_offer_price: product.current_stock?.mediboy_offer_price,
+          in_stock: product.current_stock?.in_stock || 0,
+          stock_alert: product.current_stock?.stock_alert || 10,
+          type: product.type,
+          prescription: product.prescription === 'yes' ? 1 : 0,
+          status: product.status || 'active',
+          cover_image: product.coverImage,
+          image_path: product.product_cover_image_path,
+          version: 1,
+          last_synced_at: new Date().toISOString(),
+          last_modified_at: product.updated_at || new Date().toISOString(),
+          is_dirty: 0,
+          raw_data: JSON.stringify(product),
+        }
+      })
+
+      // Bulk insert/update products
+      this.productRepo.bulkUpsert(mappedProducts as ProductEntity[])
+      result.synced = mappedProducts.length
     } catch (error: any) {
       result.success = false
-      result.errors.push(error.message)
+      result.errors.push(error.message || 'Unknown error during sync')
+      console.error('Sync error:', error)
     }
 
     return result
