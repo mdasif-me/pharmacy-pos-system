@@ -209,7 +209,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
-  padding: 0 1rem 1rem 1rem;
 }
 
 /* Input Fields */
@@ -404,8 +403,8 @@
 }
 
 .status-button img {
-  width: 48px;
-  height: 48px;
+  width: 28px;
+  height: 28px;
   filter: brightness(0) invert(1);
 }
 
@@ -447,18 +446,14 @@
   flex-shrink: 0;
 }
 
-.sync-control:hover:not(:disabled) {
-  background-color: #2a2a2a;
-}
-
 .sync-control:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
 .sync-control img {
-  width: 48px;
-  height: 48px;
+  width: 28px;
+  height: 28px;
   filter: brightness(0) invert(1);
 }
 
