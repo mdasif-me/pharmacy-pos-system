@@ -85,8 +85,11 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
       // load filter options
       const companiesData = await window.electron.getUniqueCompanies()
+      console.log('Companies data from sync:', companiesData)
 
-      setCompanies(companiesData ?? [])
+      // Ensure companies is always an array
+      const companiesArray = Array.isArray(companiesData) ? companiesData : []
+      setCompanies(companiesArray)
       await updateLastSyncTimestamp()
     } catch (error) {
       console.error('sync failed:', error)
@@ -111,8 +114,11 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
       // load filter options
       const companiesData = await window.electron.getUniqueCompanies()
+      console.log('Companies data from loadInitialData:', companiesData)
 
-      setCompanies(companiesData ?? [])
+      // Ensure companies is always an array
+      const companiesArray = Array.isArray(companiesData) ? companiesData : []
+      setCompanies(companiesArray)
       await updateLastSyncTimestamp()
 
       // if no local products, sync from api
@@ -179,14 +185,17 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     setFilteredProducts(filtered)
   }
 
-  const companyOptions = useMemo<SelectOption<number>[]>(
-    () =>
-      companies.map((company) => ({
-        value: company.company_id,
-        label: company.company_name,
-      })),
-    [companies]
-  )
+  const companyOptions = useMemo<SelectOption<number>[]>(() => {
+    // Safety check: ensure companies is an array
+    if (!Array.isArray(companies)) {
+      console.warn('companies is not an array:', companies)
+      return []
+    }
+    return companies.map((company) => ({
+      value: company.company_id,
+      label: company.company_name,
+    }))
+  }, [companies])
 
   const selectedCompanyOption = useMemo<SelectOption<number> | null>(() => {
     if (typeof selectedCompany !== 'number') {

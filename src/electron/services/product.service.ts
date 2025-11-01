@@ -232,6 +232,23 @@ export class ProductService {
     return { total, active, lowStock, pendingSync }
   }
 
+  /**
+   * get unique companies from products
+   */
+  getUniqueCompanies(): Array<{ company_id: number; company_name: string }> {
+    const sql = `
+      SELECT DISTINCT 
+        c.id as company_id, 
+        c.name as company_name
+      FROM products p
+      INNER JOIN companies c ON p.company_id = c.id
+      WHERE p.status = 'active'
+      ORDER BY c.name ASC
+    `
+    const stmt = this.productRepo['db'].prepare(sql)
+    return stmt.all() as Array<{ company_id: number; company_name: string }>
+  }
+
   // private helpers
 
   /**

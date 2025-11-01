@@ -10,6 +10,7 @@ export const IPC_CHANNELS = {
     UPDATE_STOCK: 'product:updateStock',
     GET_LOW_STOCK: 'product:getLowStock',
     GET_STATS: 'product:getStats',
+    GET_UNIQUE_COMPANIES: 'product:getUniqueCompanies',
     IMPORT: 'product:import',
   },
 

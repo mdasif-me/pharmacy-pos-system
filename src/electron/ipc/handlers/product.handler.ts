@@ -106,6 +106,16 @@ export class ProductIpcHandler {
       }
     })
 
+    // get unique companies
+    ipcMain.handle(IPC_CHANNELS.PRODUCT.GET_UNIQUE_COMPANIES, async () => {
+      try {
+        return this.productService.getUniqueCompanies()
+      } catch (error: any) {
+        console.error('Error getting unique companies:', error)
+        throw error
+      }
+    })
+
     // import products from api
     ipcMain.handle(IPC_CHANNELS.PRODUCT.IMPORT, async (_, products: any[]) => {
       try {

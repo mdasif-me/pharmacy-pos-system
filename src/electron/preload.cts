@@ -24,7 +24,7 @@ contextBridge.exposeInMainWorld('electron', {
   getProductsByCompany: (companyId: number) => invoke('product:search', { companyId }),
   getProductsByType: (type: string) => invoke('product:search', { type }),
   getProductsByCategory: (categoryId: number) => invoke('product:search', { categoryId }),
-  getUniqueCompanies: () => invoke('product:getStats'),
+  getUniqueCompanies: () => invoke('product:getUniqueCompanies'),
   getUniqueTypes: () => invoke('product:getStats'),
   getUniqueCategories: () => invoke('product:getStats'),
 
@@ -33,5 +33,6 @@ contextBridge.exposeInMainWorld('electron', {
     invoke('product:updateStock', productId, newStock),
   updateProductPrices: (productId: number, payload: any) =>
     invoke('product:update', productId, payload),
-  getLastSync: () => invoke('sync:getStatus'),
+  // TODO: Implement proper last sync timestamp storage
+  getLastSync: () => Promise.resolve(null),
 })
