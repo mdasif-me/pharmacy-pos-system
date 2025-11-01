@@ -104,6 +104,7 @@ function createMainWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
+      webSecurity: false, // Allow loading local files in production
     },
     autoHideMenuBar: true,
     frame: true,
@@ -129,7 +130,8 @@ function createMainWindow() {
     mainWindow.loadURL('http://localhost:5123')
     mainWindow.webContents.openDevTools()
   } else {
-    const indexPath = path.join(getUIPath(), 'index.html')
+    const uiPath = getUIPath()
+    const indexPath = path.join(uiPath, 'index.html')
     console.log('[Main] Loading production HTML:', indexPath)
     mainWindow.loadFile(indexPath).catch((err) => {
       console.error('[Main] Error loading file:', err)
