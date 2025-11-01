@@ -7,24 +7,33 @@ export function getPreloadPath() {
     return path.join(app.getAppPath(), 'dist-electron', 'preload.cjs')
   }
 
-  // Production: try multiple possible locations
+  // Production: preload MUST be unpacked from asar
   const fs = require('fs')
   const possiblePaths = [
+    // First try unpacked location (this should work)
+    path.join(process.resourcesPath, 'app.asar.unpacked', 'dist-electron', 'preload.cjs'),
+    // Try in asar (might not work on Windows)
     path.join(process.resourcesPath, 'app.asar', 'dist-electron', 'preload.cjs'),
+    // Try direct app path
     path.join(process.resourcesPath, 'app', 'dist-electron', 'preload.cjs'),
+    // Fallback to app path
     path.join(app.getAppPath(), 'dist-electron', 'preload.cjs'),
   ]
 
+  console.log('[PathResolver] Searching for preload.cjs...')
   for (const preloadPath of possiblePaths) {
+    console.log('[PathResolver] Checking:', preloadPath)
     if (fs.existsSync(preloadPath)) {
-      console.log('[PathResolver] Using preload path:', preloadPath)
+      console.log('[PathResolver] ✓ Found preload at:', preloadPath)
       return preloadPath
     }
   }
 
-  // Fallback
+  // Fallback - should not reach here
   const fallbackPath = path.join(app.getAppPath(), 'dist-electron', 'preload.cjs')
-  console.error('[PathResolver] Preload not found, using fallback:', fallbackPath)
+  console.error('[PathResolver] ✗ Preload not found anywhere! Using fallback:', fallbackPath)
+  console.error('[PathResolver] process.resourcesPath:', process.resourcesPath)
+  console.error('[PathResolver] app.getAppPath():', app.getAppPath())
   return fallbackPath
 }
 
