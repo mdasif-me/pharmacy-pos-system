@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Dashboard } from './components/Dashboard'
-import { Login } from './components/Login'
+import { Login } from './components/features/Auth'
+import { Dashboard } from './components/features/Dashboard'
 import './styles/App.css'
 
 function App() {

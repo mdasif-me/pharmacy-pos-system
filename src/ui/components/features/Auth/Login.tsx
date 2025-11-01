@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import logo from '../assets/logo_mediboy.png'
-import '../styles/Login.css'
+import logo from '../../../assets/logo_mediboy.png'
+import './Login.css'
 
 interface LoginProps {
   onLoginSuccess: (token: AuthToken) => void

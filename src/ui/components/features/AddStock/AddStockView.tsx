@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Rotate from '../assets/rotate.svg'
-import Search from '../assets/search.svg'
-import Wifi from '../assets/wifi.svg'
-import { broadcastStockUpdate, StockBroadcastPayload } from '../services/broadcastService'
-import '../styles/AddStockView.css'
+import Rotate from '../../../assets/rotate.svg'
+import Search from '../../../assets/search.svg'
+import Wifi from '../../../assets/wifi.svg'
+import { broadcastStockUpdate, StockBroadcastPayload } from '../../../services/broadcastService'
+import './AddStockView.css'
 
 type BulkFormState = {
   buyPercent: string

@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Select, { SingleValue } from 'react-select'
-import Company from '../assets/company.svg'
-import Discount from '../assets/discount.svg'
-import Search from '../assets/search.svg'
-import '../styles/Products.css'
+import Company from '../../../assets/company.svg'
+import Discount from '../../../assets/discount.svg'
+import Search from '../../../assets/search.svg'
+import './Products.css'
 
 type SelectOption<T> = {
   value: T
@@ -77,9 +77,13 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
       // fetch latest products from api and store locally
       const apiProducts = await window.electron.syncProducts()
-      setProducts(apiProducts ?? [])
+      console.log('Sync products response:', apiProducts)
 
-      // refresh filter options after sync
+      // Ensure we have an array
+      const productsArray = Array.isArray(apiProducts) ? apiProducts : []
+      setProducts(productsArray)
+
+      // load filter options
       const companiesData = await window.electron.getUniqueCompanies()
 
       setCompanies(companiesData ?? [])
@@ -99,7 +103,11 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
       // load products from local database first
       const localProducts = await window.electron.getAllProducts()
-      setProducts(localProducts ?? [])
+      console.log('Local products response:', localProducts)
+
+      // Ensure we have an array
+      const productsArray = Array.isArray(localProducts) ? localProducts : []
+      setProducts(productsArray)
 
       // load filter options
       const companiesData = await window.electron.getUniqueCompanies()
@@ -108,7 +116,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       await updateLastSyncTimestamp()
 
       // if no local products, sync from api
-      if (localProducts.length === 0) {
+      if (productsArray.length === 0) {
         await syncProducts()
       }
     } catch (error) {
@@ -140,6 +148,13 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   }, [syncRequestId, syncProducts])
 
   const applyFilters = () => {
+    // Ensure products is an array
+    if (!Array.isArray(products)) {
+      console.error('products is not an array:', products)
+      setFilteredProducts([])
+      return
+    }
+
     let filtered = [...products]
 
     // search filter - check product name and generic name
