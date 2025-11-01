@@ -3,6 +3,7 @@
 ## ✅ White Screen সমস্যা সমাধান হয়েছে!
 
 আমি এই সমস্যাগুলো ঠিক করে দিয়েছি:
+
 1. Content Security Policy (CSP) remove করেছি যা scripts block করছিল
 2. Path resolution ঠিক করেছি production build এর জন্য
 3. WebSecurity disable করেছি local files load করার জন্য
@@ -43,6 +44,7 @@ npm run transpile:electron && npm run build && npm run dist:win
 ### ধাপ ৪: Installer পাবেন
 
 Build সম্পন্ন হলে `release-windows` ফোল্ডারে পাবেন:
+
 - `Pharmacy POS.exe` - Portable executable (কোনো installation লাগবে না)
 
 ## 🎯 Client কে পাঠান

@@ -3,6 +3,7 @@
 ## ✅ White Screen Issue - FIXED!
 
 The white screen issue has been fixed by:
+
 1. Removing restrictive Content Security Policy from `index.html`
 2. Fixing path resolution in `pathResolver.ts`
 3. Disabling `webSecurity` for production builds to allow local file loading
@@ -51,6 +52,7 @@ git push origin main --tags
 ## 📦 What You'll Get
 
 After building, you'll find in `release-windows/`:
+
 - `Pharmacy POS.exe` - Portable executable (no installation needed)
 - Your client can run this directly on Windows!
 
@@ -63,6 +65,7 @@ After building, you'll find in `release-windows/`:
 ## 💡 Why Did the White Screen Happen?
 
 The white screen was caused by:
+
 1. **CSP (Content Security Policy)** - Too restrictive, blocked inline scripts
 2. **Path Issues** - Production build couldn't find the HTML file
 3. **Web Security** - Electron blocked loading local resources
@@ -94,12 +97,14 @@ npm run dist:win
 ## 🆘 Troubleshooting
 
 ### If Wine build fails:
+
 ```bash
 # Install additional Wine dependencies
 sudo apt-get install -y libwine libwine:i386 fonts-wine
 ```
 
 ### If you see "Module not found" errors:
+
 ```bash
 # Reinstall dependencies
 rm -rf node_modules package-lock.json
@@ -108,6 +113,7 @@ npm run rebuild:native
 ```
 
 ### To test locally before sending to client:
+
 ```bash
 # Run in development mode
 npm run dev
