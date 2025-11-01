@@ -1,6 +1,7 @@
 # Build Windows Installer from Ubuntu
 
 ## 🎯 Problem
+
 You only have Ubuntu PC, but need to create Windows .exe for clients.
 
 ## ✅ SOLUTION 1: Use GitHub Actions (EASIEST - No Windows PC Needed!)
@@ -33,12 +34,14 @@ I already created `.github/workflows/build-windows.yml` for you!
 ### Step 3: Trigger the Build
 
 **Option A: Push a version tag**
+
 ```bash
 git tag v1.0.1
 git push origin v1.0.1
 ```
 
 **Option B: Manual trigger**
+
 1. Go to: https://github.com/mdasif-me/pharmacy-pos-system/actions
 2. Click "Build Windows Installer"
 3. Click "Run workflow" button
@@ -151,11 +154,11 @@ wine64 npm run dist:win
 
 ## 📊 Comparison
 
-| Method | Difficulty | Speed | Reliability |
-|--------|-----------|-------|-------------|
-| **GitHub Actions** | ⭐ Easiest | Fast (5-10 min) | ⭐⭐⭐⭐⭐ Best |
-| **Docker** | ⭐⭐ Easy | Fast (3-5 min) | ⭐⭐⭐⭐ Good |
-| **Wine** | ⭐⭐⭐⭐⭐ Hard | Slow (15+ min) | ⭐⭐ Unreliable |
+| Method             | Difficulty      | Speed           | Reliability     |
+| ------------------ | --------------- | --------------- | --------------- |
+| **GitHub Actions** | ⭐ Easiest      | Fast (5-10 min) | ⭐⭐⭐⭐⭐ Best |
+| **Docker**         | ⭐⭐ Easy       | Fast (3-5 min)  | ⭐⭐⭐⭐ Good   |
+| **Wine**           | ⭐⭐⭐⭐⭐ Hard | Slow (15+ min)  | ⭐⭐ Unreliable |
 
 ---
 
@@ -168,7 +171,7 @@ wine64 npm run dist:win
 ✅ **Always works** - Real Windows environment  
 ✅ **Automated** - Just push code and get builds  
 ✅ **No system pollution** - Doesn't touch your Ubuntu  
-✅ **Multiple builds** - Can build Windows, Mac, Linux simultaneously  
+✅ **Multiple builds** - Can build Windows, Mac, Linux simultaneously
 
 ### Quick Start with GitHub Actions:
 
@@ -196,6 +199,7 @@ git push origin v1.0.1
 ### If GitHub Actions Fails
 
 Check the error in Actions tab. Common issues:
+
 - **Node version**: Change to `node-version: '18'` in workflow file
 - **Build errors**: Make sure `npm run build` works locally
 - **Permissions**: Make sure repo has Actions enabled in Settings
@@ -222,6 +226,7 @@ docker build -f Dockerfile.windows -t pharmacy-pos-windows . --no-cache
 ## 💡 Best Practice Workflow
 
 **For Regular Development:**
+
 ```bash
 # Develop on Ubuntu
 npm run dev
@@ -232,6 +237,7 @@ npm start
 ```
 
 **When Ready for Client:**
+
 ```bash
 # Commit your changes
 git add .
@@ -284,10 +290,12 @@ Your clients can download directly from there! No need to send files manually.
 **You have 3 options, but GitHub Actions is BEST:**
 
 1. **GitHub Actions** ⭐ RECOMMENDED
+
    - Push code → Wait 5 min → Download Windows build
    - No installation, always works, 100% free
 
 2. **Docker** ⭐ Good alternative
+
    - Install Docker → Run build → Get Windows .exe
    - Works offline, faster than Wine
 

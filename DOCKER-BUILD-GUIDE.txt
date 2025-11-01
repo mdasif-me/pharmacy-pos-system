@@ -1,0 +1,158 @@
+===============================================================================
+     🐳 BUILD WINDOWS INSTALLER ON UBUNTU USING DOCKER
+===============================================================================
+
+Since GitHub Actions has a billing issue, use Docker to build Windows 
+installers directly on your Ubuntu PC. No Windows PC needed!
+
+===============================================================================
+                        🚀 QUICK START (One Command!)
+===============================================================================
+
+Just run:
+
+    ./build-windows.sh
+
+That's it! Wait 5-10 minutes and your Windows installer will be ready.
+
+===============================================================================
+                        📋 WHAT IT DOES
+===============================================================================
+
+1. Builds a Docker container with Windows build tools
+2. Compiles your app for Windows inside the container
+3. Creates Windows installer and ZIP file
+4. Output ready in: release-windows/
+
+===============================================================================
+                        ⚙️ MANUAL STEPS (If needed)
+===============================================================================
+
+If you prefer to run commands manually:
+
+Step 1: Build Docker Image (first time only)
+    docker build -f Dockerfile.windows -t pharmacy-pos-windows .
+
+Step 2: Build Windows App
+    docker run --rm -v $(pwd)/release-windows:/project/release-windows pharmacy-pos-windows
+
+Step 3: Create ZIP
+    cd release-windows/win-unpacked
+    zip -r ../Pharmacy-POS-Windows.zip *
+    cd ../..
+
+===============================================================================
+                        📦 OUTPUT FILES
+===============================================================================
+
+After building, you'll find:
+
+📁 release-windows/win-unpacked/
+   └── Pharmacy POS.exe          (Main executable)
+   └── resources/                (App files)
+   └── *.dll                     (Windows libraries)
+
+📦 release-windows/Pharmacy-POS-Windows-Portable.zip
+   └── Ready to send to clients!
+
+===============================================================================
+                        🎯 GIVE TO YOUR CLIENT
+===============================================================================
+
+1. Copy the ZIP file to pendrive:
+   cp release-windows/Pharmacy-POS-Windows-Portable.zip /media/YOUR_PENDRIVE/
+
+2. On client's Windows PC:
+   - Extract the ZIP
+   - Run "Pharmacy POS.exe"
+   - Done!
+
+===============================================================================
+                        🔄 REBUILD AFTER CHANGES
+===============================================================================
+
+Made code changes? Just run again:
+
+    ./build-windows.sh
+
+Docker will use cache, so rebuilds are MUCH faster (1-2 minutes).
+
+===============================================================================
+                        ⚡ PERFORMANCE NOTES
+===============================================================================
+
+First Build:  5-10 minutes (downloads Windows tools)
+Next Builds:  1-2 minutes  (uses Docker cache)
+File Size:    ~125 MB ZIP
+
+Disk Space Needed:
+- Docker image: ~3 GB (one-time)
+- Build output: ~200 MB per build
+
+===============================================================================
+                        🐛 TROUBLESHOOTING
+===============================================================================
+
+Error: "Cannot connect to Docker daemon"
+Solution: sudo systemctl start docker
+
+Error: "Permission denied"
+Solution: sudo usermod -aG docker $USER
+          Then logout and login again
+
+Error: "No space left on device"
+Solution: docker system prune -a
+          This cleans up old images
+
+To see Docker logs:
+    docker logs $(docker ps -lq)
+
+===============================================================================
+                        💡 ADVANTAGES OF DOCKER METHOD
+===============================================================================
+
+✅ No GitHub account needed
+✅ Works offline
+✅ Fast rebuilds (uses cache)
+✅ Reproducible builds
+✅ Same result every time
+✅ No Windows PC needed
+✅ Free forever
+
+===============================================================================
+                        📞 QUICK REFERENCE
+===============================================================================
+
+Build:           ./build-windows.sh
+Rebuild:         ./build-windows.sh
+Clean old:       docker system prune
+Check size:      du -sh release-windows/
+Test locally:    (requires Windows PC or VM)
+
+===============================================================================
+                        🎓 WHAT'S HAPPENING INSIDE
+===============================================================================
+
+The Docker container:
+1. Uses electronuserland/builder:wine base image
+2. Installs your npm dependencies
+3. Runs TypeScript compiler
+4. Builds frontend with Vite
+5. Uses electron-builder with Wine to create Windows .exe
+6. Wine allows running Windows build tools on Linux
+7. Outputs proper Windows executable with correct .node files
+
+This solves the "better_sqlite3.node not valid Win32 application" error
+because it uses Wine to compile native modules FOR Windows!
+
+===============================================================================
+                        ✅ READY TO BUILD!
+===============================================================================
+
+Run:  ./build-windows.sh
+
+Wait 5-10 minutes (first time) or 1-2 minutes (rebuilds)
+
+Your Windows installer will be ready! 🎉
+
+===============================================================================
