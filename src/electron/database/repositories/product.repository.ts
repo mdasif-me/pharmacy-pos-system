@@ -232,6 +232,7 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
 
   /**
    * bulk upsert products (for sync)
+   * Only updates products that haven't been modified locally (is_dirty = 0)
    */
   bulkUpsert(products: ProductEntity[]): void {
     const upsertStmt = this.db.prepare(`
@@ -246,25 +247,68 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
         product_name = excluded.product_name,
         generic_name = excluded.generic_name,
         company_id = excluded.company_id,
-        category_id = excluded.category_id,
+        category_id = COALESCE(excluded.category_id, ${this.tableName}.category_id),
         mrp = excluded.mrp,
-        sale_price = excluded.sale_price,
-        discount_price = excluded.discount_price,
-        peak_hour_price = excluded.peak_hour_price,
-        mediboy_offer_price = excluded.mediboy_offer_price,
-        in_stock = excluded.in_stock,
-        stock_alert = excluded.stock_alert,
+        sale_price = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.sale_price
+          ELSE excluded.sale_price 
+        END,
+        discount_price = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.discount_price
+          ELSE excluded.discount_price 
+        END,
+        peak_hour_price = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.peak_hour_price
+          ELSE excluded.peak_hour_price 
+        END,
+        mediboy_offer_price = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.mediboy_offer_price
+          ELSE excluded.mediboy_offer_price 
+        END,
+        in_stock = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.in_stock
+          WHEN excluded.in_stock > 0 THEN excluded.in_stock 
+          ELSE ${this.tableName}.in_stock 
+        END,
+        stock_alert = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.stock_alert
+          ELSE excluded.stock_alert 
+        END,
         type = excluded.type,
         prescription = excluded.prescription,
         status = excluded.status,
         cover_image = excluded.cover_image,
         image_path = excluded.image_path,
-        version = excluded.version,
+        version = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.version
+          ELSE excluded.version 
+        END,
         last_synced_at = excluded.last_synced_at,
-        last_modified_at = excluded.last_modified_at,
+        last_modified_at = CASE 
+          WHEN ${this.tableName}.is_dirty = 1 THEN ${this.tableName}.last_modified_at
+          ELSE excluded.last_modified_at 
+        END,
         raw_data = excluded.raw_data
-      WHERE excluded.version > ${this.tableName}.version
     `)
+
+    // Get count of locally modified products before sync
+    const dirtyCountStmt = this.db.prepare(`
+      SELECT COUNT(*) as count FROM ${this.tableName} WHERE is_dirty = 1
+    `)
+    const dirtyResult = dirtyCountStmt.get() as { count: number }
+    
+    if (dirtyResult.count > 0) {
+      // Get details of dirty products
+      const dirtyProducts = this.db.prepare(`
+        SELECT id, product_name, in_stock FROM ${this.tableName} 
+        WHERE is_dirty = 1 LIMIT 5
+      `).all() as Array<{ id: number; product_name: string; in_stock: number }>
+      
+      console.log(
+        `[ProductRepository] 🔒 Protecting ${dirtyResult.count} locally edited products during sync`
+      )
+      console.log('[ProductRepository] Sample protected products:', dirtyProducts)
+    }
 
     // run in transaction for performance
     const transaction = this.db.transaction((prods: ProductEntity[]) => {
