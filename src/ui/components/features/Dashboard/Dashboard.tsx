@@ -4,7 +4,6 @@ import logo from '../../../assets/logo.png'
 import logout from '../../../assets/logout.svg'
 import pos from '../../../assets/pos.svg'
 import stock from '../../../assets/stock.svg'
-import { MainLayout } from '../../layouts'
 import { AddStockView } from '../AddStock'
 import { Products } from '../Products'
 import './Dashboard.css'
@@ -61,49 +60,53 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     }
   }, [onLogout])
 
-  let content: React.ReactNode
-  switch (activeView) {
-    case 'pos':
-      content = <PosView />
-      break
-    case 'add-stock':
-      content = <AddStockView />
-      break
-    default:
-      content = (
-        <Products
-          user={user}
-          syncRequestId={syncRequestId}
-          onSyncStatusChange={handleSyncStatusChange}
-        />
-      )
+  const renderContent = () => {
+    switch (activeView) {
+      case 'pos':
+        return <PosView />
+      case 'add-stock':
+        return <AddStockView />
+      case 'all-stock':
+        return (
+          <Products
+            user={user}
+            syncRequestId={syncRequestId}
+            onSyncStatusChange={handleSyncStatusChange}
+          />
+        )
+      default:
+        return null
+    }
   }
 
-  const isSyncDisabled = activeView !== 'all-stock' || isSyncing
-
-  // Sidebar component
-  const sidebar = (
-    <aside className="dashboard-sidebar">
-      <div className="sidebar-header">
-        <div className="sidebar-brand">
-          <img src={logo} alt="logo" />
+  return (
+    <div className="dashboard-root">
+      {/* Sidebar */}
+      <aside className="dashboard-sidebar">
+        {/* Logo Section */}
+        <div className="sidebar-header">
+          <div className="sidebar-brand">
+            <img src={logo} alt="Logo" />
+          </div>
         </div>
-        <div className="sidebar-user">{user.user_name}</div>
-      </div>
-      <nav className="sidebar-nav">
-        {menuItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`sidebar-link ${activeView === item.id ? 'is-active' : ''}`}
-            onClick={() => handleMenuClick(item.id)}
-          >
-            <img className="sidebar-icon" src={item.icon} alt={item.label} />
-            <span className="sidebar-label">{item.label}</span>
-          </button>
-        ))}
-      </nav>
-      <div>
+
+        {/* Navigation Menu */}
+        <nav className="sidebar-nav">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`sidebar-link ${activeView === item.id ? 'is-active' : ''}`}
+              onClick={() => handleMenuClick(item.id)}
+              aria-label={item.label}
+            >
+              <img className="sidebar-icon" src={item.icon} alt="" />
+              <span className="sidebar-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Logout Button */}
         <button
           type="button"
           className="sidebar-logout"
@@ -113,17 +116,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               handleLogout()
             }
           }}
+          aria-label="Logout"
         >
-          <img className="sidebar-icon" src={logout} alt="Log-out" />
-          Log-out
+          <img className="sidebar-icon" src={logout} alt="" />
+          <span>Log-out</span>
         </button>
-      </div>
-    </aside>
-  )
+      </aside>
 
-  return (
-    <MainLayout sidebar={sidebar}>
-      <main className="dashboard-content">{content}</main>
-    </MainLayout>
+      {/* Main Content Area */}
+      <main className="dashboard-content">{renderContent()}</main>
+    </div>
   )
 }

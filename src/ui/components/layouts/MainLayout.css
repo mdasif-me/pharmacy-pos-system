@@ -5,6 +5,7 @@
   height: 100vh;
   overflow: hidden;
   background: #f5f5f5;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .main-layout-header {
