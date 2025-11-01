@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow } from 'electron'
 import path from 'path'
 import { API_CONFIG } from './core/config/api.config'
 import { DATABASE_CONFIG } from './core/config/database.config'
@@ -50,29 +50,7 @@ function initializeIpcHandlers() {
   new SyncIpcHandler(db)
   new SearchIpcHandler(db)
   new StockIpcHandler()
-
-  // Register a test socket handler to debug
-  console.log('[Main] Registering test socket:isConnected handler...')
-  ipcMain.handle('socket:isConnected', async () => {
-    console.log('[Main] TEST socket:isConnected handler called!')
-    return socketService?.isConnected() ?? false
-  })
-  ipcMain.handle('socket:getId', async () => {
-    console.log('[Main] TEST socket:getId handler called!')
-    return socketService?.getSocketId() ?? null
-  })
-  ipcMain.handle('socket:reconnect', async () => {
-    console.log('[Main] TEST socket:reconnect handler called!')
-    try {
-      socketService?.disconnect()
-      socketService?.connect()
-      return { success: true }
-    } catch (error: any) {
-      return { success: false, error: error.message }
-    }
-  })
-
-  console.log('IPC handlers initialized (including test socket handlers)')
+  console.log('IPC handlers initialized')
 }
 
 function initializeSocketService() {
