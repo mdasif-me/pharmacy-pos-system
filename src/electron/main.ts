@@ -125,6 +125,16 @@ function createMainWindow() {
     console.error('[Main] Failed to load:', errorCode, errorDescription)
   })
 
+  // Log when page finishes loading
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('[Main] Page finished loading successfully')
+  })
+
+  // Log console messages from renderer
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log('[Renderer]', message)
+  })
+
   if (isDev()) {
     console.log('[Main] Loading dev URL: http://localhost:5123')
     mainWindow.loadURL('http://localhost:5123')
@@ -132,10 +142,24 @@ function createMainWindow() {
   } else {
     const uiPath = getUIPath()
     const indexPath = path.join(uiPath, 'index.html')
-    console.log('[Main] Loading production HTML:', indexPath)
+    console.log('[Main] UI Path:', uiPath)
+    console.log('[Main] Index Path:', indexPath)
+    console.log('[Main] App Path:', app.getAppPath())
+
+    // Check if file exists
+    const fs = require('fs')
+    if (fs.existsSync(indexPath)) {
+      console.log('[Main] ✓ index.html exists')
+    } else {
+      console.error('[Main] ✗ index.html NOT FOUND!')
+    }
+
     mainWindow.loadFile(indexPath).catch((err) => {
       console.error('[Main] Error loading file:', err)
     })
+
+    // Open DevTools in production to debug
+    mainWindow.webContents.openDevTools()
   }
 
   mainWindow.on('closed', () => {

@@ -2,8 +2,9 @@
   "appId": "com.pharmacy.pos",
   "productName": "Pharmacy POS",
   "copyright": "Copyright © 2025",
-  "files": ["dist-electron", "dist-react"],
-  "extraResources": ["dist-electron/preload.cjs", "src/assets/**"],
+  "files": ["dist-electron/**/*", "dist-react/**/*", "package.json"],
+  "extraResources": ["src/assets/**"],
+  "asarUnpack": ["dist-react/**/*"],
   "directories": {
     "output": "release-windows",
     "buildResources": "build"
