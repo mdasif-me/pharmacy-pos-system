@@ -1,6 +1,5 @@
 import React, { useState } from 'react'
 import logo from '../../../assets/logo_mediboy.png'
-import { AuthLayout } from '../../layouts'
 import './Login.css'
 
 interface LoginProps {
@@ -48,52 +47,50 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   }
 
   return (
-    <AuthLayout>
-      <div className="login-container">
-        <div className="login-form">
-          <div className="loginLogo">
-            <img src={logo} alt="" />
-            <h2>Login to Your Account</h2>
+    <div className="login-container">
+      <div className="login-form">
+        <div className="loginLogo">
+          <img src={logo} alt="" />
+          <h2>Login to Your Account</h2>
+        </div>
+
+        {error && <div className="error-message">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="phoneNumber">Phone Number</label>
+            <input
+              type="text"
+              id="phoneNumber"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="Enter your phoneNumber"
+              required
+            />
           </div>
 
-          {error && <div className="error-message">{error}</div>}
-
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="phoneNumber">Phone Number</label>
-              <input
-                type="text"
-                id="phoneNumber"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="Enter your phoneNumber"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-
-            <button type="submit" className="login-button" disabled={isLoading}>
-              {isLoading ? 'logging in...' : 'Login'}
-            </button>
-            <div></div>
-          </form>
-
-          <div className="login-info">
-            <p>Alright reserve @mediboy</p>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
           </div>
+
+          <button type="submit" className="login-button" disabled={isLoading}>
+            {isLoading ? 'logging in...' : 'Login'}
+          </button>
+          <div></div>
+        </form>
+
+        <div className="login-info">
+          <p>Alright reserve @mediboy</p>
         </div>
       </div>
-    </AuthLayout>
+    </div>
   )
 }
