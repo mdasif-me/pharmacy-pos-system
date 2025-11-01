@@ -162,6 +162,8 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
     let filtered = [...products]
 
+    filtered = filtered.filter((product) => (product.in_stock ?? 0) > 0)
+
     // search filter - check product name and generic name
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
@@ -338,63 +340,58 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   const tableColumns: Column<Product>[] = useMemo(
     () => [
       {
-        key: 'productName',
-        header: 'Product Name',
-        width: '25%',
-        render: (product) => (
+        key: 'sl',
+        header: 'SL',
+        width: '5%',
+        render: (_product: Product, index?: number) => startIndex + (index ?? 0) + 1,
+      },
+      {
+        key: 'productDescription',
+        header: 'Product Description',
+        width: '30%',
+        render: (product: Product) => (
           <div className="product-name-cell">
             <span className="product-name">{product.productName}</span>
             {product.genericName && <span className="product-generic">{product.genericName}</span>}
-            {(product.category_name || product.category_id) && (
-              <span className="product-category">
-                {product.category_name || `Category ${product.category_id}`}
-              </span>
-            )}
           </div>
         ),
       },
       {
-        key: 'type',
-        header: 'Type',
-        width: '10%',
-        render: (product) => product.type || '—',
+        key: 'company',
+        header: 'Company Name',
+        width: '20%',
+        render: (product: Product) => product.company_name || '—',
       },
       {
         key: 'mrp',
-        header: 'MRP/UNIT',
+        header: 'MRP',
         width: '12%',
-        render: (product) => formatCurrency(product.retail_max_price),
+        render: (product: Product) => formatCurrency(product.retail_max_price),
       },
       {
-        key: 'price',
-        header: priceType === 'discount' ? 'Discount Price/UNIT' : 'Peak-Hour Price/UNIT',
-        width: '15%',
-        render: (product) => formatCurrency(getDisplayedRate(product)),
-      },
-      {
-        key: 'company',
-        header: 'Company Name',
-        width: '18%',
-        render: (product) => product.company_name || '—',
+        key: 'rate',
+        header: 'Rate',
+        width: '12%',
+        render: (product: Product) => formatCurrency(getDisplayedRate(product)),
       },
       {
         key: 'stock',
         header: 'Current Stock',
-        width: '10%',
-        render: (product) => product.in_stock ?? 0,
+        width: '11%',
+        render: (product: Product) => product.in_stock ?? 0,
       },
       {
         key: 'action',
         header: 'Action',
         width: '10%',
-        render: (product) => (
+        render: (product: Product) => (
           <button className="edit-button" onClick={() => openPriceModal(product)}>
             Edit
           </button>
         ),
       },
     ],
-    [priceType]
+    [priceType, startIndex]
   )
 
   if (isLoading) {

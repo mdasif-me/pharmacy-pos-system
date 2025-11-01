@@ -4,7 +4,7 @@ import './Table.css'
 export interface Column<T> {
   key: string
   header: string
-  render: (item: T) => React.ReactNode
+  render: (item: T, index?: number) => React.ReactNode
   width?: string
 }
 
@@ -54,11 +54,11 @@ export function Table<T>({
             </tr>
           </thead>
           <tbody className="data-table-body">
-            {data.map((item) => (
+            {data.map((item, index) => (
               <tr key={keyExtractor(item)} className="data-table-row">
                 {columns.map((column) => (
                   <td key={column.key} className="data-table-td">
-                    {column.render(item)}
+                    {column.render(item, index)}
                   </td>
                 ))}
               </tr>
