@@ -3,7 +3,7 @@ import Select, { SingleValue } from 'react-select'
 import Company from '../assets/company.svg'
 import Discount from '../assets/discount.svg'
 import Search from '../assets/search.svg'
-import './Products.css'
+import '../styles/Products.css'
 
 type SelectOption<T> = {
   value: T

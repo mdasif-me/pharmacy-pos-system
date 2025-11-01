@@ -1,0 +1,491 @@
+.add-stock-section {
+  margin-bottom: 24px;
+}
+
+.add-stock-container {
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 0;
+}
+
+.add-stock-form {
+  display: flex;
+  gap: 20px;
+  padding: 0;
+}
+
+/* Left Section - Search and Table */
+.left-section {
+  flex: 0 0 380px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.formSearch {
+  display: flex;
+  align-items: stretch;
+  background-color: #9c9191;
+  border-top-left-radius: 4px;
+}
+
+.searchIcon {
+  background-color: #cfcfcf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+}
+
+.searchIcon img {
+  height: 20px;
+  width: 20px;
+}
+
+.formSearch input {
+  flex: 1;
+  height: 40px;
+  border: none;
+  background-color: #fffbfb;
+  color: black;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.formSearch input::placeholder {
+  color: #999;
+}
+
+/* Search Suggestions */
+.search-suggestions {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.search-suggestion {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+
+.search-suggestion:hover {
+  background: #f5f5f5;
+}
+
+.search-suggestion-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.search-suggestion-meta {
+  display: block;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.search-suggestion.loading,
+.search-suggestion.empty {
+  text-align: center;
+  color: #999;
+  cursor: default;
+}
+
+.search-suggestion.loading:hover,
+.search-suggestion.empty:hover {
+  background: white;
+}
+
+/* Products Table */
+.products-table-wrapper {
+  background: white;
+  overflow-x: auto;
+  flex: 1;
+}
+
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.products-table thead {
+  background: #0c0b0b;
+  color: white;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.products-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 700;
+}
+
+.products-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  vertical-align: top;
+}
+
+.products-table tbody tr:hover {
+  background: #fafafa;
+}
+
+/* Right Section - Forms */
+.right-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.full-input-section {
+  background: white;
+  border-radius: 4px;
+}
+
+/* Headers */
+.input-heder {
+  display: flex;
+  align-items: stretch;
+}
+
+.input-heder-stock {
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  min-width: 150px;
+  background-color: #150f0f;
+  display: flex;
+  align-items: center;
+}
+
+.input-heder-note {
+  padding: 6px 12px;
+  flex: 1;
+  background-color: #150f0f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  display: flex;
+  align-items: center;
+}
+
+/* Input Sections */
+.input-section {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  flex-wrap: wrap;
+}
+
+.input-date-section {
+  display: flex;
+  gap: 11px;
+  padding: 6px;
+  flex-wrap: wrap;
+}
+
+/* Input Fields */
+.add-stock-input {
+  display: flex;
+  align-items: stretch;
+}
+
+.add-stock-input h2 {
+  padding: 8px 10px;
+  min-width: 56px;
+  background-color: #cfcfcf;
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.add-stock-input input {
+  border: 1px solid #a89797;
+  height: 35px;
+  width: 78px;
+  background: #fffbfb;
+  padding: 0 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+/* Offer Input */
+.add-stock-input-offer {
+  display: flex;
+  align-items: stretch;
+}
+
+.add-stock-input-offer h2 {
+  padding: 8px 10px;
+  min-width: 76px;
+  background-color: #cfcfcf;
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.add-stock-input-offer input {
+  width: 124px;
+  height: 35px;
+  border: 1px solid #a89797;
+  background: #fffbfb;
+  padding: 0 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+/* Date Inputs */
+.add-stock-input-date {
+  display: flex;
+  align-items: stretch;
+}
+
+.add-stock-input-date h2 {
+  padding: 8px 10px;
+  background-color: #cfcfcf;
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.add-stock-input-date input {
+  width: 298px;
+  height: 35px;
+  border: 1px solid #a89797;
+  background: #fffbfb;
+  padding: 0 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+.add-stock-bottom-input-date {
+  display: flex;
+  align-items: stretch;
+}
+
+.add-stock-bottom-input-date h2 {
+  padding: 8px 10px;
+  background-color: #cfcfcf;
+  color: #000;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.add-stock-bottom-input-date input {
+  width: 295px;
+  height: 35px;
+  border: 1px solid #a89797;
+  background: #fffbfb;
+  padding: 0 8px;
+  font-size: 13px;
+  outline: none;
+}
+
+/* Checkbox */
+.add-stock-input-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.add-stock-input-checkbox input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.add-stock-input-checkbox h2 {
+  color: #100c0c;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Submit Button */
+.add-input-stock {
+  text-align: center;
+  padding: 12px 6px;
+}
+
+.add-input-stock button {
+  padding: 10px 90px;
+  width: auto;
+  min-width: 264px;
+  height: 39px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  background-color: #0e8e07;
+  border: none;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.add-input-stock button:hover:not(:disabled) {
+  background-color: #0c7a06;
+}
+
+.add-input-stock button:disabled {
+  background-color: #999;
+  cursor: not-allowed;
+}
+
+/* Status Messages */
+.form-status {
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.form-status-success {
+  color: #0e8e07;
+  background-color: #e8f5e8;
+  padding: 12px;
+  margin: 0;
+  border-radius: 4px;
+}
+
+.form-status-error {
+  color: #d32f2f;
+  background-color: #fdecea;
+  padding: 12px;
+  margin: 0;
+  border-radius: 4px;
+}
+
+/* Dashboard Header (Sync controls) */
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 4px;
+  margin-top: 20px;
+}
+
+.status-button,
+.sync-control {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.sync-control.spin img {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.dashboard-header article h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.dashboard-header article p {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  color: #666;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .add-stock-form {
+    flex-direction: column;
+  }
+
+  .left-section {
+    flex: 1 1 auto;
+  }
+
+  .right-section {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .add-stock-view {
+    padding: 12px;
+  }
+
+  .add-stock-form {
+    gap: 12px;
+  }
+
+  .input-section,
+  .input-date-section {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .add-stock-input input,
+  .add-stock-input-offer input,
+  .add-stock-input-date input,
+  .add-stock-bottom-input-date input {
+    width: 100%;
+    flex: 1;
+  }
+
+  .add-stock-input,
+  .add-stock-input-offer,
+  .add-stock-input-date,
+  .add-stock-bottom-input-date {
+    width: 100%;
+  }
+
+  .add-input-stock button {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .input-heder {
+    flex-direction: column;
+  }
+
+  .input-heder-stock,
+  .input-heder-note {
+    width: 100%;
+  }
+}

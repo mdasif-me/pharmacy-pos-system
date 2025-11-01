@@ -73,6 +73,7 @@ export class DatabaseOperations {
     `
 
     const seenProductIds = new Set<number>()
+    let savedCount = 0
 
     for (const rawProduct of products) {
       const product = this.normalizeProduct(rawProduct)
@@ -123,7 +124,22 @@ export class DatabaseOperations {
         product.last_sync_at ?? new Date().toISOString(),
         rawPayload,
       ])
+      savedCount++
     }
+
+    console.log(`✓ Saved ${savedCount} products to database`)
+
+    // Count products with stock
+    const stockCount = await dbManager.get<{ count: number }>(
+      'SELECT COUNT(*) as count FROM products WHERE COALESCE(in_stock, 0) > 0'
+    )
+    console.log(`✓ Products with stock > 0: ${stockCount?.count || 0}`)
+
+    // Count all products
+    const totalCount = await dbManager.get<{ count: number }>(
+      'SELECT COUNT(*) as count FROM products'
+    )
+    console.log(`✓ Total products in database: ${totalCount?.count || 0}`)
 
     // update sync status
     await this.updateLastSync()
@@ -140,17 +156,27 @@ export class DatabaseOperations {
   }
 
   /**
-   * search products by name or generic name with available stock
+   * search products by name or generic name regardless of stock level
    */
   async searchProducts(searchTerm: string): Promise<Product[]> {
+    const trimmed = (searchTerm ?? '').trim()
+
+    // If empty search, return all products
+    if (trimmed === '') {
+      const sql = `SELECT * FROM products ORDER BY productName`
+      const rows = await dbManager.all<any>(sql)
+      console.log(`[searchProducts] Returning all products: ${rows.length}`)
+      return rows.map((row) => this.hydrateProductRow(row))
+    }
+
     const sql = `
       SELECT * FROM products
-      WHERE COALESCE(in_stock, 0) > 0
-        AND (productName LIKE ? OR genericName LIKE ?)
+      WHERE productName LIKE ? OR genericName LIKE ?
       ORDER BY productName
     `
-    const term = `%${searchTerm}%`
-    const rows = await dbManager.all<any>(sql, [term, term])
+    const safeTerm = `%${trimmed}%`
+    const rows = await dbManager.all<any>(sql, [safeTerm, safeTerm])
+    console.log(`[searchProducts] Query: "${trimmed}", Results: ${rows.length}`)
     return rows.map((row) => this.hydrateProductRow(row))
   }
 

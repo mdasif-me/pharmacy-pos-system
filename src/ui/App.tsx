@@ -1,64 +1,64 @@
-import { useEffect, useRef, useState } from 'react';
-import './App.css';
-import { Dashboard } from './components/Dashboard';
-import { Login } from './components/Login';
+import { useEffect, useRef, useState } from 'react'
+import { Dashboard } from './components/Dashboard'
+import { Login } from './components/Login'
+import './styles/App.css'
 
 function App() {
-  const [currentUser, setCurrentUser] = useState<AuthToken | null>(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const hasAlertedRef = useRef(false);
+  const [currentUser, setCurrentUser] = useState<AuthToken | null>(null)
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const hasAlertedRef = useRef(false)
 
   // check if user is already logged in
   useEffect(() => {
-    checkAuthStatus();
-  }, []);
+    checkAuthStatus()
+  }, [])
 
   useEffect(() => {
     const handleError = (event: ErrorEvent) => {
-      console.error('window error captured:', event.error ?? event.message);
+      console.error('window error captured:', event.error ?? event.message)
       if (!hasAlertedRef.current) {
-        alert('an unexpected error occurred. please restart the application.');
-        hasAlertedRef.current = true;
+        alert('an unexpected error occurred. please restart the application.')
+        hasAlertedRef.current = true
       }
-    };
+    }
 
     const handleRejection = (event: PromiseRejectionEvent) => {
-      console.error('unhandled rejection captured:', event.reason);
+      console.error('unhandled rejection captured:', event.reason)
       if (!hasAlertedRef.current) {
-        alert('a background error occurred. please restart the application.');
-        hasAlertedRef.current = true;
+        alert('a background error occurred. please restart the application.')
+        hasAlertedRef.current = true
       }
-    };
+    }
 
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleRejection);
+    window.addEventListener('error', handleError)
+    window.addEventListener('unhandledrejection', handleRejection)
 
     return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleRejection);
-    };
-  }, []);
+      window.removeEventListener('error', handleError)
+      window.removeEventListener('unhandledrejection', handleRejection)
+    }
+  }, [])
 
   const checkAuthStatus = async () => {
     try {
-      const tokenInfo = await window.electron.getAuthToken();
+      const tokenInfo = await window.electron.getAuthToken()
       if (tokenInfo) {
-        setCurrentUser(tokenInfo);
+        setCurrentUser(tokenInfo)
       }
     } catch (error) {
-      console.error('failed to check auth status:', error);
+      console.error('failed to check auth status:', error)
     } finally {
-      setIsCheckingAuth(false);
+      setIsCheckingAuth(false)
     }
-  };
+  }
 
   const handleLoginSuccess = (user: AuthToken) => {
-    setCurrentUser(user);
-  };
+    setCurrentUser(user)
+  }
 
   const handleLogout = () => {
-    setCurrentUser(null);
-  };
+    setCurrentUser(null)
+  }
 
   // show loading while checking auth
   if (isCheckingAuth) {
@@ -69,9 +69,8 @@ function App() {
           <p>checking authentication...</p>
         </div>
       </div>
-    );
+    )
   }
-
 
   return (
     <div className="App">
@@ -81,7 +80,7 @@ function App() {
         <Login onLoginSuccess={handleLoginSuccess} />
       )}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

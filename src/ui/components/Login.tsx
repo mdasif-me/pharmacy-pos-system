@@ -1,52 +1,52 @@
-import React, { useState } from 'react';
-import logo from "../assets/logo_mediboy.png";
-import './Login.css';
+import React, { useState } from 'react'
+import logo from '../assets/logo_mediboy.png'
+import '../styles/Login.css'
 
 interface LoginProps {
-  onLoginSuccess: (token: AuthToken) => void;
+  onLoginSuccess: (token: AuthToken) => void
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+    e.preventDefault()
+    setIsLoading(true)
+    setError('')
 
     try {
       const response = await window.electron.login({
         phoneNumber,
         password,
-      });
+      })
 
       if (response.token) {
         // get the stored token info
-        const tokenInfo = await window.electron.getAuthToken();
+        const tokenInfo = await window.electron.getAuthToken()
         if (tokenInfo) {
-          onLoginSuccess(tokenInfo);
+          onLoginSuccess(tokenInfo)
         }
       } else {
-        setError('login failed');
+        setError('login failed')
       }
     } catch (err) {
-      setError('network error or invalid credentials');
-      console.error('login error:', err);
+      setError('network error or invalid credentials')
+      console.error('login error:', err)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <div className="login-container">
       <div className="login-form">
-       <div className='loginLogo'>
-         <img src={logo} alt="" />
-         <h2 >Login to Your Account</h2>
-       </div>
+        <div className="loginLogo">
+          <img src={logo} alt="" />
+          <h2>Login to Your Account</h2>
+        </div>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -75,15 +75,10 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             />
           </div>
 
-          <button
-            type="submit"
-            className="login-button"
-            disabled={isLoading}
-          >
+          <button type="submit" className="login-button" disabled={isLoading}>
             {isLoading ? 'logging in...' : 'Login'}
           </button>
-          <div>
-          </div>
+          <div></div>
         </form>
 
         <div className="login-info">
@@ -91,5 +86,5 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
