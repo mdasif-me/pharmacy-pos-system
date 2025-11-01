@@ -1,5 +1,3 @@
-// conflict resolver - handle sync conflicts
-
 import { ProductEntity } from '../../types/entities/product.types'
 
 export type ConflictStrategy = 'server-wins' | 'client-wins' | 'latest-wins' | 'manual'

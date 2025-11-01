@@ -1,5 +1,3 @@
-// product ipc handler - handle product-related ipc calls
-
 import { Database } from 'better-sqlite3'
 import { ipcMain } from 'electron'
 import { ProductService } from '../../services/product.service'

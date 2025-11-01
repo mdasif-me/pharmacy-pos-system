@@ -1,7 +1,3 @@
-/**
- * Price mode enums
- */
-
 export enum PriceMode {
   DISCOUNT = 'discount',
   PEAK_HOUR = 'peak-hour',

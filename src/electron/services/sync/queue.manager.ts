@@ -1,5 +1,3 @@
-// queue manager - manage offline action queue
-
 import { Database } from 'better-sqlite3'
 import { SyncQueueRepository } from '../../database/repositories/sync-queue.repository'
 import { QueueStatus, SyncQueueAction } from '../../types/entities/sync.types'

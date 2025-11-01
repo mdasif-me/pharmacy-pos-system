@@ -1,5 +1,3 @@
-// sync queue repository - manage offline actions
-
 import { Database } from 'better-sqlite3'
 import { DB_TABLES } from '../../core/constants/database.constants'
 import { SyncQueueEntity } from '../../types/entities/sync.types'

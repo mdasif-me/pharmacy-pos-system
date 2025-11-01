@@ -1,5 +1,3 @@
-// cache service - in-memory caching
-
 export interface CacheOptions {
   ttl?: number // time to live in milliseconds
   maxSize?: number // maximum cache size

@@ -1,5 +1,3 @@
-// auth api service - authentication api calls
-
 import { StorageService } from '../storage.service'
 import { HttpClient } from './http.client'
 

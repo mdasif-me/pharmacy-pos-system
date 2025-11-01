@@ -1,5 +1,3 @@
-// http client - axios wrapper with retry logic
-
 import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
 import { StorageService } from '../storage.service'
 

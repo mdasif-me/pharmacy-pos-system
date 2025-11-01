@@ -1,5 +1,3 @@
-// services index - export all services
-
 export * from './cache.service'
 export * from './product.service'
 export * from './search.service'

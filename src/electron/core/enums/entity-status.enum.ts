@@ -1,7 +1,3 @@
-/**
- * Entity status enum
- */
-
 export enum EntityStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',

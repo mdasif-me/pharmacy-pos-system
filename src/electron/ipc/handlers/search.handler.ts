@@ -1,5 +1,3 @@
-// search ipc handler - handle search-related ipc calls
-
 import { Database } from 'better-sqlite3'
 import { ipcMain } from 'electron'
 import { SearchService } from '../../services/search.service'

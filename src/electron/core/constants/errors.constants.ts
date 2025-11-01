@@ -1,7 +1,3 @@
-/**
- * Error messages and codes
- */
-
 export enum ErrorCode {
   // Database errors
   DB_CONNECTION_FAILED = 'DB_CONNECTION_FAILED',

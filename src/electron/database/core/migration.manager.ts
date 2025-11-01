@@ -1,5 +1,3 @@
-// migration.manager.ts - Database migration manager
-
 import Database from 'better-sqlite3'
 import { migration_001 } from '../migrations/001_initial_schema'
 import { migration_002 } from '../migrations/002_add_indexes'

@@ -1,5 +1,3 @@
-// company repository - crud for companies
-
 import { Database } from 'better-sqlite3'
 import { DB_TABLES } from '../../core/constants/database.constants'
 import { BaseRepository } from './base.repository'

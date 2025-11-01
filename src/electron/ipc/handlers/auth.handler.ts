@@ -1,5 +1,3 @@
-// auth ipc handler - handle authentication ipc calls
-
 import { ipcMain } from 'electron'
 import { AuthApiService, LoginRequest, RegisterRequest } from '../../services/api/auth.api.service'
 import { HttpClient } from '../../services/api/http.client'

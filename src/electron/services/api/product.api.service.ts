@@ -1,5 +1,3 @@
-// product api service - api calls for products
-
 import { ProductEntity } from '../../types/entities/product.types'
 import { HttpClient } from './http.client'
 

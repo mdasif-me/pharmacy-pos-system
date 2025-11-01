@@ -1,5 +1,3 @@
-// search service - full-text search and filtering
-
 import { Database } from 'better-sqlite3'
 import { ProductRepository } from '../database/repositories/product.repository'
 import { ProductSearchParams, ProductWithRelations } from '../types/entities/product.types'

@@ -1,7 +1,3 @@
-/**
- * Product entity types
- */
-
 export enum EntityStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',

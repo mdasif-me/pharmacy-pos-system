@@ -1,5 +1,3 @@
-// app.config.ts - Application configuration
-
 export const APP_CONFIG = {
   name: 'Pharmacy POS',
   version: '1.0.0',

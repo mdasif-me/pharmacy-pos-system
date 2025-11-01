@@ -1,7 +1,3 @@
-/**
- * Core enums for the application
- */
-
 export enum SyncStatus {
   IDLE = 'idle',
   SYNCING = 'syncing',

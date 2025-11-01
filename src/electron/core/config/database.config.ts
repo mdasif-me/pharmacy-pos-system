@@ -1,5 +1,3 @@
-// database.config.ts - Database configuration
-
 import { app } from 'electron'
 import path from 'path'
 

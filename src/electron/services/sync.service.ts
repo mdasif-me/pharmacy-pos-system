@@ -1,5 +1,3 @@
-// sync service - manage offline/online synchronization
-
 import { Database } from 'better-sqlite3'
 import { ProductRepository } from '../database/repositories/product.repository'
 import { SyncQueueRepository } from '../database/repositories/sync-queue.repository'

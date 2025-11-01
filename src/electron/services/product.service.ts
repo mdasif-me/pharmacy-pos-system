@@ -1,5 +1,3 @@
-// product service - business logic layer
-
 import { Database } from 'better-sqlite3'
 import { CategoryRepository } from '../database/repositories/category.repository'
 import { CompanyRepository } from '../database/repositories/company.repository'

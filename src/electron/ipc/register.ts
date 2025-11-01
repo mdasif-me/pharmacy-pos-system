@@ -1,5 +1,3 @@
-// ipc register - register all ipc handlers
-
 import { Database } from 'better-sqlite3'
 import { AuthIpcHandler } from './handlers/auth.handler'
 import { ProductIpcHandler } from './handlers/product.handler'

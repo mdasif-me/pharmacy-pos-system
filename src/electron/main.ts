@@ -1,17 +1,15 @@
-// main.ts - Electron main process with new architecture
-
 import { app, BrowserWindow } from 'electron'
 import path from 'path'
-import { isDev } from './util'
-import { getPreloadPath, getUIPath } from './pathResolver'
+import { API_CONFIG } from './core/config/api.config'
+import { DATABASE_CONFIG } from './core/config/database.config'
 import { DatabaseManager } from './database/core/connection.manager'
 import { MigrationManager } from './database/core/migration.manager'
-import { ProductIpcHandler } from './ipc/handlers/product.handler'
 import { AuthIpcHandler } from './ipc/handlers/auth.handler'
-import { SyncIpcHandler } from './ipc/handlers/sync.handler'
+import { ProductIpcHandler } from './ipc/handlers/product.handler'
 import { SearchIpcHandler } from './ipc/handlers/search.handler'
-import { DATABASE_CONFIG } from './core/config/database.config'
-import { API_CONFIG } from './core/config/api.config'
+import { SyncIpcHandler } from './ipc/handlers/sync.handler'
+import { getPreloadPath, getUIPath } from './pathResolver'
+import { isDev } from './util'
 
 let mainWindow: BrowserWindow | null = null
 let db: any = null

@@ -1,7 +1,3 @@
-/**
- * Database configuration and constants
- */
-
 export const DATABASE_CONFIG = {
   NAME: 'pharmacy-pos.db',
   VERSION: 1,

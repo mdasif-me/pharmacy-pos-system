@@ -4,6 +4,7 @@ import logo from '../../../assets/logo.png'
 import logout from '../../../assets/logout.svg'
 import pos from '../../../assets/pos.svg'
 import stock from '../../../assets/stock.svg'
+import { MainLayout } from '../../layouts'
 import { AddStockView } from '../AddStock'
 import { Products } from '../Products'
 import './Dashboard.css'
@@ -80,45 +81,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
   const isSyncDisabled = activeView !== 'all-stock' || isSyncing
 
-  return (
-    <div className="dashboard-root">
-      <aside className="dashboard-sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-brand">
-            <img src={logo} alt="logo" />
-          </div>
-          <div className="sidebar-user">{user.user_name}</div>
+  // Sidebar component
+  const sidebar = (
+    <aside className="dashboard-sidebar">
+      <div className="sidebar-header">
+        <div className="sidebar-brand">
+          <img src={logo} alt="logo" />
         </div>
-        <nav className="sidebar-nav">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`sidebar-link ${activeView === item.id ? 'is-active' : ''}`}
-              onClick={() => handleMenuClick(item.id)}
-            >
-              <img className="sidebar-icon" src={item.icon} alt={item.label} />
-              <span className="sidebar-label">{item.label}</span>
-            </button>
-          ))}
-        </nav>
-        <div>
+        <div className="sidebar-user">{user.user_name}</div>
+      </div>
+      <nav className="sidebar-nav">
+        {menuItems.map((item) => (
           <button
+            key={item.id}
             type="button"
-            className="sidebar-logout"
-            onClick={() => {
-              const confirmLogout = window.confirm('Are you sure you want to logout?')
-              if (confirmLogout) {
-                handleLogout()
-              }
-            }}
+            className={`sidebar-link ${activeView === item.id ? 'is-active' : ''}`}
+            onClick={() => handleMenuClick(item.id)}
           >
-            <img className="sidebar-icon" src={logout} alt="Log-out" />
-            Log-out
+            <img className="sidebar-icon" src={item.icon} alt={item.label} />
+            <span className="sidebar-label">{item.label}</span>
           </button>
-        </div>
-      </aside>
+        ))}
+      </nav>
+      <div>
+        <button
+          type="button"
+          className="sidebar-logout"
+          onClick={() => {
+            const confirmLogout = window.confirm('Are you sure you want to logout?')
+            if (confirmLogout) {
+              handleLogout()
+            }
+          }}
+        >
+          <img className="sidebar-icon" src={logout} alt="Log-out" />
+          Log-out
+        </button>
+      </div>
+    </aside>
+  )
+
+  return (
+    <MainLayout sidebar={sidebar}>
       <main className="dashboard-content">{content}</main>
-    </div>
+    </MainLayout>
   )
 }

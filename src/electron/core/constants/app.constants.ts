@@ -1,7 +1,3 @@
-/**
- * Application-wide constants
- */
-
 export const APP_CONSTANTS = {
   APP_NAME: 'Pharmacy POS',
   APP_VERSION: '2.0.0',

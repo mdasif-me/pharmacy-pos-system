@@ -1,5 +1,3 @@
-// storage.service.ts - Simple file-based storage for auth tokens
-
 import { app } from 'electron'
 import * as fs from 'fs'
 import * as path from 'path'

@@ -1,5 +1,3 @@
-// sync ipc handler - handle sync-related ipc calls
-
 import { Database } from 'better-sqlite3'
 import { ipcMain } from 'electron'
 import { SyncService } from '../../services/sync.service'

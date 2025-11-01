@@ -1,5 +1,3 @@
-// ipc channels - centralized channel definitions
-
 export const IPC_CHANNELS = {
   // product channels
   PRODUCT: {
