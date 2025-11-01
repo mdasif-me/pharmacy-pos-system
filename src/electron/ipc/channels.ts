@@ -43,6 +43,11 @@ export const IPC_CHANNELS = {
     RECENT: 'search:recent',
     REBUILD_INDEX: 'search:rebuildIndex',
   },
+
+  // stock channels
+  STOCK: {
+    ADD_AND_BROADCAST: 'stock:addAndBroadcast',
+  },
 } as const
 
 export type IpcChannel = string

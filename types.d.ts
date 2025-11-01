@@ -142,5 +142,8 @@ interface Window {
       payload: ProductPriceUpdate
     ) => Promise<Product | undefined>
     getLastSync: () => Promise<string | null>
+
+    // stock broadcast
+    addStock: (payload: any) => Promise<{ success: boolean; data?: any; error?: string }>
   }
 }

@@ -24,6 +24,9 @@ type SingleFormState = {
   promoExpiry: string
   btcDate: string
   qty: string
+  batchNo: string
+  stockAlert: string
+  shelf: string
 }
 
 const formatCurrency = (value?: number | null) => {
@@ -80,6 +83,9 @@ export const AddStockView: React.FC = () => {
     promoExpiry: '',
     btcDate: '',
     qty: '',
+    batchNo: '',
+    stockAlert: '0',
+    shelf: '',
   })
   const [isBroadcasting, setIsBroadcasting] = useState(false)
   const [statusMessage, setStatusMessage] = useState('')
@@ -296,6 +302,9 @@ export const AddStockView: React.FC = () => {
       promoExpiry: '',
       btcDate: '',
       qty: '',
+      batchNo: '',
+      stockAlert: '0',
+      shelf: '',
     })
     setSelectedProduct(null)
     setSearchTerm('')
@@ -337,21 +346,33 @@ export const AddStockView: React.FC = () => {
       return
     }
 
+    // Parse all required fields
     const productId = selectedProduct.id
     const quantity = Number.parseInt(singleForm.qty, 10)
+    const purchasePrice = Number.parseFloat(singleForm.buy)
     const discountPrice = Number.parseFloat(singleForm.sale)
     const peakHourPrice = Number.parseFloat(singleForm.pSale)
-    const mediboyOfferPrice = Number.parseFloat(singleForm.mOffer)
-    const syncSourceDate = singleForm.btcDate || bulkForm.btcDate
-    const syncDate = syncSourceDate ? new Date(syncSourceDate) : new Date()
+    const offerPrice = Number.parseFloat(singleForm.mOffer)
+    const stockAlert = Number.parseInt(singleForm.stockAlert || '0', 10)
+    const batchNo = singleForm.batchNo.trim()
+    const shelf = singleForm.shelf.trim() || null
 
+    // Get expiry date
+    const expiryDate = singleForm.expiry
+    if (!expiryDate) {
+      setErrorMessage('expiry date is required')
+      return
+    }
+
+    // Validate numeric fields
     if (
       Number.isNaN(quantity) ||
+      Number.isNaN(purchasePrice) ||
       Number.isNaN(discountPrice) ||
       Number.isNaN(peakHourPrice) ||
-      Number.isNaN(mediboyOfferPrice)
+      Number.isNaN(offerPrice)
     ) {
-      setErrorMessage('fill out stock quantity and pricing before submitting')
+      setErrorMessage('fill out all required pricing fields before submitting')
       return
     }
 
@@ -360,27 +381,39 @@ export const AddStockView: React.FC = () => {
       return
     }
 
-    if (Number.isNaN(syncDate.getTime())) {
-      setErrorMessage('enter a valid BTC date')
+    if (!batchNo) {
+      setErrorMessage('batch number is required')
       return
     }
 
+    // Calculate percentage off from MRP
+    const percOff = mrp > 0 ? ((mrp - discountPrice) / mrp) * 100 : 0
+
+    // Format date as YYYY/MM/DD
+    const formattedExpiry = expiryDate.replace(/-/g, '/')
+
     const payload: StockBroadcastPayload = {
       product_id: productId,
-      in_stock: quantity,
+      stock_mrp: mrp,
+      purchase_price: purchasePrice,
       discount_price: discountPrice,
       peak_hour_price: peakHourPrice,
-      mediboy_offer_price: mediboyOfferPrice,
-      sync_at: syncDate.toISOString(),
+      offer_price: offerPrice,
+      perc_off: percOff,
+      batch_no: batchNo,
+      expire_date: formattedExpiry,
+      qty: quantity,
+      stock_alert: stockAlert,
+      shelf: shelf,
     }
 
     setIsBroadcasting(true)
     try {
       await broadcastStockUpdate(payload)
-      setStatusMessage('stock broadcast queued successfully')
+      setStatusMessage('Product stock added and broadcasted successfully')
       resetForms()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'unable to broadcast stock update'
+      const message = error instanceof Error ? error.message : 'unable to add stock'
       setErrorMessage(message)
     } finally {
       setIsBroadcasting(false)
@@ -504,6 +537,11 @@ export const AddStockView: React.FC = () => {
                       value={bulkForm.buyPercent}
                       onChange={handleBulkChange('buyPercent')}
                     />
+                    {bulkForm.buyPercent && bulkDerivedPrices.buy && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.buy}
+                      </div>
+                    )}
                   </div>
                   <div className="add-stock-input">
                     <h2>Sale%</h2>
@@ -514,6 +552,11 @@ export const AddStockView: React.FC = () => {
                       value={bulkForm.salePercent}
                       onChange={handleBulkChange('salePercent')}
                     />
+                    {bulkForm.salePercent && bulkDerivedPrices.sale && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.sale}
+                      </div>
+                    )}
                   </div>
                   <div className="add-stock-input">
                     <h2>P-Sale%</h2>
@@ -524,6 +567,11 @@ export const AddStockView: React.FC = () => {
                       value={bulkForm.peakSalePercent}
                       onChange={handleBulkChange('peakSalePercent')}
                     />
+                    {bulkForm.peakSalePercent && bulkDerivedPrices.peakSale && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.peakSale}
+                      </div>
+                    )}
                   </div>
                   <div className="add-stock-input-offer">
                     <h2>M-Offer %</h2>
@@ -534,6 +582,11 @@ export const AddStockView: React.FC = () => {
                       value={bulkForm.mediboyOfferPercent}
                       onChange={handleBulkChange('mediboyOfferPercent')}
                     />
+                    {bulkForm.mediboyOfferPercent && bulkDerivedPrices.offer && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.offer}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -645,19 +698,47 @@ export const AddStockView: React.FC = () => {
                 </div>
 
                 <div className="input-section">
-                  <div style={{ width: '100%' }}>
-                    <div className="add-stock-bottom-input-date">
-                      <h2>QTY*</h2>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={singleForm.qty}
-                        onChange={handleSingleChange('qty')}
-                        placeholder="1000"
-                        required
-                      />
-                    </div>
+                  <div className="add-stock-input">
+                    <h2>Batch No*</h2>
+                    <input
+                      type="text"
+                      value={singleForm.batchNo}
+                      onChange={handleSingleChange('batchNo')}
+                      placeholder="Batch number"
+                      required
+                    />
+                  </div>
+                  <div className="add-stock-input">
+                    <h2>Stock Alert</h2>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={singleForm.stockAlert}
+                      onChange={handleSingleChange('stockAlert')}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="add-stock-input">
+                    <h2>Shelf</h2>
+                    <input
+                      type="text"
+                      value={singleForm.shelf}
+                      onChange={handleSingleChange('shelf')}
+                      placeholder="Shelf location"
+                    />
+                  </div>
+                  <div className="add-stock-input-offer">
+                    <h2>QTY*</h2>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={singleForm.qty}
+                      onChange={handleSingleChange('qty')}
+                      placeholder="1000"
+                      required
+                    />
                   </div>
                 </div>
 

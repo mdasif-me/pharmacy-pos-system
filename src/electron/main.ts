@@ -7,6 +7,7 @@ import { MigrationManager } from './database/core/migration.manager'
 import { AuthIpcHandler } from './ipc/handlers/auth.handler'
 import { ProductIpcHandler } from './ipc/handlers/product.handler'
 import { SearchIpcHandler } from './ipc/handlers/search.handler'
+import { StockIpcHandler } from './ipc/handlers/stock.handler'
 import { SyncIpcHandler } from './ipc/handlers/sync.handler'
 import { getPreloadPath, getUIPath } from './pathResolver'
 import { isDev } from './util'
@@ -44,6 +45,7 @@ function initializeIpcHandlers() {
   new AuthIpcHandler(API_CONFIG.baseURL)
   new SyncIpcHandler(db)
   new SearchIpcHandler(db)
+  new StockIpcHandler()
   console.log('IPC handlers initialized')
 }
 

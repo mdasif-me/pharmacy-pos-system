@@ -34,4 +34,7 @@ contextBridge.exposeInMainWorld('electron', {
   updateProductPrices: (productId: number, payload: any) =>
     invoke('product:update', productId, payload),
   getLastSync: () => invoke('sync:getLastSync'),
+
+  // Add stock and broadcast to API
+  addStock: (payload: any) => invoke('stock:addAndBroadcast', payload),
 })
