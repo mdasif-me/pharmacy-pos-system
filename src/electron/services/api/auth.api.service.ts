@@ -3,22 +3,23 @@
 import { HttpClient } from './http.client'
 
 export interface LoginRequest {
-  username: string
+  phoneNumber: string
   password: string
-  shop_id?: string
 }
 
 export interface LoginResponse {
-  success: boolean
-  message: string
-  token?: string
-  user?: {
+  user: {
     id: number
-    name: string
-    username: string
-    shop_id?: string
+    firstName: string
+    lastName: string
+    phoneNumber: string
+    email: string
     role: string
+    pharmacy_id: number
+    created_at: string
+    updated_at: string
   }
+  token: string
 }
 
 export interface RegisterRequest {
@@ -35,9 +36,9 @@ export class AuthApiService {
    * login user
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await this.http.post<LoginResponse>('/auth/login', credentials)
+    const response = await this.http.post<LoginResponse>('/pharmacy/login', credentials)
 
-    if (response.success && response.token) {
+    if (response.token) {
       // save token
       this.http.setAuthToken(response.token)
     }
@@ -51,7 +52,7 @@ export class AuthApiService {
   async register(data: RegisterRequest): Promise<LoginResponse> {
     const response = await this.http.post<LoginResponse>('/auth/register', data)
 
-    if (response.success && response.token) {
+    if (response.token) {
       // save token
       this.http.setAuthToken(response.token)
     }
@@ -75,8 +76,16 @@ export class AuthApiService {
    * get current user
    */
   async getCurrentUser(): Promise<any> {
-    const response = await this.http.get<LoginResponse>('/auth/me')
-    return response.user
+    try {
+      const response = await this.http.get<LoginResponse>('/auth/me')
+      return response.user
+    } catch (error: any) {
+      // If endpoint doesn't exist or user not authenticated, return null
+      if (error.response?.status === 404 || error.response?.status === 401) {
+        return null
+      }
+      throw error
+    }
   }
 
   /**
@@ -85,7 +94,7 @@ export class AuthApiService {
   async refreshToken(): Promise<string> {
     const response = await this.http.post<LoginResponse>('/auth/refresh')
 
-    if (response.success && response.token) {
+    if (response.token) {
       this.http.setAuthToken(response.token)
       return response.token
     }
