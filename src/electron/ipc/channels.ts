@@ -32,6 +32,7 @@ export const IPC_CHANNELS = {
     PULL: 'sync:pull',
     RETRY_FAILED: 'sync:retryFailed',
     CLEAR_QUEUE: 'sync:clearQueue',
+    GET_LAST_SYNC: 'sync:getLastSync',
   },
 
   // search channels

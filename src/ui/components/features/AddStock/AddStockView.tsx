@@ -121,6 +121,7 @@ export const AddStockView: React.FC = () => {
   const loadLastSync = useCallback(async () => {
     try {
       const value = await window.electron.getLastSync()
+      console.log('value', value)
       if (!value) {
         setLastSync('')
         return

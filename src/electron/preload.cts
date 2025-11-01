@@ -33,6 +33,5 @@ contextBridge.exposeInMainWorld('electron', {
     invoke('product:updateStock', productId, newStock),
   updateProductPrices: (productId: number, payload: any) =>
     invoke('product:update', productId, payload),
-  // TODO: Implement proper last sync timestamp storage
-  getLastSync: () => Promise.resolve(null),
+  getLastSync: () => invoke('sync:getLastSync'),
 })

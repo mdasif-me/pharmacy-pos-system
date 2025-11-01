@@ -10,6 +10,7 @@ import {
   SyncQueueEntity,
 } from '../types/entities/sync.types'
 import { ProductApiService } from './api/product.api.service'
+import { StorageService } from './storage.service'
 
 export interface SyncResult {
   success: boolean
@@ -32,7 +33,8 @@ export class SyncService {
 
   constructor(
     private db: Database,
-    private productApi: ProductApiService
+    private productApi: ProductApiService,
+    private storageService: StorageService
   ) {
     this.syncQueue = new SyncQueueRepository(db)
     this.productRepo = new ProductRepository(db)
@@ -205,6 +207,9 @@ export class SyncService {
       // Bulk insert/update products
       this.productRepo.bulkUpsert(mappedProducts as ProductEntity[])
       result.synced = mappedProducts.length
+
+      // Save last sync timestamp
+      this.storageService.setLastSync(new Date().toISOString())
     } catch (error: any) {
       result.success = false
       result.errors.push(error.message || 'Unknown error during sync')

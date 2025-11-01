@@ -9,15 +9,16 @@ import { IPC_CHANNELS } from '../channels'
 
 export class SyncIpcHandler {
   private syncService: SyncService
+  private storageService: StorageService
 
   constructor(db: Database) {
-    const storageService = new StorageService()
+    this.storageService = new StorageService()
     const httpClient = new HttpClient({
       baseURL: API_CONFIG.baseURL,
-      storage: storageService,
+      storage: this.storageService,
     })
     const productApi = new ProductApiService(httpClient)
-    this.syncService = new SyncService(db, productApi)
+    this.syncService = new SyncService(db, productApi, this.storageService)
     this.registerHandlers()
   }
 
@@ -92,6 +93,16 @@ export class SyncIpcHandler {
       } catch (error: any) {
         console.error('Error clearing queue:', error)
         throw error
+      }
+    })
+
+    // get last sync timestamp
+    ipcMain.handle(IPC_CHANNELS.SYNC.GET_LAST_SYNC, async () => {
+      try {
+        return this.storageService.getLastSync()
+      } catch (error: any) {
+        console.error('Error getting last sync:', error)
+        return null
       }
     })
   }

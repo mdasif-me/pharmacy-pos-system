@@ -11,11 +11,12 @@ interface StoredAuthData {
 export class StorageService {
   private storageDir: string
   private authFilePath: string
+  private syncFilePath: string
 
   constructor() {
-    // Use Electron's app data directory
     this.storageDir = app.getPath('userData')
     this.authFilePath = path.join(this.storageDir, 'auth-data.json')
+    this.syncFilePath = path.join(this.storageDir, 'sync-data.json')
 
     // Ensure directory exists
     if (!fs.existsSync(this.storageDir)) {
@@ -84,5 +85,39 @@ export class StorageService {
    */
   isAuthenticated(): boolean {
     return this.getToken() !== null
+  }
+
+  /**
+   * Save last sync timestamp
+   */
+  setLastSync(timestamp: string): void {
+    try {
+      const data = {
+        lastSync: timestamp,
+        updatedAt: new Date().toISOString(),
+      }
+      fs.writeFileSync(this.syncFilePath, JSON.stringify(data, null, 2), 'utf-8')
+    } catch (error) {
+      console.error('Error saving sync data:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get last sync timestamp
+   */
+  getLastSync(): string | null {
+    try {
+      if (!fs.existsSync(this.syncFilePath)) {
+        return null
+      }
+
+      const data = fs.readFileSync(this.syncFilePath, 'utf-8')
+      const parsed = JSON.parse(data)
+      return parsed.lastSync || null
+    } catch (error) {
+      console.error('Error reading sync data:', error)
+      return null
+    }
   }
 }
