@@ -6,6 +6,7 @@ import { DatabaseManager } from './database/core/connection.manager'
 import { MigrationManager } from './database/core/migration.manager'
 import { ProductRepository } from './database/repositories/product.repository'
 import { AuthIpcHandler } from './ipc/handlers/auth.handler'
+import { BusinessSetupIpcHandler } from './ipc/handlers/business-setup.handler'
 import { ProductIpcHandler } from './ipc/handlers/product.handler'
 import { SearchIpcHandler } from './ipc/handlers/search.handler'
 import { SocketIpcHandler } from './ipc/handlers/socket.handler'
@@ -52,6 +53,7 @@ function initializeIpcHandlers() {
   new SearchIpcHandler(db)
   new StockIpcHandler(db)
   new StockQueueIpcHandler(db)
+  new BusinessSetupIpcHandler(db)
   console.log('IPC handlers initialized')
 }
 

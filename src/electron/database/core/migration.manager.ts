@@ -2,6 +2,7 @@ import Database from 'better-sqlite3'
 import { migration_001 } from '../migrations/001_initial_schema'
 import { migration_002 } from '../migrations/002_add_indexes'
 import { migration_003 } from '../migrations/003_add_stock_queue'
+import { migration_004 } from '../migrations/004_create_business_setups'
 
 export interface Migration {
   id: number
@@ -31,6 +32,13 @@ export class MigrationManager {
       name: migration_003.name,
       up: (db) => {
         migration_003.up.forEach((sql) => db.exec(sql))
+      },
+    },
+    {
+      id: 4,
+      name: migration_004.name,
+      up: (db) => {
+        migration_004.up.forEach((sql) => db.exec(sql))
       },
     },
   ]

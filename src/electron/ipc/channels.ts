@@ -65,6 +65,16 @@ export const IPC_CHANNELS = {
     GET_ID: 'socket:getId',
     RECONNECT: 'socket:reconnect',
   },
+
+  // business setup channels
+  BUSINESS_SETUP: {
+    GET: 'business-setup:get',
+    UPDATE_SALE_MODE: 'business-setup:updateSaleMode',
+    UPDATE_BILL_MODE: 'business-setup:updateBillMode',
+    UPDATE_PRICE: 'business-setup:updatePrice',
+    GET_SALE_MODE: 'business-setup:getSaleMode',
+    GET_BILL_MODE: 'business-setup:getBillMode',
+  },
 } as const
 
 export type IpcChannel = string

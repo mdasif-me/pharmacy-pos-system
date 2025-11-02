@@ -43,6 +43,10 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
   const [priceType, setPriceType] = useState<PriceMode>('discount')
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(20)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [saleMode, setSaleMode] = useState(0) // 0 = discount, 1 = peak-hour
+  const [billMode, setBillMode] = useState(0) // 0 = discount, 1 = peak-hour
+  const [errorMessage, setErrorMessage] = useState('')
   const hasLoadedRef = useRef(false)
   const latestSyncRequestRef = useRef(syncRequestId)
 
@@ -140,17 +144,50 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     loadInitialData()
   }, [loadInitialData])
 
+  // Load business setup (sale mode and bill mode)
+  useEffect(() => {
+    const loadBusinessSetup = async () => {
+      try {
+        const setup = await window.electron.businessSetup.get()
+        if (setup) {
+          setSaleMode(setup.sale_mode)
+          setBillMode(setup.bill_mode)
+        }
+      } catch (error) {
+        console.error('[Products] Error loading business setup:', error)
+      }
+    }
+    loadBusinessSetup()
+  }, [])
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true)
+      setErrorMessage('')
+    }
+    const handleOffline = () => setIsOnline(false)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+
   // Listen for real-time stock updates from socket
   useEffect(() => {
     const unsubscribe = window.electron.onStockUpdated(async (data) => {
       console.log('[Products] Received real-time stock update:', data)
-      
+
       // Reload products to get the updated data
       try {
         const localProducts = await window.electron.getAllProducts()
         const productsArray = Array.isArray(localProducts) ? localProducts : []
         setProducts(productsArray)
-        
+
         // Show a brief notification (optional)
         console.log(`[Products] Stock updated for ${data.productName}: ${data.newStock} units`)
       } catch (error) {
@@ -161,6 +198,40 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     return () => {
       unsubscribe()
     }
+  }, [])
+
+  // Listen for sale mode updates
+  useEffect(() => {
+    const unsubscribe = window.electron.onSaleModeUpdated((data) => {
+      console.log('[Products] Sale mode updated:', data.saleMode)
+      setSaleMode(data.saleMode)
+    })
+    return unsubscribe
+  }, [])
+
+  // Listen for bill mode updates
+  useEffect(() => {
+    const unsubscribe = window.electron.onBillModeUpdated((data) => {
+      console.log('[Products] Bill mode updated:', data.billMode)
+      setBillMode(data.billMode)
+    })
+    return unsubscribe
+  }, [])
+
+  // Listen for price updates
+  useEffect(() => {
+    const unsubscribe = window.electron.onPriceUpdated(async (data) => {
+      console.log('[Products] Price updated:', data)
+      // Reload products to show updated prices
+      try {
+        const localProducts = await window.electron.getAllProducts()
+        const productsArray = Array.isArray(localProducts) ? localProducts : []
+        setProducts(productsArray)
+      } catch (error) {
+        console.error('[Products] Error reloading products after price update:', error)
+      }
+    })
+    return unsubscribe
   }, [])
 
   // trigger sync when dashboard requests it
@@ -295,6 +366,15 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       return
     }
 
+    // Check if online
+    if (!isOnline) {
+      setErrorMessage(
+        'আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন! মূল্য আপডেট করতে আপনাকে অনলাইনে থাকতে হবে।'
+      )
+      alert('Please check your internet connection! You have to be online to update prices.')
+      return
+    }
+
     const discountPrice = parsePriceInput(discountInput)
     if (discountPrice === undefined) {
       alert('enter a valid discount price')
@@ -312,38 +392,78 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       return
     }
 
-    const offerPrice = selectedProduct.mediboy_offer_price
-    if (
-      offerPrice !== null &&
-      offerPrice !== undefined &&
-      (discountPrice <= offerPrice || peakHourPrice <= offerPrice)
-    ) {
-      alert('discount and peak-hour prices must be greater than the Mediboy offer price')
-      return
-    }
+    // Validation will be done on the server side against mediboy_offer_price
 
     setIsSavingPrices(true)
-    try {
-      const updatedProduct = await window.electron.updateProductPrices(selectedProduct.id, {
-        discount_price: discountPrice,
-        peak_hour_price: peakHourPrice,
-      })
+    setErrorMessage('')
 
-      if (updatedProduct) {
-        setProducts((prevProducts) =>
-          prevProducts.map((product) =>
-            product.id === updatedProduct.id ? { ...product, ...updatedProduct } : product
-          )
-        )
-      }
+    try {
+      // Use the new business setup API for price updates
+      await window.electron.businessSetup.updatePrice(
+        selectedProduct.id,
+        discountPrice,
+        peakHourPrice
+      )
+
+      // Reload products to show updated prices
+      const localProducts = await window.electron.getAllProducts()
+      const productsArray = Array.isArray(localProducts) ? localProducts : []
+      setProducts(productsArray)
 
       closePriceModal()
     } catch (error) {
       console.error('failed to update prices:', error)
       const message = error instanceof Error ? error.message : 'failed to update prices'
+      setErrorMessage(message)
       alert(message)
     } finally {
       setIsSavingPrices(false)
+    }
+  }
+
+  // Handle sale mode toggle
+  const handleSaleModeToggle = async () => {
+    if (!isOnline) {
+      setErrorMessage(
+        'আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন! সেল মোড পরিবর্তন করতে আপনাকে অনলাইনে থাকতে হবে।'
+      )
+      alert('Please check your internet connection! You have to be online to change sale mode.')
+      return
+    }
+
+    const newMode = saleMode === 0 ? 1 : 0
+    try {
+      await window.electron.businessSetup.updateSaleMode(newMode)
+      setSaleMode(newMode)
+      setErrorMessage('')
+    } catch (error) {
+      console.error('Failed to update sale mode:', error)
+      const message = error instanceof Error ? error.message : 'Failed to update sale mode'
+      setErrorMessage(message)
+      alert(message)
+    }
+  }
+
+  // Handle bill mode toggle
+  const handleBillModeToggle = async () => {
+    if (!isOnline) {
+      setErrorMessage(
+        'আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন! বিল মোড পরিবর্তন করতে আপনাকে অনলাইনে থাকতে হবে।'
+      )
+      alert('Please check your internet connection! You have to be online to change bill mode.')
+      return
+    }
+
+    const newMode = billMode === 0 ? 1 : 0
+    try {
+      await window.electron.businessSetup.updateBillMode(newMode)
+      setBillMode(newMode)
+      setErrorMessage('')
+    } catch (error) {
+      console.error('Failed to update bill mode:', error)
+      const message = error instanceof Error ? error.message : 'Failed to update bill mode'
+      setErrorMessage(message)
+      alert(message)
     }
   }
 
@@ -432,6 +552,89 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         <h1>All Stock</h1>
         <div className="products-welcome-meta">
           {lastSync && <span className="products-last-sync">last sync: {lastSync}</span>}
+          {!isOnline && (
+            <span className="offline-indicator" style={{ color: '#ef4444', marginLeft: '1rem' }}>
+              ⚠ Offline
+            </span>
+          )}
+        </div>
+      </div>
+
+      {errorMessage && (
+        <div
+          className="error-banner"
+          style={{
+            padding: '12px',
+            background: '#fee2e2',
+            color: '#991b1b',
+            borderRadius: '4px',
+            marginBottom: '1rem',
+            border: '1px solid #fecaca',
+          }}
+        >
+          {errorMessage}
+        </div>
+      )}
+
+      {/* Sale Mode and Bill Mode Controls */}
+      <div
+        className="business-setup-controls"
+        style={{
+          display: 'flex',
+          gap: '1rem',
+          marginBottom: '1rem',
+          padding: '12px',
+          background: '#f9fafb',
+          borderRadius: '8px',
+          border: '1px solid #e5e7eb',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <label style={{ fontWeight: '600', fontSize: '14px' }}>Sale Mode:</label>
+          <button
+            onClick={handleSaleModeToggle}
+            disabled={!isOnline}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '4px',
+              border: 'none',
+              background: saleMode === 0 ? '#3b82f6' : '#f59e0b',
+              color: 'white',
+              cursor: isOnline ? 'pointer' : 'not-allowed',
+              opacity: isOnline ? 1 : 0.5,
+              fontWeight: '600',
+              fontSize: '13px',
+            }}
+          >
+            {saleMode === 0 ? 'Discount' : 'Peak Hour'}
+          </button>
+          {!isOnline && (
+            <span style={{ fontSize: '12px', color: '#6b7280' }}>(Requires online)</span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <label style={{ fontWeight: '600', fontSize: '14px' }}>Bill Mode:</label>
+          <button
+            onClick={handleBillModeToggle}
+            disabled={!isOnline}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '4px',
+              border: 'none',
+              background: billMode === 0 ? '#3b82f6' : '#f59e0b',
+              color: 'white',
+              cursor: isOnline ? 'pointer' : 'not-allowed',
+              opacity: isOnline ? 1 : 0.5,
+              fontWeight: '600',
+              fontSize: '13px',
+            }}
+          >
+            {billMode === 0 ? 'Discount' : 'Peak Hour'}
+          </button>
+          {!isOnline && (
+            <span style={{ fontSize: '12px', color: '#6b7280' }}>(Requires online)</span>
+          )}
         </div>
       </div>
 

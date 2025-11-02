@@ -57,9 +57,32 @@ contextBridge.exposeInMainWorld('electron', {
     reconnect: () => invoke('socket:reconnect'),
   },
 
+  // Business Setup - Sale mode, Bill mode, Price updates
+  businessSetup: {
+    get: () => invoke('business-setup:get'),
+    updateSaleMode: (saleMode: number) => invoke('business-setup:updateSaleMode', saleMode),
+    updateBillMode: (billMode: number) => invoke('business-setup:updateBillMode', billMode),
+    updatePrice: (productId: number, discountPrice: number, peakHourPrice: number) =>
+      invoke('business-setup:updatePrice', productId, discountPrice, peakHourPrice),
+    getSaleMode: () => invoke('business-setup:getSaleMode'),
+    getBillMode: () => invoke('business-setup:getBillMode'),
+  },
+
   // Event listeners for real-time updates
   onStockUpdated: (callback: (data: any) => void) => {
     ipcRenderer.on('stock-updated', (_, data) => callback(data))
     return () => ipcRenderer.removeAllListeners('stock-updated')
+  },
+  onSaleModeUpdated: (callback: (data: any) => void) => {
+    ipcRenderer.on('sale-mode-updated', (_, data) => callback(data))
+    return () => ipcRenderer.removeAllListeners('sale-mode-updated')
+  },
+  onBillModeUpdated: (callback: (data: any) => void) => {
+    ipcRenderer.on('bill-mode-updated', (_, data) => callback(data))
+    return () => ipcRenderer.removeAllListeners('bill-mode-updated')
+  },
+  onPriceUpdated: (callback: (data: any) => void) => {
+    ipcRenderer.on('price-updated', (_, data) => callback(data))
+    return () => ipcRenderer.removeAllListeners('price-updated')
   },
 })

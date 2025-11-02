@@ -1,8 +1,8 @@
 export const migration_003 = {
+  version: 3,
   name: 'add_stock_queue',
   up: [
-    `
-    CREATE TABLE IF NOT EXISTS add_stock_queues (
+    `CREATE TABLE IF NOT EXISTS add_stock_queues (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
       stock_mrp REAL NOT NULL,
@@ -21,9 +21,13 @@ export const migration_003 = {
       synced_at TEXT,
       error_message TEXT,
       FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
-    )
-  `,
+    )`,
     `CREATE INDEX IF NOT EXISTS idx_stock_queue_sync ON add_stock_queues(is_sync)`,
     `CREATE INDEX IF NOT EXISTS idx_stock_queue_product ON add_stock_queues(product_id)`,
+  ],
+  down: [
+    'DROP INDEX IF EXISTS idx_stock_queue_product',
+    'DROP INDEX IF EXISTS idx_stock_queue_sync',
+    'DROP TABLE IF EXISTS add_stock_queues',
   ],
 }

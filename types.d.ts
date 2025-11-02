@@ -168,6 +168,22 @@ interface Window {
       reconnect: () => Promise<{ success: boolean; error?: string }>
     }
 
+    // business setup - sale mode, bill mode, price updates
+    businessSetup: {
+      get: () => Promise<
+        { id: number; sale_mode: number; bill_mode: number; sync_at: string | null } | undefined
+      >
+      updateSaleMode: (saleMode: number) => Promise<{ success: boolean }>
+      updateBillMode: (billMode: number) => Promise<{ success: boolean }>
+      updatePrice: (
+        productId: number,
+        discountPrice: number,
+        peakHourPrice: number
+      ) => Promise<{ success: boolean }>
+      getSaleMode: () => Promise<number>
+      getBillMode: () => Promise<number>
+    }
+
     // Real-time event listeners
     onStockUpdated: (
       callback: (data: {
@@ -176,6 +192,11 @@ interface Window {
         newStock: number
         timestamp: string
       }) => void
+    ) => () => void
+    onSaleModeUpdated: (callback: (data: { saleMode: number }) => void) => () => void
+    onBillModeUpdated: (callback: (data: { billMode: number }) => void) => () => void
+    onPriceUpdated: (
+      callback: (data: { productId: number; discountPrice: number; peakHourPrice: number }) => void
     ) => () => void
   }
 }
