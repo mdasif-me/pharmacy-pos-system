@@ -112,15 +112,17 @@ export class BusinessSetupService {
 
     const mediboyOfferPrice = product.mediboy_offer_price || 0
 
-    if (discountPrice >= mediboyOfferPrice && mediboyOfferPrice > 0) {
+    // Discount and peak hour prices should be greater than mediboy offer price
+    // (mediboy offer should be the lowest/best price)
+    if (discountPrice <= mediboyOfferPrice && mediboyOfferPrice > 0) {
       throw new Error(
-        `Discount price (${discountPrice}) cannot equal or exceed mediboy offer price (${mediboyOfferPrice})`
+        `Discount price (${discountPrice}) must be greater than mediboy offer price (${mediboyOfferPrice})`
       )
     }
 
-    if (peakHourPrice >= mediboyOfferPrice && mediboyOfferPrice > 0) {
+    if (peakHourPrice <= mediboyOfferPrice && mediboyOfferPrice > 0) {
       throw new Error(
-        `Peak hour price (${peakHourPrice}) cannot equal or exceed mediboy offer price (${mediboyOfferPrice})`
+        `Peak hour price (${peakHourPrice}) must be greater than mediboy offer price (${mediboyOfferPrice})`
       )
     }
 
