@@ -56,9 +56,11 @@ export function SocketStatus() {
     >
       <div
         style={{
-          width: '8px',
-          height: '8px',
-          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '4px 4px',
+          fontSize: '12px',
+          borderRadius: '4px',
           backgroundColor: isConnected ? '#28a745' : '#dc3545',
         }}
       />
@@ -67,9 +69,8 @@ export function SocketStatus() {
         <button
           onClick={handleReconnect}
           style={{
-            marginLeft: '8px',
-            padding: '2px 8px',
             fontSize: '11px',
+            padding: '4px 8px',
             borderRadius: '3px',
             border: '1px solid #721c24',
             backgroundColor: '#fff',

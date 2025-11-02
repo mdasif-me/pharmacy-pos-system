@@ -1,5 +1,7 @@
-import { ipcMain } from 'electron'
+import { Database } from 'better-sqlite3'
+import { BrowserWindow, ipcMain } from 'electron'
 import { API_CONFIG } from '../../core/config/api.config'
+import { ProductRepository } from '../../database/repositories/product.repository'
 import { StorageService } from '../../services/storage.service'
 import { IPC_CHANNELS } from '../channels'
 
@@ -20,9 +22,11 @@ export interface StockBroadcastPayload {
 
 export class StockIpcHandler {
   private storageService: StorageService
+  private productRepo: ProductRepository
 
-  constructor() {
+  constructor(private db: Database) {
     this.storageService = new StorageService()
+    this.productRepo = new ProductRepository(db)
     this.registerHandlers()
   }
 
@@ -55,6 +59,27 @@ export class StockIpcHandler {
           }
 
           const result = await response.json()
+
+          // Update local product stock
+          try {
+            const product = this.productRepo.findById(payload.product_id)
+            if (product) {
+              const currentStock = product.in_stock || 0
+              const newStock = currentStock + payload.qty
+              this.productRepo.updateStock(payload.product_id, newStock)
+
+              // Notify all renderer windows about the stock update
+              this.notifyStockUpdate(payload.product_id, product.product_name, newStock)
+
+              console.log(
+                `[StockHandler] Updated local stock for product ${payload.product_id}: ${currentStock} -> ${newStock}`
+              )
+            }
+          } catch (updateError) {
+            console.error('[StockHandler] Error updating local stock:', updateError)
+            // Don't throw - API call succeeded, local update is secondary
+          }
+
           return { success: true, data: result }
         } catch (error: any) {
           console.error('Error broadcasting stock:', error)
@@ -62,5 +87,24 @@ export class StockIpcHandler {
         }
       }
     )
+  }
+
+  /**
+   * Notify UI about stock update via IPC
+   */
+  private notifyStockUpdate(productId: number, productName: string, newStock: number): void {
+    console.log(
+      `[StockHandler] Notifying stock update - Product: ${productName}, New Stock: ${newStock}`
+    )
+
+    const windows = BrowserWindow.getAllWindows()
+    windows.forEach((window) => {
+      window.webContents.send('stock-updated', {
+        productId,
+        productName,
+        newStock,
+        timestamp: new Date().toISOString(),
+      })
+    })
   }
 }

@@ -12,6 +12,7 @@ export const IPC_CHANNELS = {
     GET_STATS: 'product:getStats',
     GET_UNIQUE_COMPANIES: 'product:getUniqueCompanies',
     IMPORT: 'product:import',
+    GET_LATEST_SYNC_TIME: 'product:getLatestSyncTime',
   },
 
   // auth channels
@@ -47,6 +48,15 @@ export const IPC_CHANNELS = {
   // stock channels
   STOCK: {
     ADD_AND_BROADCAST: 'stock:addAndBroadcast',
+  },
+
+  // stock queue channels
+  STOCK_QUEUE: {
+    ADD_OFFLINE: 'stock-queue:addOffline',
+    SYNC_SINGLE: 'stock-queue:syncSingle',
+    SYNC_ALL: 'stock-queue:syncAll',
+    GET_RECENT: 'stock-queue:getRecent',
+    GET_UNSYNCED_COUNT: 'stock-queue:getUnsyncedCount',
   },
 
   // socket channels

@@ -136,6 +136,7 @@ interface Window {
     getUniqueCompanies: () => Promise<Array<{ company_id: number; company_name: string }>>
     getUniqueTypes: () => Promise<Array<{ type: string }>>
     getUniqueCategories: () => Promise<Array<{ category_id: number; category_name: string }>>
+    getLatestSyncTime: () => Promise<string | null>
     updateProductStock: (productId: number, newStock: number) => Promise<void>
     updateProductPrices: (
       productId: number,
@@ -145,6 +146,20 @@ interface Window {
 
     // stock broadcast
     addStock: (payload: any) => Promise<{ success: boolean; data?: any; error?: string }>
+
+    // stock queue - offline-first management
+    stockQueue: {
+      addOffline: (payload: any) => Promise<{ success: boolean; data?: any }>
+      syncSingle: (stockId: number) => Promise<{ success: boolean; error?: string }>
+      syncAll: () => Promise<{
+        total: number
+        success: number
+        failed: number
+        errors: Array<{ id: number; error: string }>
+      }>
+      getRecent: (limit?: number) => Promise<any[]>
+      getUnsyncedCount: () => Promise<number>
+    }
 
     // socket.io connection
     socket: {

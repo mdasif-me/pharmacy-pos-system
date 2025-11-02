@@ -3,12 +3,12 @@ import { CategoryRepository } from '../database/repositories/category.repository
 import { CompanyRepository } from '../database/repositories/company.repository'
 import { ProductRepository } from '../database/repositories/product.repository'
 import {
-    EntityStatus,
-    ProductCreateDTO,
-    ProductEntity,
-    ProductSearchParams,
-    ProductUpdateDTO,
-    ProductWithRelations,
+  EntityStatus,
+  ProductCreateDTO,
+  ProductEntity,
+  ProductSearchParams,
+  ProductUpdateDTO,
+  ProductWithRelations,
 } from '../types/entities/product.types'
 
 export class ProductService {
@@ -300,6 +300,44 @@ export class ProductService {
       last_modified_at: apiProduct.updated_at || new Date().toISOString(),
       is_dirty: 0,
       raw_data: JSON.stringify(apiProduct),
+    }
+  }
+
+  /**
+   * Get latest sync time from products table
+   */
+  getLatestSyncTime(): string | null {
+    const sql = `
+      SELECT last_synced_at 
+      FROM products 
+      WHERE last_synced_at IS NOT NULL 
+      ORDER BY last_synced_at DESC 
+      LIMIT 1
+    `
+    const result = this.db.prepare(sql).get() as { last_synced_at: string } | undefined
+
+    if (!result || !result.last_synced_at) {
+      return null
+    }
+
+    // Format as MM/DD/YYYY HH:MM:SS (24hr)
+    try {
+      const date = new Date(result.last_synced_at)
+      if (isNaN(date.getTime())) {
+        return null
+      }
+
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const year = date.getFullYear()
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+
+      return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`
+    } catch (error) {
+      console.error('Error formatting sync time:', error)
+      return null
     }
   }
 }

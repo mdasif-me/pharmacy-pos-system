@@ -36,7 +36,10 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
     const { query, limit = 100, offset = 0, inStockOnly = false, categoryId, companyId } = params
 
     let sql = `
-      SELECT p.*, c.name as company_name, cat.name as category_name
+      SELECT 
+        p.*, 
+        c.name as company_name, 
+        cat.name as category_name
       FROM ${this.tableName} p
       LEFT JOIN ${DB_TABLES.COMPANIES} c ON p.company_id = c.id
       LEFT JOIN ${DB_TABLES.CATEGORIES} cat ON p.category_id = cat.id
@@ -44,14 +47,11 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
     `
     const sqlParams: any[] = []
 
-    // full-text search on product name or generic name
+    // full-text search on product name only
     if (query) {
-      sql += ` AND (
-        p.product_name LIKE ? OR 
-        p.generic_name LIKE ?
-      )`
+      sql += ` AND p.product_name LIKE ?`
       const searchTerm = `%${query}%`
-      sqlParams.push(searchTerm, searchTerm)
+      sqlParams.push(searchTerm)
     }
 
     // filter by stock
@@ -74,14 +74,46 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
     // only active products
     sql += ` AND p.status = 'active'`
 
-    // order by relevance (products in stock first)
-    sql += ` ORDER BY p.in_stock DESC, p.product_name ASC`
+    // order by relevance: prioritize products that START with the search term
+    // Then by stock, then alphabetically
+    if (query) {
+      sql += ` ORDER BY 
+        CASE 
+          WHEN LOWER(p.product_name) LIKE ? THEN 0
+          ELSE 1
+        END,
+        p.in_stock DESC, 
+        p.product_name ASC`
+      const startsWithTerm = `${query.toLowerCase()}%`
+      sqlParams.push(startsWithTerm)
+    } else {
+      sql += ` ORDER BY p.in_stock DESC, p.product_name ASC`
+    }
 
     // pagination
     sql += ` LIMIT ? OFFSET ?`
     sqlParams.push(limit, offset)
 
-    return this.db.prepare(sql).all(...sqlParams) as ProductEntity[]
+    const results = this.db.prepare(sql).all(...sqlParams) as any[]
+
+    // Parse raw_data to extract quantity, unit_in_pack, and other fields
+    return results.map((product) => {
+      if (product.raw_data) {
+        try {
+          const rawData = JSON.parse(product.raw_data as string)
+          return {
+            ...product,
+            quantity: rawData.quantity || product.type || '',
+            unit_in_pack: rawData.unit_in_pack || '',
+            cart_text: rawData.cart_text || '',
+          } as any
+        } catch (error) {
+          console.error('Failed to parse raw_data for product:', product.id, error)
+          return product
+        }
+      }
+      return product
+    })
   }
 
   /**
@@ -135,29 +167,30 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
       LIMIT ? OFFSET ?
     `
     const results = this.db.prepare(sql).all(limit, offset) as ProductWithRelations[]
-    
+
     // Also get total products and stock statistics
     const totalSql = `SELECT COUNT(*) as total FROM ${this.tableName} WHERE status = 'active'`
     const stockSql = `SELECT COUNT(*) as with_stock FROM ${this.tableName} WHERE status = 'active' AND in_stock > 0`
     const totalResult = this.db.prepare(totalSql).get() as { total: number }
     const stockResult = this.db.prepare(stockSql).get() as { with_stock: number }
-    
+
     console.log(
       `[ProductRepository] findAllWithRelations: Returning ${results.length} products (Total: ${totalResult.total}, With stock: ${stockResult.with_stock})`
     )
-    
+
     // Log first few products with stock for debugging
-    const withStock = results.filter(p => p.in_stock > 0).slice(0, 3)
+    const withStock = results.filter((p) => p.in_stock > 0).slice(0, 3)
     if (withStock.length > 0) {
-      console.log('[ProductRepository] Sample products with stock:', 
-        withStock.map(p => ({
-          id: p.id, 
-          name: p.product_name, 
-          in_stock: p.in_stock
+      console.log(
+        '[ProductRepository] Sample products with stock:',
+        withStock.map((p) => ({
+          id: p.id,
+          name: p.product_name,
+          in_stock: p.in_stock,
         }))
       )
     }
-    
+
     return results
   }
 
@@ -296,14 +329,18 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
       SELECT COUNT(*) as count FROM ${this.tableName} WHERE is_dirty = 1
     `)
     const dirtyResult = dirtyCountStmt.get() as { count: number }
-    
+
     if (dirtyResult.count > 0) {
       // Get details of dirty products
-      const dirtyProducts = this.db.prepare(`
+      const dirtyProducts = this.db
+        .prepare(
+          `
         SELECT id, product_name, in_stock FROM ${this.tableName} 
         WHERE is_dirty = 1 LIMIT 5
-      `).all() as Array<{ id: number; product_name: string; in_stock: number }>
-      
+      `
+        )
+        .all() as Array<{ id: number; product_name: string; in_stock: number }>
+
       console.log(
         `[ProductRepository] 🔒 Protecting ${dirtyResult.count} locally edited products during sync`
       )

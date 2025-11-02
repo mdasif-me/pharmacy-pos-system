@@ -125,5 +125,15 @@ export class ProductIpcHandler {
         throw error
       }
     })
+
+    // get latest sync time from products table
+    ipcMain.handle(IPC_CHANNELS.PRODUCT.GET_LATEST_SYNC_TIME, async () => {
+      try {
+        return await this.productService.getLatestSyncTime()
+      } catch (error: any) {
+        console.error('Error getting latest sync time:', error)
+        throw error
+      }
+    })
   }
 }

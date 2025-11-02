@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Rotate from '../../../assets/rotate.svg'
 import Search from '../../../assets/search.svg'
 import Wifi from '../../../assets/wifi.svg'
-import { broadcastStockUpdate, StockBroadcastPayload } from '../../../services/broadcastService'
+import { RecentStockView } from '../RecentStock/RecentStockView'
 import './AddStockView.css'
 
 type BulkFormState = {
@@ -94,6 +94,8 @@ export const AddStockView: React.FC = () => {
   const [syncError, setSyncError] = useState('')
   const [lastSync, setLastSync] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const searchDebounceRef = useRef<number>()
   const searchCloseTimeoutRef = useRef<number>()
@@ -126,21 +128,59 @@ export const AddStockView: React.FC = () => {
 
   const loadLastSync = useCallback(async () => {
     try {
-      const value = await window.electron.getLastSync()
-      console.log('value', value)
+      // Get latest last_synced_at from products table
+      const value = await window.electron.getLatestSyncTime()
+      console.log('[AddStock] Latest sync time:', value)
+
       if (!value) {
-        setLastSync('')
+        // If no sync time, show current date/time in MM/DD/YYYY HH:MM:SS format
+        const now = new Date()
+        const month = String(now.getMonth() + 1).padStart(2, '0')
+        const day = String(now.getDate()).padStart(2, '0')
+        const year = now.getFullYear()
+        const hours = String(now.getHours()).padStart(2, '0')
+        const minutes = String(now.getMinutes()).padStart(2, '0')
+        const seconds = String(now.getSeconds()).padStart(2, '0')
+        setLastSync(`${month}/${day}/${year} ${hours}:${minutes}:${seconds}`)
         return
       }
-      const parsed = new Date(value)
-      setLastSync(Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString())
+
+      setLastSync(value)
     } catch (error) {
       console.error('failed to load last sync timestamp:', error)
+      // Show current time on error
+      const now = new Date()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      const year = now.getFullYear()
+      const hours = String(now.getHours()).padStart(2, '0')
+      const minutes = String(now.getMinutes()).padStart(2, '0')
+      const seconds = String(now.getSeconds()).padStart(2, '0')
+      setLastSync(`${month}/${day}/${year} ${hours}:${minutes}:${seconds}`)
     }
   }, [])
 
   useEffect(() => {
     loadLastSync()
+
+    // Track online/offline status
+    const handleOnline = () => {
+      setIsOnline(true)
+      console.log('[AddStock] Connection restored - Online')
+    }
+
+    const handleOffline = () => {
+      setIsOnline(false)
+      console.log('[AddStock] Connection lost - Offline')
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
   }, [loadLastSync])
 
   useEffect(() => {
@@ -386,13 +426,30 @@ export const AddStockView: React.FC = () => {
       return
     }
 
+    // Price validation
+    // Peak Hour Price must be >= Sale Price
+    if (peakHourPrice < discountPrice) {
+      setErrorMessage(
+        'পিক আওয়ার প্রাইস কখনোই সেল প্রাইসের চেয়ে কম হতে পারবে না। অনুগ্রহ করে সঠিক মূল্য দিন।'
+      )
+      return
+    }
+
+    // Mediboy Offer Price must be < Sale Price AND < Peak Hour Price
+    if (offerPrice >= discountPrice || offerPrice >= peakHourPrice) {
+      setErrorMessage(
+        'Mediboy অফার প্রাইস অবশ্যই সেল প্রাইস এবং পিক আওয়ার প্রাইস — দুটোই এর চেয়ে কম হতে হবে।'
+      )
+      return
+    }
+
     // Calculate percentage off from MRP
     const percOff = mrp > 0 ? ((mrp - discountPrice) / mrp) * 100 : 0
 
     // Format date as YYYY/MM/DD
     const formattedExpiry = expiryDate.replace(/-/g, '/')
 
-    const payload: StockBroadcastPayload = {
+    const payload = {
       product_id: productId,
       stock_mrp: mrp,
       purchase_price: purchasePrice,
@@ -409,9 +466,36 @@ export const AddStockView: React.FC = () => {
 
     setIsBroadcasting(true)
     try {
-      await broadcastStockUpdate(payload)
-      setStatusMessage('Product stock added and broadcasted successfully')
-      resetForms()
+      // Check if online - use direct API, otherwise use queue
+      const isOnline = navigator.onLine
+
+      if (isOnline) {
+        // Try direct API call first (old mechanism)
+        try {
+          await window.electron.addStock(payload)
+          setStatusMessage('Product stock added and broadcasted successfully')
+          setRefreshKey((prev) => prev + 1) // Trigger Recent Stock table refresh
+          await loadLastSync() // Refresh sync time
+          resetForms()
+        } catch (apiError) {
+          // If API fails, fall back to queue
+          console.warn('API call failed, saving to queue:', apiError)
+          await window.electron.stockQueue.addOffline(payload)
+          setStatusMessage(
+            'Offline mode: Stock saved to queue. Will sync when connection is restored.'
+          )
+          setRefreshKey((prev) => prev + 1) // Trigger Recent Stock table refresh
+          resetForms()
+        }
+      } else {
+        // Offline - save to queue
+        await window.electron.stockQueue.addOffline(payload)
+        setStatusMessage(
+          'Offline mode: Stock saved to queue. Will sync when connection is restored.'
+        )
+        setRefreshKey((prev) => prev + 1) // Trigger Recent Stock table refresh
+        resetForms()
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unable to add stock'
       setErrorMessage(message)
@@ -457,7 +541,6 @@ export const AddStockView: React.FC = () => {
                       <li className="search-suggestion empty">no products found</li>
                     )}
                     {suggestions.map((product) => {
-                      console.log('product', product)
                       return (
                         <li
                           key={product.id}
@@ -467,11 +550,23 @@ export const AddStockView: React.FC = () => {
                             handleSelectProduct(product)
                           }}
                         >
-                          <span className="search-suggestion-name">{product.product_name}</span>
-                          <span className="search-suggestion-meta">
-                            {product.company_name || 'Unknown Company'} ·{' '}
-                            {formatCurrency(product.mrp)}
-                          </span>
+                          <div className="search-suggestion-main">
+                            <span className="search-suggestion-type">
+                              {product.type ? `${product.type.slice(0, 3)}.` : ''}
+                            </span>
+                            <span className="search-suggestion-name">{product.product_name}</span>
+                            {product.quantity && (
+                              <span className="search-suggestion-quantity">{product.quantity}</span>
+                            )}
+                          </div>
+                          <div className="search-suggestion-details">
+                            <span className="search-suggestion-company">
+                              {product.company_name || 'Unknown Company'}
+                            </span>
+                            <span className="search-suggestion-price">
+                              {formatCurrency(product.mrp)}
+                            </span>
+                          </div>
                         </li>
                       )
                     })}
@@ -759,20 +854,40 @@ export const AddStockView: React.FC = () => {
           </div>
         )}
       </section>
-
+      {/* Recent Stock Table */}
+      <RecentStockView key={refreshKey} />
       <header className="dashboard-header">
-        <button className="status-button" type="button">
-          <img src={Wifi} alt="Wi-Fi" width="40" />
+        <button className="status-button" type="button" title={isOnline ? 'Online' : 'Offline'}>
+          <img
+            src={Wifi}
+            alt="Connection Status"
+            width="40"
+            style={{ opacity: isOnline ? 1 : 0.3 }}
+          />
+          {!isOnline && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '8px',
+                height: '8px',
+                background: '#ef4444',
+                borderRadius: '50%',
+              }}
+            />
+          )}
         </button>
         <article>
-          <h3>Updated At</h3>
-          <p>{lastSync || 'not synced yet'}</p>
+          <h3>{isOnline ? 'Updated At' : 'Offline Mode'}</h3>
+          <p>{isOnline ? lastSync || 'Not synced yet' : 'Queue mode active'}</p>
         </article>
         <button
           className={`sync-control ${isSyncing ? 'spin' : ''}`}
           onClick={handleSyncProducts}
-          disabled={isSyncing}
+          disabled={isSyncing || !isOnline}
           type="button"
+          title={isOnline ? 'Sync Products' : 'Cannot sync while offline'}
         >
           <img src={Rotate} alt="Sync" />
         </button>

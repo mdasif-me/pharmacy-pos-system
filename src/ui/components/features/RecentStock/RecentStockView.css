@@ -1,0 +1,270 @@
+.recent-stock-container {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.recent-stock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.recent-stock-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.sync-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.unsynced-badge {
+  padding: 6px 12px;
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.offline-badge {
+  padding: 6px 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sync-all-button {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sync-all-button:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+.sync-all-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.status-messages {
+  margin-bottom: 16px;
+}
+
+.status-success {
+  padding: 12px;
+  background: #d1fae5;
+  color: #065f46;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+.status-error {
+  padding: 12px;
+  background: #fee2e2;
+  color: #991b1b;
+  border-radius: 6px;
+}
+
+.recent-stock-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.recent-stock-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.recent-stock-table thead {
+  background: #f9fafb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.recent-stock-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: white;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.recent-stock-table tbody tr {
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.2s;
+}
+
+.recent-stock-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.recent-stock-table tbody tr.unsynced {
+  background: #fef3c7;
+}
+
+.recent-stock-table tbody tr.unsynced:hover {
+  background: #fde68a;
+}
+
+.recent-stock-table tbody tr.synced {
+  background: #fff;
+}
+
+.recent-stock-table td {
+  padding: 12px 16px;
+  color: #6b7280;
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-info strong {
+  color: #111827;
+  font-weight: 600;
+}
+
+.product-type {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #ffffff;
+  color: #000000;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.product-generic {
+  font-size: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.stock-qty {
+  text-align: center;
+}
+
+.qty-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.date-cell {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.synced {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.error-tooltip {
+  display: inline-block;
+  margin-left: 8px;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: help;
+}
+
+.sync-button {
+  padding: 6px 16px;
+  background: #10b981;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sync-button:hover:not(:disabled) {
+  background: #059669;
+  transform: translateY(-1px);
+}
+
+.sync-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .recent-stock-table {
+    font-size: 13px;
+  }
+
+  .recent-stock-table th,
+  .recent-stock-table td {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .recent-stock-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .sync-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .recent-stock-table-wrapper {
+    overflow-x: scroll;
+  }
+
+  .recent-stock-table {
+    min-width: 900px;
+  }
+}

@@ -2,6 +2,7 @@ import { Database } from 'better-sqlite3'
 import { AuthIpcHandler } from './handlers/auth.handler'
 import { ProductIpcHandler } from './handlers/product.handler'
 import { SearchIpcHandler } from './handlers/search.handler'
+import { StockQueueIpcHandler } from './handlers/stock-queue.handler'
 import { SyncIpcHandler } from './handlers/sync.handler'
 
 export function registerIpcHandlers(db: Database, apiBaseUrl: string): void {
@@ -10,6 +11,7 @@ export function registerIpcHandlers(db: Database, apiBaseUrl: string): void {
   new SyncIpcHandler(db)
   new SearchIpcHandler(db)
   new AuthIpcHandler(apiBaseUrl)
+  new StockQueueIpcHandler(db)
 
   console.log('✓ All IPC handlers registered')
 }

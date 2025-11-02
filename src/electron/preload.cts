@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld('electron', {
   getUniqueTypes: () => invoke('product:getStats'),
   getUniqueCategories: () => invoke('product:getStats'),
 
+  // Get latest sync time from products table
+  getLatestSyncTime: () => invoke('product:getLatestSyncTime'),
+
   // Stock management - backward compatible with old UI
   updateProductStock: (productId: number, newStock: number) =>
     invoke('product:updateStock', productId, newStock),
@@ -37,6 +40,15 @@ contextBridge.exposeInMainWorld('electron', {
 
   // Add stock and broadcast to API
   addStock: (payload: any) => invoke('stock:addAndBroadcast', payload),
+
+  // Stock Queue - Offline-first stock management
+  stockQueue: {
+    addOffline: (payload: any) => invoke('stock-queue:addOffline', payload),
+    syncSingle: (stockId: number) => invoke('stock-queue:syncSingle', stockId),
+    syncAll: () => invoke('stock-queue:syncAll'),
+    getRecent: (limit?: number) => invoke('stock-queue:getRecent', limit),
+    getUnsyncedCount: () => invoke('stock-queue:getUnsyncedCount'),
+  },
 
   // Socket.IO connection status
   socket: {

@@ -98,6 +98,9 @@
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
   transition: background-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .search-suggestion:hover {
@@ -111,11 +114,48 @@
   cursor: default;
 }
 
-.search-suggestion-name {
-  display: block;
+.search-suggestion-main {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.search-suggestion-type {
   font-weight: 600;
   color: #333;
-  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.search-suggestion-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.search-suggestion-quantity {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.search-suggestion-details {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.search-suggestion-company {
+  color: #555;
+  font-size: 0.8rem;
+}
+
+.search-suggestion-price {
+  color: #16a34a;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .search-suggestion-meta {
