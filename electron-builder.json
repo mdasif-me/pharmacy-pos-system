@@ -17,8 +17,10 @@
     "category": "public.app-category.business"
   },
   "linux": {
-    "target": ["AppImage", "deb"],
-    "category": "Office"
+    "target": ["AppImage"],
+    "category": "Office",
+    "icon": "build/icon.png",
+    "executableName": "pharmacy-pos"
   },
   "win": {
     "target": [

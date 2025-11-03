@@ -153,6 +153,7 @@ function createMainWindow() {
   if (isDev()) {
     console.log('[Main] Loading dev URL: http://localhost:5123')
     mainWindow.loadURL('http://localhost:5123')
+    // Open DevTools only in development
     mainWindow.webContents.openDevTools()
   } else {
     const uiPath = getUIPath()
@@ -173,8 +174,7 @@ function createMainWindow() {
       console.error('[Main] Error loading file:', err)
     })
 
-    // Open DevTools in production to debug
-    mainWindow.webContents.openDevTools()
+    // DevTools NOT opened in production
   }
 
   mainWindow.on('closed', () => {
