@@ -45,8 +45,8 @@ export function SocketStatus() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        padding: '4px 12px',
+        gap: '2px',
+        padding: '4px 4px',
         fontSize: '12px',
         borderRadius: '4px',
         backgroundColor: isConnected ? '#d4edda' : '#f8d7da',
@@ -66,14 +66,12 @@ export function SocketStatus() {
       />
       <span>{isConnected && <>Connected</>}</span>
       {!isConnected && (
-        <button
+         <button
           onClick={handleReconnect}
           style={{
             fontSize: '11px',
-            padding: '4px 8px',
+            padding: '0 2px',
             borderRadius: '3px',
-            border: '1px solid #721c24',
-            backgroundColor: '#fff',
             color: '#721c24',
             cursor: 'pointer',
           }}

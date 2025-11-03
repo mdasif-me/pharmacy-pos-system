@@ -609,104 +609,6 @@ export const AddStockView: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
-
-            {/* Right Column - Bulk Stock Helper and Single Stock */}
-            <div className="right-section">
-              {/* Bulk Stock Helper */}
-              <div className="full-input-section">
-                <div className="input-heder">
-                  <div className="input-heder-stock">Bulk Stock Helper</div>
-                  <div className="input-heder-note">
-                    Note : Bulk buy%,Sale%,P-sale%,M-offer% off calculate base on MRP
-                  </div>
-                </div>
-
-                <div className="input-section">
-                  <div className="add-stock-input">
-                    <h2>Buy%</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.buyPercent}
-                      onChange={handleBulkChange('buyPercent')}
-                    />
-                    {bulkForm.buyPercent && bulkDerivedPrices.buy && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.buy}
-                      </div>
-                    )}
-                  </div>
-                  <div className="add-stock-input">
-                    <h2>Sale%</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.salePercent}
-                      onChange={handleBulkChange('salePercent')}
-                    />
-                    {bulkForm.salePercent && bulkDerivedPrices.sale && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.sale}
-                      </div>
-                    )}
-                  </div>
-                  <div className="add-stock-input">
-                    <h2>P-Sale%</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.peakSalePercent}
-                      onChange={handleBulkChange('peakSalePercent')}
-                    />
-                    {bulkForm.peakSalePercent && bulkDerivedPrices.peakSale && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.peakSale}
-                      </div>
-                    )}
-                  </div>
-                  <div className="add-stock-input-offer">
-                    <h2>M-Offer %</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.mediboyOfferPercent}
-                      onChange={handleBulkChange('mediboyOfferPercent')}
-                    />
-                    {bulkForm.mediboyOfferPercent && bulkDerivedPrices.offer && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.offer}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="input-date-section">
-                  <div className="add-stock-input-date">
-                    <h2>Exp</h2>
-                    <input
-                      type="date"
-                      value={bulkForm.expiry}
-                      onChange={handleBulkChange('expiry')}
-                      placeholder="YYYY/MM/DD"
-                    />
-                  </div>
-                  <div className="add-stock-input-date">
-                    <h2>BTC</h2>
-                    <input
-                      type="date"
-                      value={bulkForm.btcDate}
-                      onChange={handleBulkChange('btcDate')}
-                      placeholder="GB-YYYY/MM/DD"
-                    />
-                  </div>
-                </div>
-              </div>
-
               {/* Single Stock */}
               <div className="full-input-section" style={{ marginTop: '12px' }}>
                 <div className="input-heder">
@@ -749,7 +651,7 @@ export const AddStockView: React.FC = () => {
                       required
                     />
                   </div>
-                  <div className="add-stock-input-offer">
+                    <div className='add-stock-input-offer-section'>
                     <h2>M-Offer*</h2>
                     <input
                       type="number"
@@ -762,7 +664,7 @@ export const AddStockView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="input-section">
+                <div className="input-date-section">
                   <div className="add-stock-bottom-input-date">
                     <h2>Exp*</h2>
                     <input
@@ -772,14 +674,7 @@ export const AddStockView: React.FC = () => {
                       placeholder="YYYY/MM/DD"
                     />
                   </div>
-                  <div className="add-stock-input-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={singleForm.autoBtc}
-                      onChange={handleAutoBtcToggle}
-                    />
-                    <h2>Auto BTC</h2>
-                  </div>
+
                   <div className="add-stock-bottom-input-date">
                     <h2>BTC</h2>
                     <input
@@ -790,40 +685,18 @@ export const AddStockView: React.FC = () => {
                       required
                     />
                   </div>
-                </div>
 
+                </div>
+                 <div style={{marginTop:"-20px"}} className="add-stock-input-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={singleForm.autoBtc}
+                      onChange={handleAutoBtcToggle}
+                    />
+                    <h2>Auto BTC</h2>
+                  </div>
                 <div className="input-section">
-                  <div className="add-stock-input">
-                    <h2>Batch No*</h2>
-                    <input
-                      type="text"
-                      value={singleForm.batchNo}
-                      onChange={handleSingleChange('batchNo')}
-                      placeholder="Batch number"
-                      required
-                    />
-                  </div>
-                  <div className="add-stock-input">
-                    <h2>Stock Alert</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      value={singleForm.stockAlert}
-                      onChange={handleSingleChange('stockAlert')}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="add-stock-input">
-                    <h2>Shelf</h2>
-                    <input
-                      type="text"
-                      value={singleForm.shelf}
-                      onChange={handleSingleChange('shelf')}
-                      placeholder="Shelf location"
-                    />
-                  </div>
-                  <div className="add-stock-input-offer">
+                   <div className="add-stock-input-offer">
                     <h2>QTY*</h2>
                     <input
                       type="number"
@@ -835,6 +708,37 @@ export const AddStockView: React.FC = () => {
                       required
                     />
                   </div>
+                  <div className="add-stock-input-section">
+                    <h2>Batch No*</h2>
+                    <input
+                      type="text"
+                      value={singleForm.batchNo}
+                      onChange={handleSingleChange('batchNo')}
+                      placeholder="Batch no"
+                      required
+                    />
+                  </div>
+                  <div className="add-stock-input-section">
+                    <h2>Stock Alert</h2>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={singleForm.stockAlert}
+                      onChange={handleSingleChange('stockAlert')}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="add-stock-input-section">
+                    <h2>Shelf</h2>
+                    <input
+                      type="text"
+                      value={singleForm.shelf}
+                      onChange={handleSingleChange('shelf')}
+                      placeholder="Shelf location"
+                    />
+                  </div>
+
                 </div>
 
                 <div className="add-input-stock">
@@ -843,6 +747,113 @@ export const AddStockView: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+
+            {/* Right Column - Bulk Stock Helper and Single Stock */}
+            <div className="right-section">
+              {/* Bulk Stock Helper */}
+              <div className="full-input-section">
+                <div className="input-heder">
+                  <div className="input-heder-stock">Bulk Stock Helper</div>
+                  <div className="input-heder-note">
+                    Note : Bulk buy%,Sale%,P-sale%,M-offer% off calculate base on MRP
+                  </div>
+                </div>
+
+                <div className="input-section">
+                  <div className="add-stock-input">
+                    <div className='add-stock-input-flex'>
+                      <h2>Buy%</h2>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={bulkForm.buyPercent}
+                      onChange={handleBulkChange('buyPercent')}
+                    />
+                    </div>
+                    {bulkForm.buyPercent && bulkDerivedPrices.buy && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.buy}
+                      </div>
+                    )}
+                  </div>
+                  <div className="add-stock-input">
+                    <div className='add-stock-input-flex'>
+                      <h2>Sale%</h2>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={bulkForm.salePercent}
+                      onChange={handleBulkChange('salePercent')}
+                    />
+                    </div>
+                    {bulkForm.salePercent && bulkDerivedPrices.sale && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.sale}
+                      </div>
+                    )}
+                  </div>
+                  <div className="add-stock-input">
+                    <div className='add-stock-input-flex'>
+                      <h2>P-Sale%</h2>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={bulkForm.peakSalePercent}
+                      onChange={handleBulkChange('peakSalePercent')}
+                    />
+                    </div>
+                    {bulkForm.peakSalePercent && bulkDerivedPrices.peakSale && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.peakSale}
+                      </div>
+                    )}
+                  </div>
+                  <div className="add-stock-input-offer">
+                    <div className='add-stock-input-offer-section'>
+                      <h2>M-Offer %</h2>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={bulkForm.mediboyOfferPercent}
+                      onChange={handleBulkChange('mediboyOfferPercent')}
+                    />
+                    </div>
+                    {bulkForm.mediboyOfferPercent && bulkDerivedPrices.offer && (
+                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
+                        ≈ ৳{bulkDerivedPrices.offer}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="input-date-section">
+                  <div className="add-stock-bottom-input-date">
+                    <h2>Exp</h2>
+                    <input
+                      type="date"
+                      value={bulkForm.expiry}
+                      onChange={handleBulkChange('expiry')}
+                      placeholder="YYYY/MM/DD"
+                    />
+                  </div>
+                  <div className="add-stock-bottom-input-date">
+                    <h2>BTC</h2>
+                    <input
+                      type="date"
+                      value={bulkForm.btcDate}
+                      onChange={handleBulkChange('btcDate')}
+                      placeholder="GB-YYYY/MM/DD"
+                    />
+                  </div>
+                </div>
+              </div>
+
+
             </div>
           </form>
         </div>

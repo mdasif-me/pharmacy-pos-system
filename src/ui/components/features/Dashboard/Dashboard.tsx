@@ -87,7 +87,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         </nav>
 
         {/* Socket Status */}
-        <div style={{ padding: '12px' }}>
+        <div style={{ padding: '2px' }}>
           <SocketStatus />
         </div>
 

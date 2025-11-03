@@ -181,7 +181,7 @@ export const RecentStockView: React.FC = () => {
   return (
     <div className="recent-stock-container">
       <div className="recent-stock-header">
-        <h3>Recent Stock Additions</h3>
+        <h3>Recent Stock</h3>
         <div className="sync-controls">
           {!isOnline && <span className="offline-badge">⚠ Offline</span>}
           {unsyncedCount > 0 && <span className="unsynced-badge">{unsyncedCount} Unsynced</span>}
@@ -221,7 +221,7 @@ export const RecentStockView: React.FC = () => {
             {recentStock.length === 0 ? (
               <tr>
                 <td colSpan={8} style={{ textAlign: 'center', color: '#999' }}>
-                  No recent stock additions
+                  No recent stock
                 </td>
               </tr>
             ) : (

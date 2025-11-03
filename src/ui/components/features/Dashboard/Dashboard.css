@@ -20,11 +20,11 @@
 
 /* Sidebar Container */
 .dashboard-sidebar {
-  width: 140px;
-  min-width: 140px;
-  max-width: 140px;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
   height: 100vh;
-  background-color: #1a1a1a;
+  background-color: #0F0F14;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -50,11 +50,11 @@
 }
 
 .sidebar-brand img {
-  width: 70px;
-  height: 70px;
+  width: 42px;
+  height: 41px;
   object-fit: contain;
   background-color: #e0e0e0;
-  padding: 8px;
+  padding: 13px;
   border-radius: 4px;
 }
 
@@ -119,8 +119,8 @@
 
 /* Sidebar Icons */
 .sidebar-icon {
-  width: 36px;
-  height: 36px;
+  width: 25px;
+  height: 25px;
   object-fit: contain;
   filter: brightness(0) invert(1);
   opacity: 0.9;
