@@ -23,14 +23,34 @@
   "win": {
     "target": [
       {
-        "target": "portable",
+        "target": "nsis",
         "arch": ["x64"]
       }
     ],
+    "icon": "build/icon.ico",
     "publisherName": "Pharmacy POS",
     "verifyUpdateCodeSignature": false,
     "sign": null,
     "signAndEditExecutable": false,
     "signDlls": false
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "allowElevation": true,
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "installerHeaderIcon": "build/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Pharmacy POS",
+    "perMachine": true,
+    "runAfterFinish": true,
+    "deleteAppDataOnUninstall": false,
+    "installerLanguages": ["en_US"],
+    "license": "LICENSE.txt",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "displayLanguageSelector": false,
+    "warningsAsErrors": false
   }
 }
