@@ -6,7 +6,45 @@
   "author": "Pharmacy POS Team",
   "private": true,
   "main": "dist-electron/main.js",
-  "scripts": {
+  "build": {
+    "appId": "com.pharmacy.pos",
+    "productName": "Pharmacy POS",
+    "copyright": "Copyright © 2025",
+    "files": [
+      "dist-electron/**/*",
+      "dist-react/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "directories": {
+      "output": "release-windows"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "publisherName": "Pharmacy POS",
+      "verifyUpdateCodeSignature": false,
+      "sign": null,
+      "signAndEditExecutable": false,
+      "signDlls": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Pharmacy POS",
+      "runAfterFinish": true
+    }
+  },
+   "scripts": {
     "dev": "npm-run-all --parallel dev:react dev:electron",
     "dev:react": "vite",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
