@@ -6,55 +6,15 @@
   "author": "Pharmacy POS Team",
   "private": true,
   "main": "dist-electron/main.js",
-  "build": {
-    "appId": "com.pharmacy.pos",
-    "productName": "Pharmacy POS",
-    "copyright": "Copyright © 2025",
-    "files": [
-      "dist-electron/**/*",
-      "dist-react/**/*",
-      "package.json"
-    ],
-    "asar": true,
-    "directories": {
-      "output": "release-windows"
-    },
-    "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "build/icon.ico",
-      "artifactName": "${productName}-Setup-${version}.${ext}"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "Pharmacy POS",
-      "runAfterFinish": true
-    }
-  },
   "scripts": {
     "dev": "npm-run-all --parallel dev:react dev:electron",
     "dev:react": "vite",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
     "build": "tsc && vite build",
-    "build:win": "npm run transpile:electron && npm run build && npm run dist:win",
-    "preview": "vite preview",
     "transpile:electron": "tsc --project src/electron/tsconfig.json",
     "rebuild:native": "electron-rebuild --force -w better-sqlite3",
     "postinstall": "npm run rebuild:native",
-    "dist:mac": "npm run transpile:electron && npm run build && electron-builder --mac --arm64",
-    "dist:win": "electron-builder --win --x64",
-    "dist:linux": "npm run transpile:electron && npm run build && electron-builder --linux --x64",
-    "test:e2e": "playwright test",
-    "test:unit": "vitest src"
+    "dist:win": "npm run transpile:electron && npm run build && npx electron-builder --win --x64"
   },
   "dependencies": {
     "axios": "^1.13.1",
