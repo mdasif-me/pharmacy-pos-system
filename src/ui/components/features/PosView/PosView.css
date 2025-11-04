@@ -1,0 +1,682 @@
+main {
+  display: flex;
+  flex-direction: column;
+  padding: 22px 5px;
+}
+
+section:not(.bottom-section) {
+  flex: 1;
+}
+
+.bottom-section {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-top: 1px solid #ccc;
+}
+
+.pos-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.select-batch-bar,
+.price-bar,
+.qty-number,
+.input-account {
+  display: flex;
+  align-items: center;
+}
+
+.select-batch-bar h2,
+.price-bar h2,
+.qty-number h2 {
+  background-color: #CFCFCF;
+  padding: 8.5px 18px;
+  font-weight: 700;
+  font-style: Bold;
+  font-size: 14px;
+}
+
+.select-batch-bar input,
+.input-account input {
+  padding: 2px 13px;
+  width: 264px;
+  height: 35px;
+  opacity: 1;
+  border-width: 1px;
+  background-color: #FFFBFB;
+  border: 1px solid #A89797,
+}
+
+.price-bar input,
+.qty-number input {
+  padding: 2px 13px;
+  width: 71px;
+  height: 35px;
+  opacity: 1;
+  border-width: 1px;
+  background-color: #FFFBFB;
+  border: 1px solid #A89797,
+}
+
+.input {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.input-section {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-order-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-search {
+  display: flex;
+  align-items: center;
+}
+
+.product-search input {
+  width: 357;
+  height: 35;
+  border-width: 1px;
+  padding: 8px 11px;
+  background-color: #fffbfb;
+  border: 1px solid #a89797;
+}
+
+.product-order-search {
+  display: flex;
+  align-items: center;
+}
+
+.product-order-search input {
+  width: 335px;
+  height: 35px;
+  padding: 8px 18px;
+  background-color: #fffbfb;
+  border: 1px solid #a89797;
+}
+
+.search-icon {
+  background-color: #CFCFCF;
+  padding: 8px 10px;
+}
+
+.search-icon img {
+  width: 24px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+}
+
+.input-button {
+  font-weight: 700;
+  font-style: Bold;
+  font-size: 20px;
+  padding: 8.5px 35px;
+  color: #FFFFFF;
+  background-color: #05791E;
+
+}
+
+.input-Order-button {
+  width: 113px;
+  height: 35px;
+  padding: 10px 12px;
+  font-weight: 700;
+  font-size: 12px;
+  background-color: #05791e;
+  color: #ffffff;
+  border: none;
+}
+
+.pos-account-section {
+  display: flex;
+  align-items: end;
+  gap: 30px;
+}
+
+.pos-account-section h1 {
+  font-weight: 700;
+  font-size: 36px;
+  padding: 25px 54px;
+  width: 250px;
+  height: 93px;
+  background-color: #ffdf00;
+  text-align: center;
+  margin: 0 !important;
+}
+
+
+.order-section {
+  width: 100%;
+  background: #f2f2f2;
+  font-family: Arial, sans-serif;
+}
+
+.input-order {
+  background: #2D2A2A;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+}
+
+.input-order-bill {
+  padding-top: 11px;
+  padding-left: 8px;
+}
+
+.input-order-section {
+  display: flex;
+  align-items: center;
+}
+
+.product-order-search {
+  display: flex;
+  align-items: center;
+  background: #d9d9d9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.product-order-search input {
+  border: none;
+  outline: none;
+  padding: 0px 12px;
+  width: 200px;
+  background: transparent;
+  color: #333;
+  font-size: 14px;
+}
+
+.input-order-button {
+  white-space: nowrap;
+  background: #008000;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.bill-section {
+  background: #ffcc00;
+  color: black;
+  padding: 14px 40px;
+  margin-left: 96px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.bill-section span {
+  font-weight: 700;
+  font-style: Bold;
+  font-size: 25px;
+}
+
+.bill-amount {
+  display: block;
+  font-size: 24px;
+}
+
+.bill-text {
+  font-size: 14px;
+}
+
+.bottom-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.bottom-info div {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.return-label {
+  font-weight: bold;
+}
+
+.phone,
+.delivery {
+  color: #ccc;
+}
+
+.order-table table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.order-table thead {
+  background: #000;
+  color: #fff;
+  font-size: 14px;
+}
+
+.order-table th,
+.order-table td {
+  padding: 8px 12px;
+}
+
+.order-table tbody .empty-row {
+  background: #dcdcdc;
+  height: 35px;
+}
+
+.bottom-section {
+  display: flex;
+}
+
+.border {
+  margin: 0 !important;
+  border-top: 0.5px solid #000;
+}
+
+.Order-price {
+  display: flex;
+  gap: 85px;
+  padding: 10px 4px;
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 16px 29px;
+  width: 286px;
+  background-color: #046D2C;
+}
+
+.sold-out-btn {
+  width: 225px;
+  height: 54px;
+  background-color: #046D2C;
+  padding: 15px 60px;
+  font-weight: 700;
+  font-style: Bold;
+  font-size: 20px;
+  color: #FFFFFF;
+}
+
+.total span {
+  font-weight: 700;
+  font-style: Bold;
+  font-size: 16px;
+  color: #FFFFFF;
+}
+
+.product-description {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.header-products-table-wrapper,
+.products-table-wrapper {
+  background-color: #ffffff;
+  border: none;
+  overflow: hidden;
+  width: 100%;
+}
+
+.qty-input {
+  width: 58px;
+  height: 23px;
+  text-align: center;
+  border: 1px solid #ABA7A7;
+  background-color: #FFFFFF;
+  font-weight: 400;
+  font-size: 12px;
+}
+
+.order-input-section {
+  display: flex;
+}
+
+.header-products-table-wrapper {
+  flex: 1;
+}
+
+.products-table-wrapper {
+  flex: 1;
+}
+
+.header-products-table,
+.products-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.header-products-table thead,
+.products-table thead {
+  white-space: nowrap;
+  background-color: #1a1a1a;
+  color: white;
+}
+
+.header-products-table th,
+.products-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.header-products-table td,
+.products-table td {
+  padding: 1rem;
+  border: none;
+  background-color: #FFFFFF;
+  font-size: 0.9rem;
+  color: #333;
+  text-align: center;
+}
+
+.header-products-table tbody tr td:first-child,
+.products-table tbody tr td:first-child {
+  text-align: left;
+}
+
+.products-table input {
+  width: 50px;
+  text-align: center;
+}
+
+
+/* ✅ Only Small Device Responsive (Mobile View) */
+
+
+
+/* ✅ Extra Small Devices (max-width: 480px) */
+@media (max-width: 480px) {
+
+  .account-section h1 {
+    font-size: 20px;
+    padding: 10px 0;
+  }
+
+  .input-button,
+  .input-Order-button {
+    padding: 8.5 35px;
+  }
+
+  .header,
+  .bottom-section {
+    padding: 8px;
+  }
+
+  .pos-account-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .price-bar h2,
+  .select-batch-bar h2 {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+
+
+  .header,
+  .input,
+  .input-order-section,
+  .account-section,
+  .Order-price,
+  .bottom-section,
+  .product-description {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .select-batch-bar input,
+  .price-bar input,
+  .product-search input,
+  .product-order-search input,
+  .input-account input,
+  .qty-number input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .input-button,
+  .input-Order-button,
+  .sold-out-btn,
+  .total {
+    padding: 8.5 35px;
+  }
+
+  .account-section h1 {
+    width: 100%;
+    font-size: 24px;
+    padding: 15px 0;
+  }
+
+  .bill-section {
+    margin-left: 0;
+    width: 100%;
+    max-width: 139px;
+    text-align: center;
+  }
+
+  .bottom-info {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .header-products-table-wrapper,
+  .products-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .order-table table {
+    width: 100%;
+  }
+}
+
+/* ✅ Medium Devices (min-width: 769px) and (max-width: 992px) */
+@media (min-width: 769px) and (max-width: 992px) {
+
+  .header,
+  .input,
+  .input-order-section,
+  .account-section,
+  .Order-price,
+  .bottom-section,
+  .product-description {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .select-batch-bar input,
+  .price-bar input,
+  .product-search input,
+  .product-order-search input,
+  .input-account input,
+  .qty-number input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .input-button,
+  .input-Order-button,
+  .sold-out-btn,
+  .total {
+    padding: 8.5 35px;
+  }
+
+  .account-section h1 {
+    width: 100%;
+    font-size: 24px;
+    padding: 15px 0;
+  }
+
+  .bill-section {
+    margin-left: 0;
+    width: 100%;
+    max-width: 139px;
+    text-align: center;
+  }
+
+  .bottom-info {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .header-products-table-wrapper,
+  .products-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .order-table table {
+    width: 100%;
+  }
+}
+
+
+/* ✅ Large Devices (min-width: 993px) and (max-width: 1200px) */
+@media (min-width: 993px) and (max-width: 1200px) {
+
+  .header,
+  .input,
+  .input-order-section,
+  .account-section,
+  .Order-price,
+  .bottom-section,
+  .product-description {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .select-batch-bar input,
+  .price-bar input,
+  .product-search input,
+  .product-order-search input,
+  .input-account input,
+  .qty-number input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .input-button,
+  .input-Order-button,
+  .sold-out-btn,
+  .total {
+    padding: 8.5 35px;
+  }
+
+  .account-section h1 {
+    width: 100%;
+    font-size: 24px;
+    padding: 15px 0;
+  }
+
+  .bill-section {
+    margin-left: 0;
+    width: 100%;
+    max-width: 139px;
+    text-align: center;
+  }
+
+  .bottom-info {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .header-products-table-wrapper,
+  .products-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .order-table table {
+    width: 100%;
+  }
+}
+
+
+/* ✅ Extra Large Devices (min-width: 1201px) and (max-width: 1400px) */
+@media (min-width: 1201px) and (max-width: 1400px) {
+
+  .header,
+  .input,
+  .input-order-section,
+  .account-section,
+  .Order-price,
+  .bottom-section,
+  .product-description {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .select-batch-bar input,
+  .price-bar input,
+  .product-search input,
+  .product-order-search input,
+  .input-account input,
+  .qty-number input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .input-button,
+  .input-Order-button,
+  .sold-out-btn,
+  .total {
+    padding: 8.5 35px;
+  }
+
+  .account-section h1 {
+    width: 100%;
+    font-size: 24px;
+    padding: 15px 0;
+  }
+
+  .bill-section {
+    margin-left: 0;
+    width: 100%;
+    max-width: 139px;
+    text-align: center;
+  }
+
+  .bottom-info {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .header-products-table-wrapper,
+  .products-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .order-table table {
+    width: 100%;
+  }
+}

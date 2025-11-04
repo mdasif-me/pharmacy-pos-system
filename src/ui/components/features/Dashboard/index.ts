@@ -1,2 +1,2 @@
 export { Dashboard } from './Dashboard'
-export { PosView } from './PosView'
+export { PosView } from '../PosView/PosView'

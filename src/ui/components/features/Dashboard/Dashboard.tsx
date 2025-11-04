@@ -8,7 +8,7 @@ import { SocketStatus } from '../../common/SocketStatus'
 import { AddStockView } from '../AddStock'
 import { Products } from '../Products'
 import './Dashboard.css'
-import { PosView } from './PosView'
+import { PosView } from '../PosView/PosView'
 
 type DashboardView = 'pos' | 'all-stock' | 'add-stock'
 
