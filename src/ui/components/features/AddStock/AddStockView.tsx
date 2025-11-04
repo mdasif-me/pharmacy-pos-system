@@ -627,6 +627,7 @@ export const AddStockView: React.FC = () => {
                       step="0.01"
                       value={singleForm.buy}
                       onChange={handleSingleChange('buy')}
+                      placeholder='10'
                     />
                   </div>
                   <div className="add-stock-input">
@@ -638,6 +639,7 @@ export const AddStockView: React.FC = () => {
                       value={singleForm.sale}
                       onChange={handleSingleChange('sale')}
                       required
+                      placeholder='10'
                     />
                   </div>
                   <div className="add-stock-input">
@@ -649,6 +651,7 @@ export const AddStockView: React.FC = () => {
                       value={singleForm.pSale}
                       onChange={handleSingleChange('pSale')}
                       required
+                      placeholder='10'
                     />
                   </div>
                     <div className='add-stock-input-offer-section'>
@@ -660,6 +663,7 @@ export const AddStockView: React.FC = () => {
                       value={singleForm.mOffer}
                       onChange={handleSingleChange('mOffer')}
                       required
+                      placeholder='12'
                     />
                   </div>
                 </div>
@@ -668,7 +672,7 @@ export const AddStockView: React.FC = () => {
                   <div className="add-stock-bottom-input-date">
                     <h2>Exp*</h2>
                     <input
-                      type="date"
+                      type="text"
                       value={singleForm.expiry}
                       onChange={handleSingleChange('expiry')}
                       placeholder="YYYY/MM/DD"
@@ -678,7 +682,7 @@ export const AddStockView: React.FC = () => {
                   <div className="add-stock-bottom-input-date">
                     <h2>BTC</h2>
                     <input
-                      type="date"
+                      type="text"
                       value={singleForm.btcDate}
                       onChange={handleSingleChange('btcDate')}
                       placeholder="GB-YYYY/MM/DD"
@@ -708,7 +712,7 @@ export const AddStockView: React.FC = () => {
                       required
                     />
                   </div>
-                  <div className="add-stock-input-section">
+                  {/* <div className="add-stock-input-section">
                     <h2>Batch No*</h2>
                     <input
                       type="text"
@@ -717,16 +721,16 @@ export const AddStockView: React.FC = () => {
                       placeholder="Batch no"
                       required
                     />
-                  </div>
+                  </div> */}
                   <div className="add-stock-input-section">
-                    <h2>Stock Alert</h2>
+                    <h2>STK-ALT* </h2>
                     <input
                       type="number"
                       min="0"
                       step="1"
                       value={singleForm.stockAlert}
                       onChange={handleSingleChange('stockAlert')}
-                      placeholder="0"
+                      placeholder="1000"
                     />
                   </div>
                   <div className="add-stock-input-section">
@@ -735,7 +739,7 @@ export const AddStockView: React.FC = () => {
                       type="text"
                       value={singleForm.shelf}
                       onChange={handleSingleChange('shelf')}
-                      placeholder="Shelf location"
+                      placeholder="AC-120"
                     />
                   </div>
 
@@ -770,6 +774,7 @@ export const AddStockView: React.FC = () => {
                       step="0.01"
                       value={bulkForm.buyPercent}
                       onChange={handleBulkChange('buyPercent')}
+                      placeholder='10'
                     />
                     </div>
                     {bulkForm.buyPercent && bulkDerivedPrices.buy && (
@@ -787,6 +792,7 @@ export const AddStockView: React.FC = () => {
                       step="0.01"
                       value={bulkForm.salePercent}
                       onChange={handleBulkChange('salePercent')}
+                      placeholder='10'
                     />
                     </div>
                     {bulkForm.salePercent && bulkDerivedPrices.sale && (
@@ -804,6 +810,7 @@ export const AddStockView: React.FC = () => {
                       step="0.01"
                       value={bulkForm.peakSalePercent}
                       onChange={handleBulkChange('peakSalePercent')}
+                      placeholder='10'
                     />
                     </div>
                     {bulkForm.peakSalePercent && bulkDerivedPrices.peakSale && (
@@ -821,6 +828,7 @@ export const AddStockView: React.FC = () => {
                       step="0.01"
                       value={bulkForm.mediboyOfferPercent}
                       onChange={handleBulkChange('mediboyOfferPercent')}
+                      placeholder='12'
                     />
                     </div>
                     {bulkForm.mediboyOfferPercent && bulkDerivedPrices.offer && (
@@ -835,7 +843,7 @@ export const AddStockView: React.FC = () => {
                   <div className="add-stock-bottom-input-date">
                     <h2>Exp</h2>
                     <input
-                      type="date"
+                      type="text"
                       value={bulkForm.expiry}
                       onChange={handleBulkChange('expiry')}
                       placeholder="YYYY/MM/DD"
@@ -844,7 +852,7 @@ export const AddStockView: React.FC = () => {
                   <div className="add-stock-bottom-input-date">
                     <h2>BTC</h2>
                     <input
-                      type="date"
+                      type="text"
                       value={bulkForm.btcDate}
                       onChange={handleBulkChange('btcDate')}
                       placeholder="GB-YYYY/MM/DD"
@@ -852,7 +860,13 @@ export const AddStockView: React.FC = () => {
                   </div>
                 </div>
               </div>
-
+                  <div className='button-section'>
+                    <div className='apply-btn'>
+                      <input type="checkbox" />
+                      <h2>Apply</h2>
+                    </div>
+                    <h2 className='clear-btn'>Clear</h2>
+                  </div>
 
             </div>
           </form>
