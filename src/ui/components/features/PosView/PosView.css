@@ -503,7 +503,6 @@ section:not(.bottom-section) {
   .input,
   .input-order-section,
   .account-section,
-  .Order-price,
   .bottom-section,
   .product-description {
     flex-direction: column;
@@ -565,7 +564,6 @@ section:not(.bottom-section) {
   .input,
   .input-order-section,
   .account-section,
-  .Order-price,
   .bottom-section,
   .product-description {
     flex-direction: column;
@@ -627,7 +625,6 @@ section:not(.bottom-section) {
   .input,
   .input-order-section,
   .account-section,
-  .Order-price,
   .bottom-section,
   .product-description {
     flex-direction: column;
