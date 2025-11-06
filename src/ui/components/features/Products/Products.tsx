@@ -54,10 +54,9 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     try {
       const value = await window.electron.getLastSync()
       if (value) {
-        const parsed = new Date(value)
-        setLastSync(Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString())
+        setLastSync(value)
       } else {
-        setLastSync('')
+        setLastSync('Sync not available')
       }
     } catch (error) {
       console.error('failed to load last sync timestamp:', error)
@@ -699,7 +698,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         <div className="filter-group filter-select-group">
           <img src={Company} alt="search" />
           <Select
-            className="react-select-container"
+            className="react-select-container-company"
             classNamePrefix="react-select"
             options={companyOptions}
             value={selectedCompanyOption}

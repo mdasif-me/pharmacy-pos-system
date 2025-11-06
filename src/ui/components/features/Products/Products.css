@@ -92,6 +92,12 @@
   font-weight: 400;
   color: #000;
 }
+.react-select-container-company {
+  width: 320px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #000;
+}
 
 .react-select__control {
   min-height: 40px;
