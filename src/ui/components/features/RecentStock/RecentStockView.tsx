@@ -55,8 +55,8 @@ export const RecentStockView: React.FC = () => {
   const loadRecentStock = useCallback(async () => {
     try {
       console.log('[RecentStock] Loading recent stock...')
-      // Get all unsynced and today's items
-      const items = await window.electron.stockQueue.getUnsyncedAndToday()
+      // Get all recently added stock items (last 100, most recent first)
+      const items = await window.electron.stockQueue.getRecent()
       console.log('[RecentStock] Loaded items:', items.length)
       setRecentStock(items)
     } catch (error) {
