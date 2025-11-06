@@ -378,20 +378,11 @@ export const AddStockView: React.FC = () => {
 
   const handleAutoBtcToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked
-    if (checked && singleForm.expiry) {
-      // Generate BTC from expiry: GB-YYYY/MM/DD (convert from YYYY-MM-DD format)
-      const formattedDate = singleForm.expiry.replace(/-/g, '/')
-      const btcValue = `GB-${formattedDate}`
-      setSingleForm((previous) => ({
-        ...previous,
-        btcDate: btcValue,
-      }))
-    } else {
-      setSingleForm((previous) => ({
-        ...previous,
-        btcDate: '',
-      }))
-    }
+    setSingleForm((previous) => ({
+      ...previous,
+      autoBtc: checked,
+      btcDate: checked && previous.expiry ? `GB-${previous.expiry}` : '',
+    }))
   }
 
   const resetForms = () => {
@@ -800,8 +791,10 @@ export const AddStockView: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div style={{ marginTop: '-20px' }} className="add-stock-input-checkbox">
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
+                <div style={{ marginBottom: '20px' }} className="add-stock-input-checkbox">
+                  <label
+                    style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}
+                  >
                     <input
                       type="checkbox"
                       checked={singleForm.autoBtc}
@@ -941,7 +934,10 @@ export const AddStockView: React.FC = () => {
                 </div>
               </div>
               <div className="button-section">
-                <label className="apply-btn" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
+                <label
+                  className="apply-btn"
+                  style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}
+                >
                   <input
                     type="checkbox"
                     checked={bulkForm.applyBulk}
