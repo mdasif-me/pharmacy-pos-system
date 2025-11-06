@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Rotate from '../../../assets/rotate.svg'
 import Search from '../../../assets/search.svg'
 import Wifi from '../../../assets/wifi.svg'
+import { showError, showSuccess } from '../../../utils/alerts'
 import { RecentStockView } from '../RecentStock/RecentStockView'
 import './AddStockView.css'
 
@@ -26,7 +27,6 @@ type SingleFormState = {
   promoExpiry: string
   btcDate: string
   qty: string
-  batchNo: string
   stockAlert: string
   shelf: string
 }
@@ -87,13 +87,10 @@ export const AddStockView: React.FC = () => {
     promoExpiry: '',
     btcDate: '',
     qty: '',
-    batchNo: '',
     stockAlert: '0',
     shelf: '',
   })
   const [isBroadcasting, setIsBroadcasting] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncError, setSyncError] = useState('')
   const [lastSync, setLastSync] = useState('')
@@ -261,6 +258,11 @@ export const AddStockView: React.FC = () => {
         sale: bulkDerivedPrices.sale || '',
         pSale: bulkDerivedPrices.peakSale || '',
         mOffer: bulkDerivedPrices.offer || '',
+        expiry: bulkForm.expiry,
+        btcDate: bulkForm.btcDate,
+        stockAlert: String(
+          selectedProduct.current_stock?.stock_alert ?? selectedProduct.stock_alert ?? 0
+        ),
       }))
     } else {
       setSingleForm((previous) => ({
@@ -269,12 +271,19 @@ export const AddStockView: React.FC = () => {
         sale: numberToString(selectedProduct.discount_price) || '',
         pSale: numberToString(selectedProduct.peak_hour_price) || '',
         mOffer: numberToString(selectedProduct.mediboy_offer_price) || '',
+        expiry: '',
+        btcDate: '',
+        stockAlert: String(
+          selectedProduct.current_stock?.stock_alert ?? selectedProduct.stock_alert ?? 0
+        ),
       }))
     }
   }, [
     mrp,
     selectedProduct,
     bulkForm.applyBulk,
+    bulkForm.expiry,
+    bulkForm.btcDate,
     bulkForm.buyPercent,
     bulkForm.salePercent,
     bulkForm.peakSalePercent,
@@ -298,11 +307,10 @@ export const AddStockView: React.FC = () => {
     }
   }, [singleForm.autoBtc, singleForm.expiry])
 
-  // Auto-generate BTC for bulk form when expiry changes and autoBtc is checked
+  // Auto-generate BTC for bulk form when expiry changes
   useEffect(() => {
-    if (bulkForm.autoBtc && bulkForm.expiry) {
-      const formattedDate = bulkForm.expiry.replace(/-/g, '/')
-      const btcValue = `GB-${formattedDate}`
+    if (bulkForm.expiry) {
+      const btcValue = `GB-${bulkForm.expiry}`
       setBulkForm((previous) => {
         if (previous.btcDate !== btcValue) {
           return {
@@ -313,7 +321,7 @@ export const AddStockView: React.FC = () => {
         return previous
       })
     }
-  }, [bulkForm.autoBtc, bulkForm.expiry])
+  }, [bulkForm.expiry])
 
   const handleSyncProducts = useCallback(async () => {
     setSyncError('')
@@ -349,10 +357,7 @@ export const AddStockView: React.FC = () => {
     setSelectedProduct(product)
     setSearchTerm(product.product_name ?? '')
     setSuggestions([])
-    setStatusMessage('')
-    setErrorMessage('')
     closeSuggestions()
-    // useEffect will handle all the value filling based on bulkForm.applyBulk state
   }
 
   const handleBulkChange =
@@ -379,33 +384,11 @@ export const AddStockView: React.FC = () => {
       const btcValue = `GB-${formattedDate}`
       setSingleForm((previous) => ({
         ...previous,
-        autoBtc: checked,
         btcDate: btcValue,
       }))
     } else {
       setSingleForm((previous) => ({
         ...previous,
-        autoBtc: checked,
-        btcDate: '',
-      }))
-    }
-  }
-
-  const handleBulkAutoBtcToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = event.target.checked
-    if (checked && bulkForm.expiry) {
-      // Generate BTC from bulk expiry: GB-YYYY/MM/DD (convert from YYYY-MM-DD format)
-      const formattedDate = bulkForm.expiry.replace(/-/g, '/')
-      const btcValue = `GB-${formattedDate}`
-      setBulkForm((previous) => ({
-        ...previous,
-        autoBtc: checked,
-        btcDate: btcValue,
-      }))
-    } else {
-      setBulkForm((previous) => ({
-        ...previous,
-        autoBtc: checked,
         btcDate: '',
       }))
     }
@@ -423,7 +406,6 @@ export const AddStockView: React.FC = () => {
       promoExpiry: '',
       btcDate: '',
       qty: '',
-      batchNo: '',
       stockAlert: '0',
       shelf: '',
     })
@@ -455,7 +437,6 @@ export const AddStockView: React.FC = () => {
       promoExpiry: '',
       btcDate: '',
       qty: '',
-      batchNo: '',
       stockAlert: '0',
       shelf: '',
     })
@@ -491,11 +472,9 @@ export const AddStockView: React.FC = () => {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setStatusMessage('')
-    setErrorMessage('')
 
     if (!selectedProduct) {
-      setErrorMessage('select a product before adding stock')
+      showError('Validation Error', 'select a product before adding stock')
       return
     }
 
@@ -507,13 +486,13 @@ export const AddStockView: React.FC = () => {
     const peakHourPrice = Number.parseFloat(singleForm.pSale)
     const offerPrice = Number.parseFloat(singleForm.mOffer)
     const stockAlert = Number.parseInt(singleForm.stockAlert || '0', 10)
-    const batchNo = singleForm.batchNo.trim()
+    const batchNo = singleForm.btcDate.trim()
     const shelf = singleForm.shelf.trim() || null
 
     // Get expiry date
     const expiryDate = singleForm.expiry
     if (!expiryDate) {
-      setErrorMessage('expiry date is required')
+      showError('Validation Error', 'expiry date is required')
       return
     }
 
@@ -525,33 +504,35 @@ export const AddStockView: React.FC = () => {
       Number.isNaN(peakHourPrice) ||
       Number.isNaN(offerPrice)
     ) {
-      setErrorMessage('fill out all required pricing fields before submitting')
+      showError('Validation Error', 'fill out all required pricing fields before submitting')
       return
     }
 
     if (quantity <= 0) {
-      setErrorMessage('quantity must be greater than zero')
+      showError('Validation Error', 'quantity must be greater than zero')
       return
     }
 
     if (!batchNo) {
-      setErrorMessage('batch number is required')
+      showError('Validation Error', 'BTC (batch number) is required')
       return
     }
 
     // Price validation
     // Peak Hour Price must be >= Sale Price
     if (peakHourPrice < discountPrice) {
-      setErrorMessage(
-        'পিক আওয়ার প্রাইস কখনোই সেল প্রাইসের চেয়ে কম হতে পারবে না। অনুগ্রহ করে সঠিক মূল্য দিন।'
+      showError(
+        'Price Validation Error',
+        'পিক আওয়ার প্রাইস কখনোই সেল প্রাইসের চেয়ে কম হতে পারবে না। অনুগ্রহ করে সঠিক মূল্য দিন।'
       )
       return
     }
 
     // Mediboy Offer Price must be < Sale Price AND < Peak Hour Price
     if (offerPrice >= discountPrice || offerPrice >= peakHourPrice) {
-      setErrorMessage(
-        'Mediboy অফার প্রাইস অবশ্যই সেল প্রাইস এবং পিক আওয়ার প্রাইস — দুটোই এর চেয়ে কম হতে হবে।'
+      showError(
+        'Price Validation Error',
+        'Mediboy অফার প্রাইস অবশ্যই সেল প্রাইস এবং পিক আওয়ার প্রাইস — দুটোই এর চেয়ে কম হতে হবে।'
       )
       return
     }
@@ -585,30 +566,29 @@ export const AddStockView: React.FC = () => {
       if (isOnline) {
         try {
           await window.electron.addStock(payload)
-          setStatusMessage('Product stock added and broadcasted successfully')
+          showSuccess('Success', 'Product stock added and broadcasted successfully')
           setRefreshKey((prev) => prev + 1)
           await loadLastSync()
           resetForms()
         } catch (apiError) {
           console.warn('API call failed, saving to queue:', apiError)
           await window.electron.stockQueue.addOffline(payload)
-          setStatusMessage(
-            'Offline mode: Stock saved to queue. Will sync when connection is restored.'
+          showSuccess(
+            'Offline Mode',
+            'Stock saved to queue. Will sync when connection is restored.'
           )
           setRefreshKey((prev) => prev + 1)
           resetForms()
         }
       } else {
         await window.electron.stockQueue.addOffline(payload)
-        setStatusMessage(
-          'Offline mode: Stock saved to queue. Will sync when connection is restored.'
-        )
+        showSuccess('Offline Mode', 'Stock saved to queue. Will sync when connection is restored.')
         setRefreshKey((prev) => prev + 1)
         resetForms()
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unable to add stock'
-      setErrorMessage(message)
+      showError('Error', message)
     } finally {
       setIsBroadcasting(false)
     }
@@ -821,12 +801,15 @@ export const AddStockView: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ marginTop: '-20px' }} className="add-stock-input-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={singleForm.autoBtc}
-                    onChange={handleAutoBtcToggle}
-                  />
-                  <h2>Auto BTC</h2>
+                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
+                    <input
+                      type="checkbox"
+                      checked={singleForm.autoBtc}
+                      onChange={handleAutoBtcToggle}
+                      style={{ cursor: 'pointer', margin: 0 }}
+                    />
+                    <h2 style={{ margin: 0 }}>Auto BTC</h2>
+                  </label>
                 </div>
                 <div className="input-section">
                   <div className="add-stock-input-offer">
@@ -838,16 +821,6 @@ export const AddStockView: React.FC = () => {
                       value={singleForm.qty}
                       onChange={handleSingleChange('qty')}
                       placeholder="1000"
-                      required
-                    />
-                  </div>
-                  <div className="add-stock-input-section">
-                    <h2>Batch No*</h2>
-                    <input
-                      type="text"
-                      value={singleForm.batchNo}
-                      onChange={handleSingleChange('batchNo')}
-                      placeholder="Batch no"
                       required
                     />
                   </div>
@@ -961,29 +934,22 @@ export const AddStockView: React.FC = () => {
                     <input
                       type="text"
                       value={bulkForm.btcDate}
-                      onChange={handleBulkChange('btcDate')}
-                      placeholder="GB-YYYY/MM/DD"
+                      placeholder="GB-YYYY-MM-DD"
+                      readOnly
                     />
                   </div>
                 </div>
-                <div style={{ marginTop: '-20px' }} className="add-stock-input-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={bulkForm.autoBtc}
-                    onChange={handleBulkAutoBtcToggle}
-                  />
-                  <h2>Auto BTC</h2>
-                </div>
               </div>
               <div className="button-section">
-                <div className="apply-btn">
+                <label className="apply-btn" style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
                   <input
                     type="checkbox"
                     checked={bulkForm.applyBulk}
                     onChange={handleBulkChange('applyBulk')}
+                    style={{ cursor: 'pointer', margin: 0 }}
                   />
-                  <h2>Apply</h2>
-                </div>
+                  <h2 style={{ margin: 0 }}>Apply</h2>
+                </label>
                 <button type="button" className="clear-btn" onClick={resetAllForms}>
                   Clear
                 </button>
@@ -991,13 +957,6 @@ export const AddStockView: React.FC = () => {
             </div>
           </form>
         </div>
-
-        {(statusMessage || errorMessage) && (
-          <div className="form-status" style={{ marginTop: '16px' }}>
-            {statusMessage && <p className="form-status-success">{statusMessage}</p>}
-            {errorMessage && <p className="form-status-error">{errorMessage}</p>}
-          </div>
-        )}
       </section>
       {/* Recent Stock Table */}
       <RecentStockView key={refreshKey} />

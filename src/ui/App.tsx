@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Login } from './components/features/Auth'
 import { Dashboard } from './components/features/Dashboard'
 import './styles/App.css'
+import { showError } from './utils/alerts'
 
 function App() {
   const [currentUser, setCurrentUser] = useState<AuthToken | null>(null)
@@ -17,7 +18,7 @@ function App() {
     const handleError = (event: ErrorEvent) => {
       console.error('window error captured:', event.error ?? event.message)
       if (!hasAlertedRef.current) {
-        alert('an unexpected error occurred. please restart the application.')
+        showError('Error', 'an unexpected error occurred. please restart the application.')
         hasAlertedRef.current = true
       }
     }
@@ -25,7 +26,7 @@ function App() {
     const handleRejection = (event: PromiseRejectionEvent) => {
       console.error('unhandled rejection captured:', event.reason)
       if (!hasAlertedRef.current) {
-        alert('a background error occurred. please restart the application.')
+        showError('Error', 'a background error occurred. please restart the application.')
         hasAlertedRef.current = true
       }
     }

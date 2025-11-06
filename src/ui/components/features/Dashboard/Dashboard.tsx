@@ -4,11 +4,12 @@ import logo from '../../../assets/logo.png'
 import logout from '../../../assets/logout.svg'
 import pos from '../../../assets/pos.svg'
 import stock from '../../../assets/stock.svg'
+import { showError, showLogoutConfirmation } from '../../../utils/alerts'
 import { SocketStatus } from '../../common/SocketStatus'
 import { AddStockView } from '../AddStock'
+import { PosView } from '../PosView/PosView'
 import { Products } from '../Products'
 import './Dashboard.css'
-import { PosView } from '../PosView/PosView'
 
 type DashboardView = 'pos' | 'all-stock' | 'add-stock'
 
@@ -42,7 +43,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       onLogout()
     } catch (error) {
       console.error('logout failed:', error)
-      alert('unable to logout. please try again.')
+      showError('Logout Error', 'unable to logout. please try again.')
     }
   }, [onLogout])
 
@@ -95,9 +96,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         <button
           type="button"
           className="sidebar-logout"
-          onClick={() => {
-            const confirmLogout = window.confirm('Are you sure you want to logout?')
-            if (confirmLogout) {
+          onClick={async () => {
+            const result = await showLogoutConfirmation()
+            if (result.isConfirmed) {
               handleLogout()
             }
           }}

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
+import { showError, showInfo, showSuccess } from '../../../utils/alerts'
 import './RecentStockView.css'
 
 interface StockQueueItem {
@@ -47,8 +48,6 @@ export const RecentStockView: React.FC = () => {
   const [unsyncedCount, setUnsyncedCount] = useState(0)
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncingItemId, setSyncingItemId] = useState<number | null>(null)
-  const [statusMessage, setStatusMessage] = useState('')
-  const [errorMessage, setErrorMessage] = useState('')
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
   console.log('[RecentStock] Component rendered, items count:', recentStock.length)
@@ -76,35 +75,39 @@ export const RecentStockView: React.FC = () => {
 
   const handleSyncAll = useCallback(async () => {
     if (unsyncedCount === 0) {
-      setStatusMessage('No items to sync')
+      showInfo('Sync Info', 'No items to sync')
       return
     }
 
     if (!isOnline) {
-      setErrorMessage('Cannot sync while offline. Please check your internet connection.')
+      showError('Offline', 'Cannot sync while offline. Please check your internet connection.')
       return
     }
 
     setIsSyncing(true)
-    setStatusMessage('')
-    setErrorMessage('')
 
     try {
       const result: SyncResult = await window.electron.stockQueue.syncAll()
 
       if (result.success > 0) {
-        setStatusMessage(`Synced ${result.success} of ${result.total} items successfully`)
+        showSuccess(
+          'Sync Complete',
+          `Synced ${result.success} of ${result.total} items successfully`
+        )
       }
 
       if (result.failed > 0) {
-        setErrorMessage(`Failed to sync ${result.failed} items. Check console for details.`)
+        showError(
+          'Sync Failed',
+          `Failed to sync ${result.failed} items. Check console for details.`
+        )
         console.error('Sync errors:', result.errors)
       }
 
       await loadRecentStock()
       await loadUnsyncedCount()
     } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to sync all items')
+      showError('Sync Error', error.message || 'Failed to sync all items')
     } finally {
       setIsSyncing(false)
     }
@@ -131,7 +134,7 @@ export const RecentStockView: React.FC = () => {
           if (count > 0) {
             const result: SyncResult = await window.electron.stockQueue.syncAll()
             if (result.success > 0) {
-              setStatusMessage(`Auto-synced ${result.success} items after reconnection`)
+              showSuccess('Auto Sync', `Auto-synced ${result.success} items after reconnection`)
             }
             await loadRecentStock()
             await loadUnsyncedCount()
@@ -159,21 +162,19 @@ export const RecentStockView: React.FC = () => {
 
   const handleSyncSingle = async (stockId: number) => {
     setSyncingItemId(stockId)
-    setStatusMessage('')
-    setErrorMessage('')
 
     try {
       const result = await window.electron.stockQueue.syncSingle(stockId)
 
       if (result.success) {
-        setStatusMessage(`Stock item #${stockId} synced successfully`)
+        showSuccess('Sync Complete', `Stock item #${stockId} synced successfully`)
         await loadRecentStock()
         await loadUnsyncedCount()
       } else {
-        setErrorMessage(`Failed to sync: ${result.error}`)
+        showError('Sync Failed', `Failed to sync: ${result.error}`)
       }
     } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to sync stock item')
+      showError('Sync Error', error.message || 'Failed to sync stock item')
     } finally {
       setSyncingItemId(null)
     }
@@ -197,13 +198,6 @@ export const RecentStockView: React.FC = () => {
         </div>
       </div>
 
-      {(statusMessage || errorMessage) && (
-        <div className="status-messages">
-          {statusMessage && <p className="status-success">{statusMessage}</p>}
-          {errorMessage && <p className="status-error">{errorMessage}</p>}
-        </div>
-      )}
-
       <div className="recent-stock-table-wrapper">
         <table className="recent-stock-table">
           <thead>
@@ -212,7 +206,6 @@ export const RecentStockView: React.FC = () => {
               <th>Company Name</th>
               <th>MRP</th>
               <th>Stock (Qty)</th>
-              <th>Batch</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -220,7 +213,7 @@ export const RecentStockView: React.FC = () => {
           <tbody>
             {recentStock.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ textAlign: 'center', color: '#999' }}>
+                <td colSpan={6} style={{ textAlign: 'center', color: '#999' }}>
                   No recent stock
                 </td>
               </tr>
@@ -241,7 +234,6 @@ export const RecentStockView: React.FC = () => {
                   <td className="stock-qty">
                     <span className="qty-badge">{item.qty}</span>
                   </td>
-                  <td>{item.batch_no}</td>
                   <td>
                     {item.is_sync === 1 ? (
                       <span className="status-badge synced">✓ Synced</span>

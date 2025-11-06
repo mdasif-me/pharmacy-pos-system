@@ -44,7 +44,7 @@
       "runAfterFinish": true
     }
   },
-   "scripts": {
+  "scripts": {
     "dev": "npm-run-all --parallel dev:react dev:electron",
     "dev:react": "vite",
     "dev:electron": "npm run transpile:electron && cross-env NODE_ENV=development electron .",
@@ -63,7 +63,8 @@
     "react-select": "^5.10.2",
     "recharts": "^2.12.7",
     "socket.io-client": "^4.8.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "sweetalert2": "^11.26.3"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.2",
