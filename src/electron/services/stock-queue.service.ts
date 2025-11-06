@@ -52,6 +52,28 @@ export class StockQueueService {
   }
 
   /**
+   * Add already-synced stock to queue (for online mode)
+   * Used when stock is added online and synced immediately
+   */
+  addStockSynced(payload: AddStockPayload): StockQueueEntity {
+    console.log('[StockQueueService] Adding synced stock to queue:', payload.product_id)
+
+    const now = new Date().toISOString()
+    const stockEntry: Omit<StockQueueEntity, 'id'> = {
+      ...payload,
+      is_sync: 1,
+      created_at: now,
+      synced_at: now,
+      error_message: null,
+    }
+
+    const result = this.stockQueueRepo.addToQueue(stockEntry)
+    console.log('[StockQueueService] Synced stock added to queue with ID:', result.id)
+
+    return result
+  }
+
+  /**
    * Sync a single stock item
    */
   async syncStockItem(stockId: number): Promise<{ success: boolean; error?: string }> {

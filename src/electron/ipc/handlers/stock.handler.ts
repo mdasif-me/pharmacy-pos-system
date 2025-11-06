@@ -2,6 +2,7 @@ import { Database } from 'better-sqlite3'
 import { BrowserWindow, ipcMain } from 'electron'
 import { API_CONFIG } from '../../core/config/api.config'
 import { ProductRepository } from '../../database/repositories/product.repository'
+import { StockQueueService } from '../../services/stock-queue.service'
 import { StorageService } from '../../services/storage.service'
 import { IPC_CHANNELS } from '../channels'
 
@@ -23,10 +24,12 @@ export interface StockBroadcastPayload {
 export class StockIpcHandler {
   private storageService: StorageService
   private productRepo: ProductRepository
+  private stockQueueService: StockQueueService
 
   constructor(private db: Database) {
     this.storageService = new StorageService()
     this.productRepo = new ProductRepository(db)
+    this.stockQueueService = new StockQueueService(db)
     this.registerHandlers()
   }
 
@@ -59,6 +62,17 @@ export class StockIpcHandler {
           }
 
           const result = await response.json()
+
+          // Save to stock queue with is_sync=1 (already synced)
+          try {
+            this.stockQueueService.addStockSynced(payload)
+            console.log(
+              `[StockHandler] Saved online stock to queue for product ${payload.product_id}`
+            )
+          } catch (queueError) {
+            console.error('[StockHandler] Error saving to stock queue:', queueError)
+            // Don't throw - API call succeeded, queue save is secondary
+          }
 
           // Update local product stock
           try {
