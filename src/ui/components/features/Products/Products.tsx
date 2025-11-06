@@ -3,6 +3,7 @@ import Select, { SingleValue } from 'react-select'
 import Company from '../../../assets/company.svg'
 import Discount from '../../../assets/discount.svg'
 import Search from '../../../assets/search.svg'
+import { showModeChangeConfirmation } from '../../../utils/alerts'
 import { Column, Pagination, Table } from '../../common'
 import './Products.css'
 
@@ -502,15 +503,22 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     }
 
     const newMode = saleMode === 0 ? 1 : 0
-    try {
-      await window.electron.businessSetup.updateSaleMode(newMode)
-      setSaleMode(newMode)
-      setErrorMessage('')
-    } catch (error) {
-      console.error('Failed to update sale mode:', error)
-      const message = error instanceof Error ? error.message : 'Failed to update sale mode'
-      setErrorMessage(message)
-      alert(message)
+    const newModeLabel = newMode === 0 ? 'Discount' : 'Peak-Hour'
+
+    // Show confirmation dialog
+    const result = await showModeChangeConfirmation('sale mode', newModeLabel)
+
+    if (result.isConfirmed) {
+      try {
+        await window.electron.businessSetup.updateSaleMode(newMode)
+        setSaleMode(newMode)
+        setErrorMessage('')
+      } catch (error) {
+        console.error('Failed to update sale mode:', error)
+        const message = error instanceof Error ? error.message : 'Failed to update sale mode'
+        setErrorMessage(message)
+        alert(message)
+      }
     }
   }
 
@@ -525,15 +533,22 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     }
 
     const newMode = billMode === 0 ? 1 : 0
-    try {
-      await window.electron.businessSetup.updateBillMode(newMode)
-      setBillMode(newMode)
-      setErrorMessage('')
-    } catch (error) {
-      console.error('Failed to update bill mode:', error)
-      const message = error instanceof Error ? error.message : 'Failed to update bill mode'
-      setErrorMessage(message)
-      alert(message)
+    const newModeLabel = newMode === 0 ? 'Discount' : 'Peak-Hour'
+
+    // Show confirmation dialog
+    const result = await showModeChangeConfirmation('bill mode', newModeLabel)
+
+    if (result.isConfirmed) {
+      try {
+        await window.electron.businessSetup.updateBillMode(newMode)
+        setBillMode(newMode)
+        setErrorMessage('')
+      } catch (error) {
+        console.error('Failed to update bill mode:', error)
+        const message = error instanceof Error ? error.message : 'Failed to update bill mode'
+        setErrorMessage(message)
+        alert(message)
+      }
     }
   }
 
@@ -675,13 +690,18 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             ]}
             value={{ value: saleMode, label: saleMode === 0 ? 'Discount' : 'Peak-Hour' }}
             onChange={async (option) => {
-              if (option) {
-                setSaleMode(option.value)
-                try {
-                  await window.electron.businessSetup.updateSaleMode(option.value)
-                } catch (error) {
-                  console.error('Error updating sale mode:', error)
-                  setErrorMessage('Failed to update sale mode')
+              if (option && option.value !== saleMode) {
+                const newModeLabel = option.value === 0 ? 'Discount' : 'Peak-Hour'
+                const result = await showModeChangeConfirmation('sale mode', newModeLabel)
+                if (result.isConfirmed) {
+                  try {
+                    await window.electron.businessSetup.updateSaleMode(option.value)
+                    setSaleMode(option.value)
+                    setErrorMessage('')
+                  } catch (error) {
+                    console.error('Error updating sale mode:', error)
+                    setErrorMessage('Failed to update sale mode')
+                  }
                 }
               }
             }}
@@ -705,13 +725,18 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             ]}
             value={{ value: billMode, label: billMode === 0 ? 'Discount' : 'Peak-Hour' }}
             onChange={async (option) => {
-              if (option) {
-                setBillMode(option.value)
-                try {
-                  await window.electron.businessSetup.updateBillMode(option.value)
-                } catch (error) {
-                  console.error('Error updating bill mode:', error)
-                  setErrorMessage('Failed to update bill mode')
+              if (option && option.value !== billMode) {
+                const newModeLabel = option.value === 0 ? 'Discount' : 'Peak-Hour'
+                const result = await showModeChangeConfirmation('bill mode', newModeLabel)
+                if (result.isConfirmed) {
+                  try {
+                    await window.electron.businessSetup.updateBillMode(option.value)
+                    setBillMode(option.value)
+                    setErrorMessage('')
+                  } catch (error) {
+                    console.error('Error updating bill mode:', error)
+                    setErrorMessage('Failed to update bill mode')
+                  }
                 }
               }
             }}

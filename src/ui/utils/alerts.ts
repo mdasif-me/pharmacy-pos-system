@@ -131,3 +131,19 @@ export const closeAlert = () => {
 export const hideAlert = () => {
   return Swal.hideLoading()
 }
+
+/**
+ * Show a confirmation dialog for mode changes
+ */
+export const showModeChangeConfirmation = (modeName: string, newMode: string) => {
+  return Swal.fire({
+    icon: 'question',
+    title: 'Confirm Mode Change',
+    text: `Are you sure you want to change the ${modeName} to ${newMode}?`,
+    showCancelButton: true,
+    confirmButtonColor: '#046C2E',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Yes, Change it',
+    cancelButtonText: 'Cancel',
+  })
+}
