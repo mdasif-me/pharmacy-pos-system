@@ -4,7 +4,7 @@
   background-color: #f5f5f5;
 }
 
-.add-stock-section>h3 {
+.add-stock-section > h3 {
   margin: 0 0 1.5rem 0;
   font-size: 1.5rem;
   font-weight: 600;
@@ -194,7 +194,7 @@
   background-color: #e8e8e8;
   font-size: 0.9rem;
   color: #333;
-  text-align: center;
+  text-align: start;
 }
 
 .products-table tbody tr td:first-child {
@@ -228,8 +228,8 @@
   max-width: 134px;
   width: 100%;
   padding: 6px;
-  background-color: #150F0F;
-  color: #FFF;
+  background-color: #150f0f;
+  color: #fff;
   font-size: 14px;
   font-weight: 700;
 }
@@ -238,8 +238,8 @@
   white-space: nowrap;
   width: 100%;
   padding: 6px 9px;
-  background-color: #150F0F;
-  color: #FFF;
+  background-color: #150f0f;
+  color: #fff;
   font-size: 14px;
   font-weight: 400;
 }
@@ -273,7 +273,7 @@
   font-size: 14px;
   font-weight: 700;
   padding: 8.5px 8px;
-  background-color: #CFCFCF;
+  background-color: #cfcfcf;
 }
 
 .add-stock-input input {
@@ -281,8 +281,8 @@
   height: 35px;
   padding: 2px;
   text-align: center;
-  border: 1px solid #A89797;
-  background-color: #FFFBFB;
+  border: 1px solid #a89797;
+  background-color: #fffbfb;
 }
 
 .add-stock-input-offer-section {
@@ -297,7 +297,7 @@
 
 .add-stock-input-offer-section h2 {
   white-space: nowrap;
-  background-color: #CFCFCF;
+  background-color: #cfcfcf;
   padding: 8.5px 8px;
   color: #000;
   font-size: 14px;
@@ -312,8 +312,8 @@
   padding: 2px 10px;
   width: 100%;
   height: 35px;
-  border: 1px solid #A89797;
-  background-color: #FFFBFB;
+  border: 1px solid #a89797;
+  background-color: #fffbfb;
 }
 
 .add-stock-bottom-input-date {
@@ -327,15 +327,15 @@
   font-size: 14px;
   font-weight: 700;
   padding: 8.5px 8px;
-  background-color: #CFCFCF;
+  background-color: #cfcfcf;
 }
 
 .add-stock-bottom-input-date input {
   width: 100%;
   height: 35px;
   padding: 2px 10px;
-  border: 1px solid #A89797;
-  background-color: #FFFBFB;
+  border: 1px solid #a89797;
+  background-color: #fffbfb;
 }
 
 .add-stock-input-checkbox {
@@ -345,7 +345,7 @@
 }
 
 .add-stock-input-checkbox h2 {
-  color: #100C0C;
+  color: #100c0c;
   font-size: 14px;
   font-weight: 700;
 }
@@ -353,8 +353,8 @@
 .add-stock-input-checkbox input[type='checkbox'] {
   width: 19px;
   height: 17px;
-  background-color: #FFFFFF;
-  border: 1px solid #110F0F
+  background-color: #ffffff;
+  border: 1px solid #110f0f;
 }
 
 .add-stock-input-offer {
@@ -369,15 +369,15 @@
   font-size: 14px;
   font-weight: 700;
   padding: 8.5px 8px;
-  background-color: #CFCFCF;
+  background-color: #cfcfcf;
 }
 
 .add-stock-input-offer input {
   width: 100%;
   height: 35px;
   padding: 2px;
-  border: 1px solid #A89797;
-  background-color: #FFFBFB;
+  border: 1px solid #a89797;
+  background-color: #fffbfb;
 }
 
 .add-stock-input-section {
@@ -394,7 +394,7 @@
 .apply-btn {
   display: flex;
   align-items: center;
-  background-color: #0E8E07;
+  background-color: #0e8e07;
   width: 140px;
   gap: 12px;
   padding: 11px;
@@ -403,14 +403,14 @@
 .apply-btn input[type='checkbox'] {
   width: 18px;
   height: 18px;
-  background: #D9D9D9;
+  background: #d9d9d9;
 }
 
 .apply-btn h2 {
   font-weight: 700;
   font-style: Bold;
   font-size: 14px;
-  color: #FFFFFF;
+  color: #ffffff;
   margin: 0 !important;
 }
 
@@ -420,9 +420,9 @@
   font-weight: 700;
   font-style: Bold;
   font-size: 14px;
-  color: #FFFFFF;
+  color: #ffffff;
   padding: 11px 0;
-  background-color: #8E3407;
+  background-color: #8e3407;
   text-align: center;
 }
 
@@ -649,7 +649,6 @@
   .input-section {
     grid-template-columns: repeat(2, 1fr);
   }
-
 }
 
 @media (max-width: 992px) {
@@ -758,7 +757,7 @@
     padding: 0 0.75rem 90px 0.75rem;
   }
 
-  .add-stock-section>h3 {
+  .add-stock-section > h3 {
     font-size: 1.25rem;
   }
 

@@ -294,7 +294,6 @@ export const AddStockView: React.FC = () => {
 
     setSingleForm((prev) => ({
       ...prev,
-      buy: numberToString(product.sale_price) || '',
       sale: numberToString(product.discount_price) || '',
       pSale: numberToString(product.peak_hour_price) || '',
       mOffer: numberToString(product.mediboy_offer_price) || '',
@@ -579,7 +578,6 @@ export const AddStockView: React.FC = () => {
                   <thead>
                     <tr>
                       <th>Product Description</th>
-                      <th>Company Name</th>
                       <th>MRP</th>
                     </tr>
                   </thead>
@@ -587,17 +585,38 @@ export const AddStockView: React.FC = () => {
                     {selectedProduct ? (
                       <tr>
                         <td>
-                          <strong>{selectedProduct.product_name}</strong>
+                          <article>
+                            <strong>{selectedProduct.product_name}</strong>
+                            <span style={{ marginLeft: '10px' }}>{selectedProduct.quantity}</span>
+                          </article>
+                          <p
+                            style={{
+                              borderRadius: '5px',
+                              padding: '2px 6px',
+                              background: '#927572',
+                              color: '#fff',
+                              fontSize: '0.75rem',
+                              width: 'fit-content',
+                            }}
+                          >
+                            {selectedProduct.cart_text}
+                          </p>
                           {selectedProduct.generic_name && (
                             <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                              {selectedProduct.generic_name}
+                              {selectedProduct.company_name && `${selectedProduct.company_name}`}
                             </div>
                           )}
                         </td>
-                        <td style={{ textAlign: 'start' }}>
-                          {selectedProduct.company_name || '—'}
+                        <td
+                          style={{
+                            textAlign: 'left',
+                            color: '#046C2E',
+                            fontWeight: 'bold',
+                            fontSize: '1.1rem',
+                          }}
+                        >
+                          {formatCurrency(selectedProduct.mrp)}
                         </td>
-                        <td>{formatCurrency(selectedProduct.mrp)}</td>
                       </tr>
                     ) : (
                       <tr>
@@ -627,7 +646,7 @@ export const AddStockView: React.FC = () => {
                       step="0.01"
                       value={singleForm.buy}
                       onChange={handleSingleChange('buy')}
-                      placeholder='10'
+                      placeholder="10"
                     />
                   </div>
                   <div className="add-stock-input">
@@ -639,7 +658,7 @@ export const AddStockView: React.FC = () => {
                       value={singleForm.sale}
                       onChange={handleSingleChange('sale')}
                       required
-                      placeholder='10'
+                      placeholder="10"
                     />
                   </div>
                   <div className="add-stock-input">
@@ -651,10 +670,10 @@ export const AddStockView: React.FC = () => {
                       value={singleForm.pSale}
                       onChange={handleSingleChange('pSale')}
                       required
-                      placeholder='10'
+                      placeholder="10"
                     />
                   </div>
-                    <div className='add-stock-input-offer-section'>
+                  <div className="add-stock-input-offer-section">
                     <h2>M-Offer*</h2>
                     <input
                       type="number"
@@ -663,7 +682,7 @@ export const AddStockView: React.FC = () => {
                       value={singleForm.mOffer}
                       onChange={handleSingleChange('mOffer')}
                       required
-                      placeholder='12'
+                      placeholder="12"
                     />
                   </div>
                 </div>
@@ -689,18 +708,17 @@ export const AddStockView: React.FC = () => {
                       required
                     />
                   </div>
-
                 </div>
-                 <div style={{marginTop:"-20px"}} className="add-stock-input-checkbox">
-                    <input
-                      type="checkbox"
-                      checked={singleForm.autoBtc}
-                      onChange={handleAutoBtcToggle}
-                    />
-                    <h2>Auto BTC</h2>
-                  </div>
+                <div style={{ marginTop: '-20px' }} className="add-stock-input-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={singleForm.autoBtc}
+                    onChange={handleAutoBtcToggle}
+                  />
+                  <h2>Auto BTC</h2>
+                </div>
                 <div className="input-section">
-                   <div className="add-stock-input-offer">
+                  <div className="add-stock-input-offer">
                     <h2>QTY*</h2>
                     <input
                       type="number"
@@ -742,7 +760,6 @@ export const AddStockView: React.FC = () => {
                       placeholder="AC-120"
                     />
                   </div>
-
                 </div>
 
                 <div className="add-input-stock">
@@ -766,16 +783,16 @@ export const AddStockView: React.FC = () => {
 
                 <div className="input-section">
                   <div className="add-stock-input">
-                    <div className='add-stock-input-flex'>
+                    <div className="add-stock-input-flex">
                       <h2>Buy%</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.buyPercent}
-                      onChange={handleBulkChange('buyPercent')}
-                      placeholder='10'
-                    />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={bulkForm.buyPercent}
+                        onChange={handleBulkChange('buyPercent')}
+                        placeholder="10"
+                      />
                     </div>
                     {bulkForm.buyPercent && bulkDerivedPrices.buy && (
                       <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
@@ -784,16 +801,16 @@ export const AddStockView: React.FC = () => {
                     )}
                   </div>
                   <div className="add-stock-input">
-                    <div className='add-stock-input-flex'>
+                    <div className="add-stock-input-flex">
                       <h2>Sale%</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.salePercent}
-                      onChange={handleBulkChange('salePercent')}
-                      placeholder='10'
-                    />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={bulkForm.salePercent}
+                        onChange={handleBulkChange('salePercent')}
+                        placeholder="10"
+                      />
                     </div>
                     {bulkForm.salePercent && bulkDerivedPrices.sale && (
                       <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
@@ -802,16 +819,16 @@ export const AddStockView: React.FC = () => {
                     )}
                   </div>
                   <div className="add-stock-input">
-                    <div className='add-stock-input-flex'>
+                    <div className="add-stock-input-flex">
                       <h2>P-Sale%</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.peakSalePercent}
-                      onChange={handleBulkChange('peakSalePercent')}
-                      placeholder='10'
-                    />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={bulkForm.peakSalePercent}
+                        onChange={handleBulkChange('peakSalePercent')}
+                        placeholder="10"
+                      />
                     </div>
                     {bulkForm.peakSalePercent && bulkDerivedPrices.peakSale && (
                       <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
@@ -820,16 +837,16 @@ export const AddStockView: React.FC = () => {
                     )}
                   </div>
                   <div className="add-stock-input-offer">
-                    <div className='add-stock-input-offer-section'>
+                    <div className="add-stock-input-offer-section">
                       <h2>M-Offer %</h2>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={bulkForm.mediboyOfferPercent}
-                      onChange={handleBulkChange('mediboyOfferPercent')}
-                      placeholder='12'
-                    />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={bulkForm.mediboyOfferPercent}
+                        onChange={handleBulkChange('mediboyOfferPercent')}
+                        placeholder="12"
+                      />
                     </div>
                     {bulkForm.mediboyOfferPercent && bulkDerivedPrices.offer && (
                       <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
@@ -860,14 +877,13 @@ export const AddStockView: React.FC = () => {
                   </div>
                 </div>
               </div>
-                  <div className='button-section'>
-                    <div className='apply-btn'>
-                      <input type="checkbox" />
-                      <h2>Apply</h2>
-                    </div>
-                    <h2 className='clear-btn'>Clear</h2>
-                  </div>
-
+              <div className="button-section">
+                <div className="apply-btn">
+                  <input type="checkbox" />
+                  <h2>Apply</h2>
+                </div>
+                <h2 className="clear-btn">Clear</h2>
+              </div>
             </div>
           </form>
         </div>
