@@ -12,6 +12,7 @@ interface StockUpdateRecord {
   discount_price: number
   peak_hour_price: number
   mediboy_offer_price: number
+  last_synced_at: string
   created_at: string
   updated_at: string
 }
@@ -153,7 +154,7 @@ export class SocketService {
         peak_hour_price: record.peak_hour_price,
         mediboy_offer_price: record.mediboy_offer_price,
         last_modified_at: record.updated_at,
-        last_synced_at: new Date().toISOString(),
+        last_synced_at: record.last_synced_at,
       }
 
       console.log('[SocketService] Updating product with data:', updateData)

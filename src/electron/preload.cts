@@ -28,15 +28,11 @@ contextBridge.exposeInMainWorld('electron', {
   getUniqueTypes: () => invoke('product:getStats'),
   getUniqueCategories: () => invoke('product:getStats'),
 
-  // Get latest sync time from products table
-  getLatestSyncTime: () => invoke('product:getLatestSyncTime'),
-
   // Stock management - backward compatible with old UI
   updateProductStock: (productId: number, newStock: number) =>
     invoke('product:updateStock', productId, newStock),
   updateProductPrices: (productId: number, payload: any) =>
     invoke('product:update', productId, payload),
-  getLastSync: () => invoke('sync:getLastSync'),
 
   // Add stock and broadcast to API
   addStock: (payload: any) => invoke('stock:addAndBroadcast', payload),

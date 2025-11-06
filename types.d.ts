@@ -67,7 +67,8 @@ type Product = Record<string, unknown> & {
   cover_image?: string
   coverImage?: string
   product_cover_image_path?: string
-  last_sync_at?: string
+  last_synced_at?: string
+  last_modified_at?: string
   company?: ProductCompany
   current_stock?: ProductCurrentStock
 }
@@ -114,7 +115,6 @@ type EventPayloadMapping = {
   getUniqueCategories: Array<{ category_id: number; category_name: string }>
   updateProductStock: void
   updateProductPrices: Product | undefined
-  getLastSync: string | null
 }
 
 type UnsubscribeFunction = () => void
@@ -136,13 +136,11 @@ interface Window {
     getUniqueCompanies: () => Promise<Array<{ company_id: number; company_name: string }>>
     getUniqueTypes: () => Promise<Array<{ type: string }>>
     getUniqueCategories: () => Promise<Array<{ category_id: number; category_name: string }>>
-    getLatestSyncTime: () => Promise<string | null>
     updateProductStock: (productId: number, newStock: number) => Promise<void>
     updateProductPrices: (
       productId: number,
       payload: ProductPriceUpdate
     ) => Promise<Product | undefined>
-    getLastSync: () => Promise<string | null>
 
     // stock broadcast
     addStock: (payload: any) => Promise<{ success: boolean; data?: any; error?: string }>

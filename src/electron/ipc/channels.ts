@@ -12,7 +12,6 @@ export const IPC_CHANNELS = {
     GET_STATS: 'product:getStats',
     GET_UNIQUE_COMPANIES: 'product:getUniqueCompanies',
     IMPORT: 'product:import',
-    GET_LATEST_SYNC_TIME: 'product:getLatestSyncTime',
   },
 
   // auth channels

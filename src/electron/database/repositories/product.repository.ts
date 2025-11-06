@@ -369,7 +369,7 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
           p.cover_image || null,
           p.image_path || null,
           p.version || 1,
-          p.last_synced_at || new Date().toISOString(),
+          p.last_synced_at || null,
           p.last_modified_at || new Date().toISOString(),
           0, // reset dirty flag after sync
           p.raw_data || null
@@ -399,10 +399,10 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
     const placeholders = ids.map(() => '?').join(',')
     const sql = `
       UPDATE ${this.tableName}
-      SET is_dirty = 0, last_synced_at = ?
+      SET is_dirty = 0
       WHERE id IN (${placeholders})
     `
-    this.db.prepare(sql).run(new Date().toISOString(), ...ids)
+    this.db.prepare(sql).run(...ids)
   }
 
   /**

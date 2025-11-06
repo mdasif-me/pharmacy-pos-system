@@ -52,16 +52,38 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
   const updateLastSyncTimestamp = useCallback(async () => {
     try {
-      const value = await window.electron.getLastSync()
-      if (value) {
-        setLastSync(value)
-      } else {
-        setLastSync('Sync not available')
+      if (products && products.length > 0) {
+        console.log('[Products] updateLastSyncTimestamp called with products:', products.length)
+        const productsWithSyncTime = products.filter((p) => p.last_synced_at)
+        console.log('[Products] Products with sync time:', productsWithSyncTime.length)
+
+        if (productsWithSyncTime.length > 0) {
+          let mostRecentSyncTime = ''
+          for (const product of productsWithSyncTime) {
+            if (product.last_synced_at && product.last_synced_at > mostRecentSyncTime) {
+              mostRecentSyncTime = product.last_synced_at
+            }
+          }
+          console.log('[Products] mostRecentSyncTime:', mostRecentSyncTime)
+          setLastSync(mostRecentSyncTime)
+          return
+        }
       }
+
+      console.log('[Products] No products with sync time found')
+      setLastSync('No last sync info found')
     } catch (error) {
-      console.error('failed to load last sync timestamp:', error)
+      console.error('[Products] Error in updateLastSyncTimestamp:', error)
+      setLastSync('Error loading sync time')
     }
-  }, [])
+  }, [products])
+
+  // Update last sync timestamp whenever products change
+  useEffect(() => {
+    if (products && products.length > 0) {
+      updateLastSyncTimestamp()
+    }
+  }, [products, updateLastSyncTimestamp])
 
   // apply filters when search or filter values change
   useEffect(() => {
@@ -92,7 +114,23 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       // Ensure companies is always an array
       const companiesArray = Array.isArray(companiesData) ? companiesData : []
       setCompanies(companiesArray)
-      await updateLastSyncTimestamp()
+
+      // Update sync timestamp with the synced products
+      if (productsArray.length > 0) {
+        const productsWithSyncTime = productsArray.filter((p) => p.last_synced_at)
+        if (productsWithSyncTime.length > 0) {
+          let mostRecentSyncTime = ''
+          for (const product of productsWithSyncTime) {
+            if (product.last_synced_at && product.last_synced_at > mostRecentSyncTime) {
+              mostRecentSyncTime = product.last_synced_at
+            }
+          }
+          console.log('[Products] Latest sync time from synced products:', mostRecentSyncTime)
+          setLastSync(mostRecentSyncTime)
+        } else {
+          setLastSync('No last sync info found')
+        }
+      }
     } catch (error) {
       console.error('sync failed:', error)
       const message = error instanceof Error ? error.message : 'failed to sync products from server'
@@ -121,7 +159,23 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       // Ensure companies is always an array
       const companiesArray = Array.isArray(companiesData) ? companiesData : []
       setCompanies(companiesArray)
-      await updateLastSyncTimestamp()
+
+      // Update sync timestamp with the loaded products
+      if (productsArray.length > 0) {
+        const productsWithSyncTime = productsArray.filter((p) => p.last_synced_at)
+        if (productsWithSyncTime.length > 0) {
+          let mostRecentSyncTime = ''
+          for (const product of productsWithSyncTime) {
+            if (product.last_synced_at && product.last_synced_at > mostRecentSyncTime) {
+              mostRecentSyncTime = product.last_synced_at
+            }
+          }
+          console.log('[Products] Latest sync time from loaded products:', mostRecentSyncTime)
+          setLastSync(mostRecentSyncTime)
+        } else {
+          setLastSync('No last sync info found')
+        }
+      }
 
       // if no local products, sync from api
       if (productsArray.length === 0) {
@@ -567,7 +621,9 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       <div className="products-welcome">
         <h1>All Stock</h1>
         <div className="products-welcome-meta">
-          {lastSync && <span className="products-last-sync">last sync: {lastSync}</span>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <span className="products-last-sync">Last Sync: {lastSync || 'Loading...'}</span>
+          </div>
           {!isOnline && (
             <span className="offline-indicator" style={{ color: '#ef4444', marginLeft: '1rem' }}>
               ⚠ Offline

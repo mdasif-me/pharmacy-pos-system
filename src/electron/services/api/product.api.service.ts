@@ -20,20 +20,11 @@ export class ProductApiService {
   async fetchAllProducts(page = 1, limit = 100, lastSyncDate?: string): Promise<any[]> {
     const params: any = {}
 
-    // If lastSyncDate is provided, add it as a query parameter
     if (lastSyncDate) {
       params.last_sync_at = lastSyncDate
-      console.log('[ProductApiService] Fetching products updated after:', lastSyncDate)
     }
-
     const response = await this.http.get<any>(`/pharmacy/get-real-time-stock-product`, { params })
-
     if (response && response.data && Array.isArray(response.data)) {
-      console.log(
-        `[ProductApiService] Fetched ${response.data.length} products${
-          lastSyncDate ? ' (incremental sync)' : ' (full sync)'
-        }`
-      )
       return response.data
     }
 
@@ -42,6 +33,9 @@ export class ProductApiService {
 
   /**
    * fetch product by id
+   * @param id - product id
+   * @returns product data if found, otherwise throws an error
+   * @throws {Error} if product not found
    */
   async fetchProductById(id: number): Promise<any> {
     const response = await this.http.get<ProductApiResponse>(`/products/${id}`)
@@ -54,7 +48,10 @@ export class ProductApiService {
   }
 
   /**
-   * search products
+   * Search products by name, description, or code
+   * @param query - search query
+   * @returns array of products if search successful, otherwise throws an error
+   * @throws {Error} if search fails
    */
   async searchProducts(query: string): Promise<any[]> {
     const response = await this.http.get<ProductApiResponse>(`/products/search`, {
@@ -69,7 +66,10 @@ export class ProductApiService {
   }
 
   /**
-   * create product
+   * Create a new product
+   * @param product - product data to be created
+   * @returns created product data if successful, otherwise throws an error
+   * @throws {Error} if creation fails
    */
   async createProduct(product: Partial<ProductEntity>): Promise<any> {
     const response = await this.http.post<ProductApiResponse>('/products', product)
@@ -82,7 +82,11 @@ export class ProductApiService {
   }
 
   /**
-   * update product
+   * Update an existing product
+   * @param id - product id to update
+   * @param product - product data to update
+   * @returns updated product data if successful, otherwise throws an error
+   * @throws {Error} if update fails
    */
   async updateProduct(id: number, product: Partial<ProductEntity>): Promise<any> {
     const response = await this.http.put<ProductApiResponse>(`/products/${id}`, product)
@@ -95,7 +99,10 @@ export class ProductApiService {
   }
 
   /**
-   * delete product
+   * Delete a product by its id
+   * @param id - product id to delete
+   * @returns true if deletion successful, otherwise false
+   * @throws {Error} if deletion fails
    */
   async deleteProduct(id: number): Promise<boolean> {
     const response = await this.http.delete<ProductApiResponse>(`/products/${id}`)
@@ -103,7 +110,11 @@ export class ProductApiService {
   }
 
   /**
-   * update stock
+   * Update the stock of a product
+   * @param id - product id to update stock of
+   * @param quantity - new stock quantity
+   * @returns updated product data if successful, otherwise throws an error
+   * @throws {Error} if update stock fails
    */
   async updateStock(id: number, quantity: number): Promise<any> {
     const response = await this.http.patch<ProductApiResponse>(`/products/${id}/stock`, {
@@ -118,7 +129,10 @@ export class ProductApiService {
   }
 
   /**
-   * batch sync products
+   * Batch sync products to the API
+   * @param products - array of products to sync
+   * @returns array of synced products if successful, otherwise throws an error
+   * @throws {Error} if batch sync fails
    */
   async batchSync(products: ProductEntity[]): Promise<any[]> {
     const response = await this.http.post<ProductApiResponse>('/products/batch-sync', {

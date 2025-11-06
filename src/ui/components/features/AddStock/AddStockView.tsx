@@ -103,6 +103,34 @@ export const AddStockView: React.FC = () => {
 
   const mrp = selectedProduct ? Number(selectedProduct.mrp ?? 0) : 0
 
+  // Load last sync timestamp from products
+  const loadLastSyncTimestamp = useCallback(async () => {
+    try {
+      const products = await window.electron.getAllProducts()
+      const productsArray = Array.isArray(products) ? products : []
+
+      if (productsArray.length > 0) {
+        const productsWithSyncTime = productsArray.filter((p) => p.last_synced_at)
+
+        if (productsWithSyncTime.length > 0) {
+          let mostRecentSyncTime = ''
+          for (const product of productsWithSyncTime) {
+            if (product.last_synced_at && product.last_synced_at > mostRecentSyncTime) {
+              mostRecentSyncTime = product.last_synced_at
+            }
+          }
+          setLastSync(mostRecentSyncTime)
+          return
+        }
+      }
+
+      setLastSync('No last sync info found')
+    } catch (error) {
+      console.error('[AddStock] Error loading last sync timestamp:', error)
+      setLastSync('Error loading sync time')
+    }
+  }, [])
+
   const bulkDerivedPrices = useMemo(() => {
     if (!selectedProduct || mrp <= 0) {
       return {
@@ -138,43 +166,12 @@ export const AddStockView: React.FC = () => {
     selectedProduct,
   ])
 
-  const loadLastSync = useCallback(async () => {
-    try {
-      // Get last sync timestamp from storage (formatted for UI)
-      const value = await window.electron.getLastSync()
-      console.log('[AddStock] Last sync time:', value)
-
-      if (!value) {
-        // If no sync time, show current date/time in MM/DD/YYYY HH:MM:SS format
-        const now = new Date()
-        const month = String(now.getMonth() + 1).padStart(2, '0')
-        const day = String(now.getDate()).padStart(2, '0')
-        const year = now.getFullYear()
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
-        const seconds = String(now.getSeconds()).padStart(2, '0')
-        setLastSync(`${month}/${day}/${year} ${hours}:${minutes}:${seconds}`)
-        return
-      }
-
-      setLastSync(value)
-    } catch (error) {
-      console.error('failed to load last sync timestamp:', error)
-      // Show current time on error
-      const now = new Date()
-      const month = String(now.getMonth() + 1).padStart(2, '0')
-      const day = String(now.getDate()).padStart(2, '0')
-      const year = now.getFullYear()
-      const hours = String(now.getHours()).padStart(2, '0')
-      const minutes = String(now.getMinutes()).padStart(2, '0')
-      const seconds = String(now.getSeconds()).padStart(2, '0')
-      setLastSync(`${month}/${day}/${year} ${hours}:${minutes}:${seconds}`)
-    }
-  }, [])
+  // Load last sync timestamp on component mount
+  useEffect(() => {
+    loadLastSyncTimestamp()
+  }, [loadLastSyncTimestamp])
 
   useEffect(() => {
-    loadLastSync()
-
     // Track online/offline status
     const handleOnline = () => {
       setIsOnline(true)
@@ -193,7 +190,7 @@ export const AddStockView: React.FC = () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [loadLastSync])
+  }, [])
 
   useEffect(() => {
     if (!isSearchOpen) {
@@ -328,14 +325,14 @@ export const AddStockView: React.FC = () => {
     setIsSyncing(true)
     try {
       await window.electron.syncProducts()
-      await loadLastSync()
+      await loadLastSyncTimestamp()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'failed to sync products'
       setSyncError(message)
     } finally {
       setIsSyncing(false)
     }
-  }, [loadLastSync])
+  }, [loadLastSyncTimestamp])
 
   const closeSuggestions = useCallback(() => {
     if (searchCloseTimeoutRef.current) {
@@ -559,7 +556,6 @@ export const AddStockView: React.FC = () => {
           await window.electron.addStock(payload)
           showSuccess('Success', 'Product stock added and broadcasted successfully')
           setRefreshKey((prev) => prev + 1)
-          await loadLastSync()
           resetForms()
         } catch (apiError) {
           console.warn('API call failed, saving to queue:', apiError)
@@ -979,8 +975,8 @@ export const AddStockView: React.FC = () => {
           )}
         </button>
         <article>
-          <h3>{isOnline ? 'Updated At' : 'Offline Mode'}</h3>
-          <p>{isOnline ? lastSync || 'Not synced yet' : 'Queue mode active'}</p>
+          <h3>{isOnline ? 'Last Sync' : 'Offline Mode'}</h3>
+          <p>{isOnline ? lastSync || 'Loading...' : 'Queue mode active'}</p>
         </article>
         <button
           className={`sync-control ${isSyncing ? 'spin' : ''}`}

@@ -109,8 +109,6 @@ export class StorageService {
    */
   getLastSync(): string | null {
     try {
-      console.log('getLastSync: Checking file:', this.syncFilePath)
-
       if (!fs.existsSync(this.syncFilePath)) {
         console.log('getLastSync: File does not exist')
         return null
