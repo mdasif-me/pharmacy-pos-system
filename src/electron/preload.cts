@@ -48,6 +48,7 @@ contextBridge.exposeInMainWorld('electron', {
     syncAll: () => invoke('stock-queue:syncAll'),
     getRecent: (limit?: number) => invoke('stock-queue:getRecent', limit),
     getUnsyncedCount: () => invoke('stock-queue:getUnsyncedCount'),
+    getUnsyncedAndToday: () => invoke('stock-queue:getUnsyncedAndToday'),
   },
 
   // Socket.IO connection status

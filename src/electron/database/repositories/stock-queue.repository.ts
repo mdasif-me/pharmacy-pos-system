@@ -122,7 +122,7 @@ export class StockQueueRepository extends BaseRepository<StockQueueEntity> {
   }
 
   /**
-   * Get recent stock items with product details
+   * Get recent stock items with product details (all items, newest first)
    */
   getRecentWithProduct(limit = 20): StockQueueWithProduct[] {
     const sql = `
@@ -138,9 +138,66 @@ export class StockQueueRepository extends BaseRepository<StockQueueEntity> {
       LEFT JOIN products p ON sq.product_id = p.id
       LEFT JOIN companies c ON p.company_id = c.id
       ORDER BY sq.created_at DESC
-      LIMIT ?
+      LIMIT 100
     `
-    return this.db.prepare(sql).all(limit) as StockQueueWithProduct[]
+
+    console.log('[StockQueueRepository] Fetching all recent stock items')
+    const result = this.db.prepare(sql).all() as StockQueueWithProduct[]
+    console.log('[StockQueueRepository] Found', result.length, 'items total')
+
+    return result
+  }
+
+  /**
+   * Get all unsynced items and today's items with product details
+   */
+  getUnsyncedAndTodayItems(): StockQueueWithProduct[] {
+    // Get today's date boundaries in local timezone
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const todayStart = today.toISOString()
+
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    const todayEnd = tomorrow.toISOString()
+
+    console.log('[StockQueueRepository] Date range:', { todayStart, todayEnd })
+
+    const sql = `
+      SELECT 
+        sq.*,
+        p.product_name,
+        c.name as company_name,
+        p.generic_name,
+        p.mrp,
+        p.type,
+        p.in_stock
+      FROM ${this.tableName} sq
+      LEFT JOIN products p ON sq.product_id = p.id
+      LEFT JOIN companies c ON p.company_id = c.id
+      WHERE sq.is_sync = 0 OR (sq.created_at >= ? AND sq.created_at < ?)
+      ORDER BY sq.created_at DESC
+    `
+
+    console.log('[StockQueueRepository] Fetching unsynced and today items')
+    const result = this.db.prepare(sql).all(todayStart, todayEnd) as StockQueueWithProduct[]
+    console.log('[StockQueueRepository] Found', result.length, 'items (unsynced + today)')
+
+    // Debug: Check if there are ANY items in the table
+    const totalCount = this.db.prepare(`SELECT COUNT(*) as count FROM ${this.tableName}`).get() as {
+      count: number
+    }
+    const unsyncedCount = this.db
+      .prepare(`SELECT COUNT(*) as count FROM ${this.tableName} WHERE is_sync = 0`)
+      .get() as { count: number }
+    console.log(
+      '[StockQueueRepository] Total items in queue:',
+      totalCount.count,
+      'Unsynced:',
+      unsyncedCount.count
+    )
+
+    return result
   }
 
   /**

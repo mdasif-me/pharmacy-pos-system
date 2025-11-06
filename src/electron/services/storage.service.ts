@@ -105,6 +105,7 @@ export class StorageService {
 
   /**
    * Get last sync timestamp
+   * Returns in API-compatible format: YYYY-MM-DD HH:MM:SS
    */
   getLastSync(): string | null {
     try {
@@ -118,9 +119,56 @@ export class StorageService {
       const data = fs.readFileSync(this.syncFilePath, 'utf-8')
       const parsed = JSON.parse(data)
       console.log('getLastSync: Parsed data:', parsed)
-      return parsed.lastSync || null
+
+      const lastSync = parsed.lastSync || null
+
+      // Convert ISO format to API format (YYYY-MM-DD HH:MM:SS)
+      if (lastSync) {
+        const date = new Date(lastSync)
+        const formatted = date
+          .toISOString()
+          .replace('T', ' ')
+          .replace(/\.\d{3}Z$/, '')
+        console.log('getLastSync: Formatted for API:', formatted)
+        return formatted
+      }
+
+      return null
     } catch (error) {
       console.error('Error reading sync data:', error)
+      return null
+    }
+  }
+
+  /**
+   * Get last sync timestamp formatted for UI display
+   * Returns in format: MM/DD/YYYY HH:MM:SS
+   */
+  getLastSyncFormatted(): string | null {
+    try {
+      if (!fs.existsSync(this.syncFilePath)) {
+        return null
+      }
+
+      const data = fs.readFileSync(this.syncFilePath, 'utf-8')
+      const parsed = JSON.parse(data)
+
+      const lastSync = parsed.lastSync || null
+
+      if (lastSync) {
+        const date = new Date(lastSync)
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const year = date.getFullYear()
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        const seconds = String(date.getSeconds()).padStart(2, '0')
+        return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`
+      }
+
+      return null
+    } catch (error) {
+      console.error('Error reading sync data for UI:', error)
       return null
     }
   }

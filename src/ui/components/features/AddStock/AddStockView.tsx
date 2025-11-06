@@ -12,6 +12,8 @@ type BulkFormState = {
   peakSalePercent: string
   mediboyOfferPercent: string
   btcDate: string
+  autoBtc: boolean
+  applyBulk: boolean
 }
 
 type SingleFormState = {
@@ -52,7 +54,7 @@ const numberToString = (value?: number | null) => {
 
 const percentToPrice = (percentValue: string, mrp: number) => {
   const numericPercent = Number.parseFloat(percentValue)
-  if (Number.isNaN(numericPercent) || !Number.isFinite(numericPercent)) {
+  if (Number.isNaN(numericPercent) || !Number.isFinite(numericPercent) || percentValue === '') {
     return ''
   }
   const computed = mrp - mrp * (numericPercent / 100)
@@ -72,6 +74,8 @@ export const AddStockView: React.FC = () => {
     peakSalePercent: '',
     mediboyOfferPercent: '',
     btcDate: '',
+    autoBtc: false,
+    applyBulk: false,
   })
   const [singleForm, setSingleForm] = useState<SingleFormState>({
     buy: '',
@@ -100,7 +104,7 @@ export const AddStockView: React.FC = () => {
   const searchDebounceRef = useRef<number>()
   const searchCloseTimeoutRef = useRef<number>()
 
-  const mrp = selectedProduct ? Number(selectedProduct.retail_max_price ?? 0) : 0
+  const mrp = selectedProduct ? Number(selectedProduct.mrp ?? 0) : 0
 
   const bulkDerivedPrices = useMemo(() => {
     if (!selectedProduct || mrp <= 0) {
@@ -111,11 +115,22 @@ export const AddStockView: React.FC = () => {
         offer: '',
       }
     }
+
+    // Calculate prices for all percentages
+    const buyPrice = bulkForm.buyPercent ? percentToPrice(bulkForm.buyPercent, mrp) : ''
+    const salePrice = bulkForm.salePercent ? percentToPrice(bulkForm.salePercent, mrp) : ''
+    const peakSalePrice = bulkForm.peakSalePercent
+      ? percentToPrice(bulkForm.peakSalePercent, mrp)
+      : ''
+    const offerPrice = bulkForm.mediboyOfferPercent
+      ? percentToPrice(bulkForm.mediboyOfferPercent, mrp)
+      : ''
+
     return {
-      buy: percentToPrice(bulkForm.buyPercent, mrp),
-      sale: percentToPrice(bulkForm.salePercent, mrp),
-      peakSale: percentToPrice(bulkForm.peakSalePercent, mrp),
-      offer: percentToPrice(bulkForm.mediboyOfferPercent, mrp),
+      buy: buyPrice,
+      sale: salePrice,
+      peakSale: peakSalePrice,
+      offer: offerPrice,
     }
   }, [
     bulkForm.buyPercent,
@@ -128,9 +143,9 @@ export const AddStockView: React.FC = () => {
 
   const loadLastSync = useCallback(async () => {
     try {
-      // Get latest last_synced_at from products table
-      const value = await window.electron.getLatestSyncTime()
-      console.log('[AddStock] Latest sync time:', value)
+      // Get last sync timestamp from storage (formatted for UI)
+      const value = await window.electron.getLastSync()
+      console.log('[AddStock] Last sync time:', value)
 
       if (!value) {
         // If no sync time, show current date/time in MM/DD/YYYY HH:MM:SS format
@@ -238,21 +253,67 @@ export const AddStockView: React.FC = () => {
     if (!selectedProduct || mrp <= 0) {
       return
     }
-    setSingleForm((previous) => ({
-      ...previous,
-      buy: bulkDerivedPrices.buy || previous.buy,
-      sale: bulkDerivedPrices.sale || previous.sale,
-      pSale: bulkDerivedPrices.peakSale || previous.pSale,
-      mOffer: bulkDerivedPrices.offer || previous.mOffer,
-    }))
+
+    if (bulkForm.applyBulk) {
+      setSingleForm((previous) => ({
+        ...previous,
+        buy: bulkDerivedPrices.buy || '',
+        sale: bulkDerivedPrices.sale || '',
+        pSale: bulkDerivedPrices.peakSale || '',
+        mOffer: bulkDerivedPrices.offer || '',
+      }))
+    } else {
+      setSingleForm((previous) => ({
+        ...previous,
+        buy: '',
+        sale: numberToString(selectedProduct.discount_price) || '',
+        pSale: numberToString(selectedProduct.peak_hour_price) || '',
+        mOffer: numberToString(selectedProduct.mediboy_offer_price) || '',
+      }))
+    }
   }, [
-    bulkDerivedPrices.buy,
-    bulkDerivedPrices.sale,
-    bulkDerivedPrices.peakSale,
-    bulkDerivedPrices.offer,
     mrp,
     selectedProduct,
+    bulkForm.applyBulk,
+    bulkForm.buyPercent,
+    bulkForm.salePercent,
+    bulkForm.peakSalePercent,
+    bulkForm.mediboyOfferPercent,
   ])
+
+  // Auto-generate BTC for single form when expiry changes and autoBtc is checked
+  useEffect(() => {
+    if (singleForm.autoBtc && singleForm.expiry) {
+      const formattedDate = singleForm.expiry.replace(/-/g, '/')
+      const btcValue = `GB-${formattedDate}`
+      setSingleForm((previous) => {
+        if (previous.btcDate !== btcValue) {
+          return {
+            ...previous,
+            btcDate: btcValue,
+          }
+        }
+        return previous
+      })
+    }
+  }, [singleForm.autoBtc, singleForm.expiry])
+
+  // Auto-generate BTC for bulk form when expiry changes and autoBtc is checked
+  useEffect(() => {
+    if (bulkForm.autoBtc && bulkForm.expiry) {
+      const formattedDate = bulkForm.expiry.replace(/-/g, '/')
+      const btcValue = `GB-${formattedDate}`
+      setBulkForm((previous) => {
+        if (previous.btcDate !== btcValue) {
+          return {
+            ...previous,
+            btcDate: btcValue,
+          }
+        }
+        return previous
+      })
+    }
+  }, [bulkForm.autoBtc, bulkForm.expiry])
 
   const handleSyncProducts = useCallback(async () => {
     setSyncError('')
@@ -291,19 +352,16 @@ export const AddStockView: React.FC = () => {
     setStatusMessage('')
     setErrorMessage('')
     closeSuggestions()
-
-    setSingleForm((prev) => ({
-      ...prev,
-      sale: numberToString(product.discount_price) || '',
-      pSale: numberToString(product.peak_hour_price) || '',
-      mOffer: numberToString(product.mediboy_offer_price) || '',
-    }))
+    // useEffect will handle all the value filling based on bulkForm.applyBulk state
   }
 
   const handleBulkChange =
     (field: keyof BulkFormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
-      const { value } = event.target
-      setBulkForm((previous) => ({ ...previous, [field]: value }))
+      const { value, type, checked } = event.target
+      setBulkForm((previous) => ({
+        ...previous,
+        [field]: type === 'checkbox' ? checked : value,
+      }))
     }
 
   const handleSingleChange =
@@ -315,14 +373,68 @@ export const AddStockView: React.FC = () => {
 
   const handleAutoBtcToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
     const checked = event.target.checked
-    setSingleForm((previous) => ({
-      ...previous,
-      autoBtc: checked,
-      btcDate: checked ? getDateInputValue(new Date()) : '',
-    }))
+    if (checked && singleForm.expiry) {
+      // Generate BTC from expiry: GB-YYYY/MM/DD (convert from YYYY-MM-DD format)
+      const formattedDate = singleForm.expiry.replace(/-/g, '/')
+      const btcValue = `GB-${formattedDate}`
+      setSingleForm((previous) => ({
+        ...previous,
+        autoBtc: checked,
+        btcDate: btcValue,
+      }))
+    } else {
+      setSingleForm((previous) => ({
+        ...previous,
+        autoBtc: checked,
+        btcDate: '',
+      }))
+    }
+  }
+
+  const handleBulkAutoBtcToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = event.target.checked
+    if (checked && bulkForm.expiry) {
+      // Generate BTC from bulk expiry: GB-YYYY/MM/DD (convert from YYYY-MM-DD format)
+      const formattedDate = bulkForm.expiry.replace(/-/g, '/')
+      const btcValue = `GB-${formattedDate}`
+      setBulkForm((previous) => ({
+        ...previous,
+        autoBtc: checked,
+        btcDate: btcValue,
+      }))
+    } else {
+      setBulkForm((previous) => ({
+        ...previous,
+        autoBtc: checked,
+        btcDate: '',
+      }))
+    }
   }
 
   const resetForms = () => {
+    // Only reset single form and product selection, keep bulk values
+    setSingleForm({
+      buy: '',
+      sale: '',
+      expiry: '',
+      autoBtc: false,
+      pSale: '',
+      mOffer: '',
+      promoExpiry: '',
+      btcDate: '',
+      qty: '',
+      batchNo: '',
+      stockAlert: '0',
+      shelf: '',
+    })
+    setSelectedProduct(null)
+    setSearchTerm('')
+    setSuggestions([])
+    closeSuggestions()
+  }
+
+  const resetAllForms = () => {
+    // Reset everything (for Clear button)
     setBulkForm({
       buyPercent: '',
       salePercent: '',
@@ -330,6 +442,8 @@ export const AddStockView: React.FC = () => {
       peakSalePercent: '',
       mediboyOfferPercent: '',
       btcDate: '',
+      autoBtc: false,
+      applyBulk: false,
     })
     setSingleForm({
       buy: '',
@@ -469,30 +583,27 @@ export const AddStockView: React.FC = () => {
       const isOnline = navigator.onLine
 
       if (isOnline) {
-        // Try direct API call first (old mechanism)
         try {
           await window.electron.addStock(payload)
           setStatusMessage('Product stock added and broadcasted successfully')
-          setRefreshKey((prev) => prev + 1) // Trigger Recent Stock table refresh
-          await loadLastSync() // Refresh sync time
+          setRefreshKey((prev) => prev + 1)
+          await loadLastSync()
           resetForms()
         } catch (apiError) {
-          // If API fails, fall back to queue
           console.warn('API call failed, saving to queue:', apiError)
           await window.electron.stockQueue.addOffline(payload)
           setStatusMessage(
             'Offline mode: Stock saved to queue. Will sync when connection is restored.'
           )
-          setRefreshKey((prev) => prev + 1) // Trigger Recent Stock table refresh
+          setRefreshKey((prev) => prev + 1)
           resetForms()
         }
       } else {
-        // Offline - save to queue
         await window.electron.stockQueue.addOffline(payload)
         setStatusMessage(
           'Offline mode: Stock saved to queue. Will sync when connection is restored.'
         )
-        setRefreshKey((prev) => prev + 1) // Trigger Recent Stock table refresh
+        setRefreshKey((prev) => prev + 1)
         resetForms()
       }
     } catch (error) {
@@ -691,10 +802,10 @@ export const AddStockView: React.FC = () => {
                   <div className="add-stock-bottom-input-date">
                     <h2>Exp*</h2>
                     <input
-                      type="text"
+                      type="date"
                       value={singleForm.expiry}
                       onChange={handleSingleChange('expiry')}
-                      placeholder="YYYY/MM/DD"
+                      required
                     />
                   </div>
 
@@ -730,7 +841,7 @@ export const AddStockView: React.FC = () => {
                       required
                     />
                   </div>
-                  {/* <div className="add-stock-input-section">
+                  <div className="add-stock-input-section">
                     <h2>Batch No*</h2>
                     <input
                       type="text"
@@ -739,7 +850,7 @@ export const AddStockView: React.FC = () => {
                       placeholder="Batch no"
                       required
                     />
-                  </div> */}
+                  </div>
                   <div className="add-stock-input-section">
                     <h2>STK-ALT* </h2>
                     <input
@@ -794,11 +905,6 @@ export const AddStockView: React.FC = () => {
                         placeholder="10"
                       />
                     </div>
-                    {bulkForm.buyPercent && bulkDerivedPrices.buy && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.buy}
-                      </div>
-                    )}
                   </div>
                   <div className="add-stock-input">
                     <div className="add-stock-input-flex">
@@ -812,11 +918,6 @@ export const AddStockView: React.FC = () => {
                         placeholder="10"
                       />
                     </div>
-                    {bulkForm.salePercent && bulkDerivedPrices.sale && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.sale}
-                      </div>
-                    )}
                   </div>
                   <div className="add-stock-input">
                     <div className="add-stock-input-flex">
@@ -830,11 +931,6 @@ export const AddStockView: React.FC = () => {
                         placeholder="10"
                       />
                     </div>
-                    {bulkForm.peakSalePercent && bulkDerivedPrices.peakSale && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.peakSale}
-                      </div>
-                    )}
                   </div>
                   <div className="add-stock-input-offer">
                     <div className="add-stock-input-offer-section">
@@ -848,11 +944,6 @@ export const AddStockView: React.FC = () => {
                         placeholder="12"
                       />
                     </div>
-                    {bulkForm.mediboyOfferPercent && bulkDerivedPrices.offer && (
-                      <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '4px' }}>
-                        ≈ ৳{bulkDerivedPrices.offer}
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -860,10 +951,9 @@ export const AddStockView: React.FC = () => {
                   <div className="add-stock-bottom-input-date">
                     <h2>Exp</h2>
                     <input
-                      type="text"
+                      type="date"
                       value={bulkForm.expiry}
                       onChange={handleBulkChange('expiry')}
-                      placeholder="YYYY/MM/DD"
                     />
                   </div>
                   <div className="add-stock-bottom-input-date">
@@ -876,13 +966,27 @@ export const AddStockView: React.FC = () => {
                     />
                   </div>
                 </div>
+                <div style={{ marginTop: '-20px' }} className="add-stock-input-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={bulkForm.autoBtc}
+                    onChange={handleBulkAutoBtcToggle}
+                  />
+                  <h2>Auto BTC</h2>
+                </div>
               </div>
               <div className="button-section">
                 <div className="apply-btn">
-                  <input type="checkbox" />
+                  <input
+                    type="checkbox"
+                    checked={bulkForm.applyBulk}
+                    onChange={handleBulkChange('applyBulk')}
+                  />
                   <h2>Apply</h2>
                 </div>
-                <h2 className="clear-btn">Clear</h2>
+                <button type="button" className="clear-btn" onClick={resetAllForms}>
+                  Clear
+                </button>
               </div>
             </div>
           </form>

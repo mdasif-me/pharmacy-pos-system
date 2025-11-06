@@ -354,7 +354,29 @@
   width: 19px;
   height: 17px;
   background-color: #ffffff;
-  border: 1px solid #110f0f;
+  border: 2px solid #110f0f;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border-radius: 3px;
+  position: relative;
+}
+
+.add-stock-input-checkbox input[type='checkbox']:checked {
+  background-color: #0e8e07;
+  border-color: #0e8e07;
+}
+
+.add-stock-input-checkbox input[type='checkbox']:checked::after {
+  content: '✓';
+  position: absolute;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .add-stock-input-offer {
@@ -403,7 +425,30 @@
 .apply-btn input[type='checkbox'] {
   width: 18px;
   height: 18px;
-  background: #d9d9d9;
+  background: #ffffff;
+  border: 2px solid #ffffff;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border-radius: 3px;
+  position: relative;
+}
+
+.apply-btn input[type='checkbox']:checked {
+  background-color: #ffffff;
+  border-color: #ffffff;
+}
+
+.apply-btn input[type='checkbox']:checked::after {
+  content: '✓';
+  position: absolute;
+  color: #0e8e07;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .apply-btn h2 {

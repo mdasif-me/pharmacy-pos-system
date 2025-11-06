@@ -86,6 +86,16 @@ export class StockQueueIpcHandler {
         throw error
       }
     })
+
+    // Get unsynced and today's items
+    ipcMain.handle(IPC_CHANNELS.STOCK_QUEUE.GET_UNSYNCED_AND_TODAY, async () => {
+      try {
+        return this.stockQueueService.getUnsyncedAndTodayItems()
+      } catch (error: any) {
+        console.error('Error getting unsynced and today items:', error)
+        throw error
+      }
+    })
   }
 
   /**

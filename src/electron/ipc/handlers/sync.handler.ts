@@ -96,10 +96,10 @@ export class SyncIpcHandler {
       }
     })
 
-    // get last sync timestamp
+    // get last sync timestamp (formatted for UI)
     ipcMain.handle(IPC_CHANNELS.SYNC.GET_LAST_SYNC, async () => {
       try {
-        return this.storageService.getLastSync()
+        return this.storageService.getLastSyncFormatted()
       } catch (error: any) {
         console.error('Error getting last sync:', error)
         return null

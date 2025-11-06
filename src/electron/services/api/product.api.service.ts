@@ -13,11 +13,27 @@ export class ProductApiService {
 
   /**
    * fetch all products from api
+   * @param page - page number
+   * @param limit - items per page
+   * @param lastSyncDate - optional date to filter products updated after this date (format: YYYY-MM-DD HH:MM:SS)
    */
-  async fetchAllProducts(page = 1, limit = 100): Promise<any[]> {
-    const response = await this.http.get<any>(`/pharmacy/get-real-time-stock-product`)
+  async fetchAllProducts(page = 1, limit = 100, lastSyncDate?: string): Promise<any[]> {
+    const params: any = {}
+
+    // If lastSyncDate is provided, add it as a query parameter
+    if (lastSyncDate) {
+      params.last_sync_at = lastSyncDate
+      console.log('[ProductApiService] Fetching products updated after:', lastSyncDate)
+    }
+
+    const response = await this.http.get<any>(`/pharmacy/get-real-time-stock-product`, { params })
 
     if (response && response.data && Array.isArray(response.data)) {
+      console.log(
+        `[ProductApiService] Fetched ${response.data.length} products${
+          lastSyncDate ? ' (incremental sync)' : ' (full sync)'
+        }`
+      )
       return response.data
     }
 

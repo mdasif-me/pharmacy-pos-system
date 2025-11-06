@@ -127,6 +127,13 @@ export class StockQueueService {
   }
 
   /**
+   * Get all unsynced items and today's items
+   */
+  getUnsyncedAndTodayItems(): StockQueueWithProduct[] {
+    return this.stockQueueRepo.getUnsyncedAndTodayItems()
+  }
+
+  /**
    * Broadcast stock to API
    */
   private async broadcastStockToAPI(stock: StockQueueEntity): Promise<void> {

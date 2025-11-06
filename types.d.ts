@@ -149,6 +149,7 @@ interface Window {
 
     // stock queue - offline-first management
     stockQueue: {
+      [x: string]: any
       addOffline: (payload: any) => Promise<{ success: boolean; data?: any }>
       syncSingle: (stockId: number) => Promise<{ success: boolean; error?: string }>
       syncAll: () => Promise<{

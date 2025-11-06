@@ -154,6 +154,7 @@ export class SyncService {
 
   /**
    * pull products from server
+   * Supports incremental sync by fetching only products updated after last sync
    */
   async pullProducts(): Promise<SyncResult> {
     const result: SyncResult = {
@@ -164,19 +165,40 @@ export class SyncService {
     }
 
     try {
-      // Fetch products from API
-      const apiProducts = await this.productApi.fetchAllProducts()
+      // Get last sync date from storage
+      const lastSyncDate = this.storageService.getLastSync()
+      console.log('[SyncService] Last sync date:', lastSyncDate || 'Never synced (full sync)')
+
+      // Fetch products from API with optional lastSyncDate filter
+      const apiProducts = await this.productApi.fetchAllProducts(1, 100, lastSyncDate || undefined)
 
       if (!Array.isArray(apiProducts) || apiProducts.length === 0) {
-        result.errors.push('No products received from API')
-        result.success = false
+        console.log('[SyncService] No new products to sync')
+        result.errors.push(
+          lastSyncDate ? 'No products updated since last sync' : 'No products received from API'
+        )
+        result.success = true // Not an error if there are no new products
         return result
       }
+
+      console.log(`[SyncService] Received ${apiProducts.length} products from API`)
 
       // Map API products to database format - sync ALL products
       const mappedProducts: Partial<ProductEntity>[] = apiProducts.map((product) => {
         // Get or create company
         const company = this.companyRepo.getOrCreate(product.company?.name || 'Unknown')
+
+        // Parse last_sync_at from API (format: YYYY-MM-DD HH:MM:SS)
+        let lastSyncAtFromApi = new Date().toISOString()
+        if (product.last_sync_at) {
+          try {
+            // Convert from "2025-11-06 10:58:10" to ISO format
+            const [date, time] = product.last_sync_at.split(' ')
+            lastSyncAtFromApi = new Date(`${date}T${time}.000Z`).toISOString()
+          } catch (e) {
+            console.log('[SyncService] Could not parse last_sync_at for product:', product.id)
+          }
+        }
 
         return {
           id: product.id,
@@ -197,7 +219,7 @@ export class SyncService {
           cover_image: product.coverImage,
           image_path: product.product_cover_image_path,
           version: 1,
-          last_synced_at: new Date().toISOString(),
+          last_synced_at: lastSyncAtFromApi, // Use API's last_sync_at
           last_modified_at: product.updated_at || new Date().toISOString(),
           is_dirty: 0,
           raw_data: JSON.stringify(product),
@@ -205,16 +227,19 @@ export class SyncService {
       })
 
       // Count products with stock for logging
-      const productsWithStock = mappedProducts.filter(p => (p.in_stock ?? 0) > 0)
-      console.log(`[SyncService] Syncing ${mappedProducts.length} products (${productsWithStock.length} have stock > 0)`)
-      
+      const productsWithStock = mappedProducts.filter((p) => (p.in_stock ?? 0) > 0)
+      console.log(
+        `[SyncService] Syncing ${mappedProducts.length} products (${productsWithStock.length} have stock > 0)`
+      )
+
       // Log some examples
       if (productsWithStock.length > 0) {
-        console.log('[SyncService] Sample products with stock:', 
-          productsWithStock.slice(0, 3).map(p => ({
+        console.log(
+          '[SyncService] Sample products with stock:',
+          productsWithStock.slice(0, 3).map((p) => ({
             id: p.id,
             name: p.product_name,
-            in_stock: p.in_stock
+            in_stock: p.in_stock,
           }))
         )
       }

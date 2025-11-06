@@ -56,7 +56,8 @@ export const RecentStockView: React.FC = () => {
   const loadRecentStock = useCallback(async () => {
     try {
       console.log('[RecentStock] Loading recent stock...')
-      const items = await window.electron.stockQueue.getRecent(20)
+      // Get all unsynced and today's items
+      const items = await window.electron.stockQueue.getUnsyncedAndToday()
       console.log('[RecentStock] Loaded items:', items.length)
       setRecentStock(items)
     } catch (error) {
@@ -212,7 +213,6 @@ export const RecentStockView: React.FC = () => {
               <th>MRP</th>
               <th>Stock (Qty)</th>
               <th>Batch</th>
-              <th>Added</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -220,7 +220,7 @@ export const RecentStockView: React.FC = () => {
           <tbody>
             {recentStock.length === 0 ? (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', color: '#999' }}>
+                <td colSpan={7} style={{ textAlign: 'center', color: '#999' }}>
                   No recent stock
                 </td>
               </tr>
@@ -242,7 +242,6 @@ export const RecentStockView: React.FC = () => {
                     <span className="qty-badge">{item.qty}</span>
                   </td>
                   <td>{item.batch_no}</td>
-                  <td className="date-cell">{formatDate(item.created_at)}</td>
                   <td>
                     {item.is_sync === 1 ? (
                       <span className="status-badge synced">✓ Synced</span>

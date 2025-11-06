@@ -57,6 +57,7 @@ export const IPC_CHANNELS = {
     SYNC_ALL: 'stock-queue:syncAll',
     GET_RECENT: 'stock-queue:getRecent',
     GET_UNSYNCED_COUNT: 'stock-queue:getUnsyncedCount',
+    GET_UNSYNCED_AND_TODAY: 'stock-queue:getUnsyncedAndToday',
   },
 
   // socket channels
