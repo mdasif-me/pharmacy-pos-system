@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Select, { SingleValue } from 'react-select'
 import Company from '../../../assets/company.svg'
-import Discount from '../../../assets/discount.svg'
 import Search from '../../../assets/search.svg'
 import { showModeChangeConfirmation } from '../../../utils/alerts'
 import { Column, Pagination, Table } from '../../common'
@@ -263,6 +262,13 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     return unsubscribe
   }, [])
 
+  // Sync saleMode with priceType in the table display
+  useEffect(() => {
+    const newPriceType: PriceMode = saleMode === 0 ? 'discount' : 'peak-hour'
+    setPriceType(newPriceType)
+    console.log('[Products] Price type updated to:', newPriceType, 'based on saleMode:', saleMode)
+  }, [saleMode])
+
   // Listen for bill mode updates
   useEffect(() => {
     const unsubscribe = window.electron.onBillModeUpdated((data) => {
@@ -310,24 +316,71 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
 
     let filtered = [...products]
 
-    // search filter - check product name and generic name
+    // search filter - prioritize products that start with search term
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
-      filtered = filtered.filter(
-        (product) =>
-          (product.product_name ?? '').toLowerCase().includes(term) ||
-          (product.generic_name ?? '').toLowerCase().includes(term) ||
-          (product.company_name ?? '').toLowerCase().includes(term) ||
-          String(product.in_stock ?? '')
-            .toLowerCase()
-            .includes(term)
-      )
+
+      // Separate products into two groups: starts with and contains
+      const startsWithMatches: Product[] = []
+      const containsMatches: Product[] = []
+
+      filtered.forEach((product) => {
+        const productNameLower = (product.product_name ?? '').toLowerCase()
+        const genericNameLower = (product.generic_name ?? '').toLowerCase()
+        const companyNameLower = (product.company_name ?? '').toLowerCase()
+        const stockStr = String(product.in_stock ?? '').toLowerCase()
+
+        // Check if starts with search term
+        if (
+          productNameLower.startsWith(term) ||
+          genericNameLower.startsWith(term) ||
+          companyNameLower.startsWith(term) ||
+          stockStr.startsWith(term)
+        ) {
+          startsWithMatches.push(product)
+        }
+        // Check if contains search term (but not starts with)
+        else if (
+          productNameLower.includes(term) ||
+          genericNameLower.includes(term) ||
+          companyNameLower.includes(term) ||
+          stockStr.includes(term)
+        ) {
+          containsMatches.push(product)
+        }
+      })
+
+      // Combine: starts with first, then contains
+      filtered = [...startsWithMatches, ...containsMatches]
     }
 
     // company filter
     if (selectedCompany) {
       filtered = filtered.filter((product) => product.company_id === selectedCompany)
     }
+
+    // Sort by stock: prioritize 0, 1, 3 first, then ascending order
+    filtered.sort((a, b) => {
+      const stockA = a.in_stock ?? 0
+      const stockB = b.in_stock ?? 0
+
+      // Priority values order: 0, 1, 3
+      const priorityOrder: { [key: number]: number } = { 0: 0, 1: 1, 3: 2 }
+      const priorityA = priorityOrder[stockA] ?? 999
+      const priorityB = priorityOrder[stockB] ?? 999
+
+      // If both have priority, sort by priority
+      if (priorityA !== 999 && priorityB !== 999) {
+        return priorityA - priorityB
+      }
+
+      // If only one has priority, it comes first
+      if (priorityA !== 999) return -1
+      if (priorityB !== 999) return 1
+
+      // Otherwise, sort ascending
+      return stockA - stockB
+    })
 
     setFilteredProducts(filtered)
   }
@@ -577,9 +630,29 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
         width: '30%',
         render: (product: Product) => (
           <div className="product-name-cell">
-            <span className="product-name">{product.product_name}</span>
+            <article>
+              <strong>{product.product_name}</strong>
+              {product.quantity && <span style={{ marginLeft: '10px' }}>{product.quantity}</span>}
+            </article>
+            {product.type && (
+              <p
+                style={{
+                  borderRadius: '5px',
+                  padding: '2px 6px',
+                  background: '#927572',
+                  color: '#fff',
+                  fontSize: '0.75rem',
+                  width: 'fit-content',
+                  marginTop: '4px',
+                }}
+              >
+                {product.type}
+              </p>
+            )}
             {product.generic_name && (
-              <span className="product-generic">{product.generic_name}</span>
+              <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '4px' }}>
+                {product.company_name ? product.company_name : product.generic_name}
+              </div>
             )}
           </div>
         ),
@@ -756,23 +829,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
-          />
-        </div>
-
-        <div className="filter-group filter-discount filter-select-group">
-          <img src={Discount} alt="search" />
-          <Select
-            className="react-select-container"
-            classNamePrefix="react-select"
-            options={priceTypeOptions}
-            value={priceTypeOptions.find((option) => option.value === priceType) ?? null}
-            onChange={(option: SingleValue<SelectOption<PriceMode>>) => {
-              setPriceType(option?.value ?? 'discount')
-            }}
-            isSearchable={false}
-            placeholder="Price Type"
-            menuPortalTarget={document.body}
-            styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
           />
         </div>
 

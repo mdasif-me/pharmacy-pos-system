@@ -93,7 +93,7 @@
   color: #000;
 }
 .react-select-container-company {
-  width: 320px;
+  min-width: 280px;
   font-size: 14px;
   font-weight: 400;
   color: #000;
