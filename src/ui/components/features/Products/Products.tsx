@@ -392,7 +392,24 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
       return
     }
 
-    // Validation will be done on the server side against mediboy_offer_price
+    // Get mediboy offer price from selected product
+    const offerPrice = selectedProduct.mediboy_offer_price || 0
+
+    // Price validation - Peak Hour Price must be >= Sale Price
+    if (peakHourPrice < discountPrice) {
+      setErrorMessage(
+        'পিক আওয়ার প্রাইস কখনোই সেল প্রাইসের চেয়ে কম হতে পারবে না। অনুগ্রহ করে সঠিক মূল্য দিন।'
+      )
+      return
+    }
+
+    // Mediboy Offer Price must be < Sale Price AND < Peak Hour Price
+    if (offerPrice >= discountPrice || offerPrice >= peakHourPrice) {
+      setErrorMessage(
+        'Mediboy অফার প্রাইস অবশ্যই সেল প্রাইস এবং পিক আওয়ার প্রাইস — দুটোই এর চেয়ে কম হতে হবে।'
+      )
+      return
+    }
 
     setIsSavingPrices(true)
     setErrorMessage('')
@@ -589,52 +606,64 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
           border: '1px solid #e5e7eb',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label style={{ fontWeight: '600', fontSize: '14px' }}>Sale Mode:</label>
-          <button
-            onClick={handleSaleModeToggle}
-            disabled={!isOnline}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: saleMode === 0 ? '#3b82f6' : '#f59e0b',
-              color: 'white',
-              cursor: isOnline ? 'pointer' : 'not-allowed',
-              opacity: isOnline ? 1 : 0.5,
-              fontWeight: '600',
-              fontSize: '13px',
+        {/* Sale Mode Dropdown */}
+        <div className="filter-group filter-select-group">
+          <label style={{ fontWeight: 600, marginRight: '8px', marginTop: '7px' }}>
+            Sale Mode:
+          </label>
+          <Select
+            className="react-select-container"
+            classNamePrefix="react-select"
+            options={[
+              { value: 0, label: 'Discount' },
+              { value: 1, label: 'Peak-Hour' },
+            ]}
+            value={{ value: saleMode, label: saleMode === 0 ? 'Discount' : 'Peak-Hour' }}
+            onChange={async (option) => {
+              if (option) {
+                setSaleMode(option.value)
+                try {
+                  await window.electron.businessSetup.updateSaleMode(option.value)
+                } catch (error) {
+                  console.error('Error updating sale mode:', error)
+                  setErrorMessage('Failed to update sale mode')
+                }
+              }
             }}
-          >
-            {saleMode === 0 ? 'Discount' : 'Peak Hour'}
-          </button>
-          {!isOnline && (
-            <span style={{ fontSize: '12px', color: '#6b7280' }}>(Requires online)</span>
-          )}
+            isSearchable={false}
+            menuPortalTarget={document.body}
+            styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+          />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <label style={{ fontWeight: '600', fontSize: '14px' }}>Bill Mode:</label>
-          <button
-            onClick={handleBillModeToggle}
-            disabled={!isOnline}
-            style={{
-              padding: '6px 12px',
-              borderRadius: '4px',
-              border: 'none',
-              background: billMode === 0 ? '#3b82f6' : '#f59e0b',
-              color: 'white',
-              cursor: isOnline ? 'pointer' : 'not-allowed',
-              opacity: isOnline ? 1 : 0.5,
-              fontWeight: '600',
-              fontSize: '13px',
+        {/* Bill Mode Dropdown */}
+        <div className="filter-group filter-select-group">
+          <label style={{ fontWeight: 600, marginRight: '8px', marginTop: '7px' }}>
+            Bill Mode:
+          </label>
+          <Select
+            className="react-select-container"
+            classNamePrefix="react-select"
+            options={[
+              { value: 0, label: 'Discount' },
+              { value: 1, label: 'Peak-Hour' },
+            ]}
+            value={{ value: billMode, label: billMode === 0 ? 'Discount' : 'Peak-Hour' }}
+            onChange={async (option) => {
+              if (option) {
+                setBillMode(option.value)
+                try {
+                  await window.electron.businessSetup.updateBillMode(option.value)
+                } catch (error) {
+                  console.error('Error updating bill mode:', error)
+                  setErrorMessage('Failed to update bill mode')
+                }
+              }
             }}
-          >
-            {billMode === 0 ? 'Discount' : 'Peak Hour'}
-          </button>
-          {!isOnline && (
-            <span style={{ fontSize: '12px', color: '#6b7280' }}>(Requires online)</span>
-          )}
+            isSearchable={false}
+            menuPortalTarget={document.body}
+            styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+          />
         </div>
       </div>
 
@@ -682,6 +711,7 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
           />
         </div>
+
         <div className="filter-info">
           Showing {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} of{' '}
           {filteredProducts.length} Products
