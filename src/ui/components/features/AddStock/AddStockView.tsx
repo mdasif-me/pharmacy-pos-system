@@ -710,7 +710,7 @@ export const AddStockView: React.FC = () => {
                               width: 'fit-content',
                             }}
                           >
-                            {selectedProduct.cart_text}
+                            {selectedProduct.type}
                           </p>
                           {selectedProduct.generic_name && (
                             <div style={{ fontSize: '0.8rem', color: '#666' }}>
