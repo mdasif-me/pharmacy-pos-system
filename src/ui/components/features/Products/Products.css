@@ -208,6 +208,7 @@
   justify-content: center;
   padding: 1rem;
   z-index: 1000;
+  pointer-events: auto;
 }
 
 .modal-content {
@@ -216,10 +217,14 @@
   width: min(480px, 100%);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   animation: modalIn 0.25s ease;
+  position: relative;
+  z-index: 1001;
+  pointer-events: auto;
 }
 
 .modal-header {
   padding: 1.25rem 1.5rem 0;
+  pointer-events: auto;
 }
 
 .modal-header h2 {
@@ -240,12 +245,14 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  pointer-events: auto;
 }
 
 .modal-offer {
   margin: 0;
   font-size: 0.95rem;
   color: #444;
+  pointer-events: auto;
 }
 
 .modal-label {
@@ -255,6 +262,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: #555;
+  pointer-events: auto;
 }
 
 .modal-label input {
@@ -262,12 +270,18 @@
   border: 1px solid #d0d0d0;
   border-radius: 6px;
   font-size: 0.95rem;
+  pointer-events: auto;
+  cursor: text;
+  background-color: white;
+  position: relative;
+  z-index: 1002;
 }
 
 .modal-label input:focus {
   outline: none;
   border-color: #1976d2;
   box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+  z-index: 1003;
 }
 
 .modal-actions {
@@ -275,6 +289,7 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+  pointer-events: auto;
 }
 
 .modal-close,
@@ -285,6 +300,9 @@
   cursor: pointer;
   font-size: 0.9rem;
   transition: all 0.2s ease;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1002;
 }
 
 .modal-close {

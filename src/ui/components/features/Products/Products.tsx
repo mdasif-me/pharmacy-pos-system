@@ -745,7 +745,12 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
             }
           }}
         >
-          <div className="modal-content">
+          <div
+            className="modal-content"
+            onClick={(e) => {
+              e.stopPropagation()
+            }}
+          >
             <div className="modal-header">
               <h2>Update Price</h2>
               <p className="modal-subtitle">{selectedProduct.product_name}</p>
@@ -763,6 +768,10 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
                   step="0.01"
                   value={discountInput}
                   onChange={(e) => setDiscountInput(e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
                   placeholder="leave empty to clear"
                 />
               </label>
@@ -774,6 +783,10 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
                   step="0.01"
                   value={peakHourInput}
                   onChange={(e) => setPeakHourInput(e.target.value)}
+                  onFocus={(e) => e.target.select()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                  }}
                   placeholder="leave empty to clear"
                 />
               </label>
