@@ -50,7 +50,7 @@ export class ProductRepository extends BaseRepository<ProductEntity> {
     // full-text search on product name only
     if (query) {
       sql += ` AND p.product_name LIKE ?`
-      const searchTerm = `%${query}%`
+      const searchTerm = `${query}%`
       sqlParams.push(searchTerm)
     }
 
