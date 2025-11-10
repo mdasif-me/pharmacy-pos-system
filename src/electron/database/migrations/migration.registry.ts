@@ -8,6 +8,9 @@ import { migration_001 } from './001_initial_schema.js'
 import { migration_002 } from './002_add_indexes.js'
 import { migration_003 } from './003_add_stock_queue.js'
 import { migration_004 } from './004_create_business_setups.js'
+import { migration_005 } from './005_create_batches_table.js'
+import { migration_006 } from './006_create_sales_table.js'
+import { migration_007 } from './007_create_sale_items_table.js'
 
 export interface Migration {
   version: number
@@ -17,7 +20,15 @@ export interface Migration {
 }
 
 // Register all migrations in order
-export const migrations: Migration[] = [migration_001, migration_002, migration_003, migration_004]
+export const migrations: Migration[] = [
+  migration_001,
+  migration_002,
+  migration_003,
+  migration_004,
+  migration_005,
+  migration_006,
+  migration_007,
+]
 
 export class MigrationManager {
   constructor(private db: Database) {}

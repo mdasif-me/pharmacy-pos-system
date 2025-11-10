@@ -182,6 +182,10 @@ export class StockQueueService {
       shelf: stock.shelf,
     }
 
+    console.log('[StockQueueService] Syncing stock to API:')
+    console.log('[StockQueueService] Endpoint:', endpoint)
+    console.log('[StockQueueService] Payload:', JSON.stringify(payload, null, 2))
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -191,8 +195,11 @@ export class StockQueueService {
       body: JSON.stringify(payload),
     })
 
+    console.log('[StockQueueService] Response status:', response.status, response.statusText)
+
     if (!response.ok) {
       const errorText = await response.text()
+      console.log('[StockQueueService] Error response:', errorText)
       throw new Error(errorText || `Failed with status ${response.status}`)
     }
 

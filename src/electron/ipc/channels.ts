@@ -59,7 +59,38 @@ export const IPC_CHANNELS = {
     GET_UNSYNCED_AND_TODAY: 'stock-queue:getUnsyncedAndToday',
   },
 
-  // socket channels
+  // sales channels
+  SALES: {
+    CREATE: 'sales:create',
+    GET: 'sales:get',
+    GET_BY_CUSTOMER: 'sales:getByCustomer',
+    GET_BY_DATE_RANGE: 'sales:getByDateRange',
+    GET_ALL: 'sales:getAll',
+    GET_UNSYNCED: 'sales:getUnsynced',
+    GET_UNSYNCED_COUNT: 'sales:getUnsyncedCount',
+    MARK_SYNCED: 'sales:markSynced',
+    GET_STATS: 'sales:getStats',
+    DELETE: 'sales:delete',
+    SYNC_ALL: 'sales:syncAll',
+    SYNC_SINGLE: 'sales:syncSingle',
+    RETRY_FAILED: 'sales:retryFailed',
+  },
+
+  // batch channels
+  BATCHES: {
+    GET_BY_PRODUCT: 'batches:getByProduct',
+    GET_AVAILABLE: 'batches:getAvailable',
+    GET_BY_STATUS: 'batches:getByStatus',
+    GET_EXPIRING: 'batches:getExpiring',
+    GET_ALL: 'batches:getAll',
+    UPDATE_STATUS: 'batches:updateStatus',
+  },
+
+  // sale items channels
+  SALE_ITEMS: {
+    GET_BY_SALE: 'sale-items:getBySale',
+    GET_BY_SALE_WITH_PRODUCT: 'sale-items:getBySaleWithProduct',
+  },
   SOCKET: {
     IS_CONNECTED: 'socket:isConnected',
     GET_ID: 'socket:getId',

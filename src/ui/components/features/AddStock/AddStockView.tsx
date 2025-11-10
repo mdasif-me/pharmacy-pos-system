@@ -548,31 +548,15 @@ export const AddStockView: React.FC = () => {
 
     setIsBroadcasting(true)
     try {
-      // Check if online - use direct API, otherwise use queue
-      const isOnline = navigator.onLine
-
-      if (isOnline) {
-        try {
-          await window.electron.addStock(payload)
-          showSuccess('Success', 'Product stock added and broadcasted successfully')
-          setRefreshKey((prev) => prev + 1)
-          resetForms()
-        } catch (apiError) {
-          console.warn('API call failed, saving to queue:', apiError)
-          await window.electron.stockQueue.addOffline(payload)
-          showSuccess(
-            'Offline Mode',
-            'Stock saved to queue. Will sync when connection is restored.'
-          )
-          setRefreshKey((prev) => prev + 1)
-          resetForms()
-        }
-      } else {
-        await window.electron.stockQueue.addOffline(payload)
-        showSuccess('Offline Mode', 'Stock saved to queue. Will sync when connection is restored.')
-        setRefreshKey((prev) => prev + 1)
-        resetForms()
-      }
+      // ALWAYS use offline-first queue for stock
+      // Stock will be synced via the queue when network is available
+      await window.electron.stockQueue.addOffline(payload)
+      showSuccess(
+        'Stock Added',
+        'Product stock has been added and queued for sync. It will be synchronized with the server.'
+      )
+      setRefreshKey((prev) => prev + 1)
+      resetForms()
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unable to add stock'
       showError('Error', message)

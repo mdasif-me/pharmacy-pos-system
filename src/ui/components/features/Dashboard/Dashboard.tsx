@@ -9,9 +9,10 @@ import { SocketStatus } from '../../common/SocketStatus'
 import { AddStockView } from '../AddStock'
 import { PosView } from '../PosView/PosView'
 import { Products } from '../Products'
+import { SalesView } from '../Sales'
 import './Dashboard.css'
 
-type DashboardView = 'pos' | 'all-stock' | 'add-stock'
+type DashboardView = 'pos' | 'all-stock' | 'add-stock' | 'sales'
 
 type MenuItem = {
   id: DashboardView
@@ -23,6 +24,7 @@ const menuItems: MenuItem[] = [
   { id: 'pos', label: 'POS', icon: pos },
   { id: 'all-stock', label: 'All Stock', icon: stock },
   { id: 'add-stock', label: 'Add Stock', icon: addStock },
+  { id: 'sales', label: 'Sales', icon: stock },
 ]
 
 interface DashboardProps {
@@ -55,6 +57,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         return <AddStockView />
       case 'all-stock':
         return <Products user={user} />
+      case 'sales':
+        return <SalesView />
       default:
         return null
     }

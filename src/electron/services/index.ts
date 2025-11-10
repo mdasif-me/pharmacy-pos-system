@@ -1,6 +1,10 @@
+export * from './add-stock-broadcast.service'
 export * from './cache.service'
 export * from './product.service'
+export * from './sales-sync.service'
+export * from './sales.service'
 export * from './search.service'
+export * from './stock-queue.service'
 export * from './sync.service'
 
 export * from './api/auth.api.service'

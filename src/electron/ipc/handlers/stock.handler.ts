@@ -47,6 +47,10 @@ export class StockIpcHandler {
 
           const endpoint = `${API_CONFIG.baseURL}/pharmacy/real-time-add-stock-and-broadcast`
 
+          console.log('[StockHandler] Adding stock to API:')
+          console.log('[StockHandler] Endpoint:', endpoint)
+          console.log('[StockHandler] Payload:', JSON.stringify(payload, null, 2))
+
           const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -56,12 +60,16 @@ export class StockIpcHandler {
             body: JSON.stringify(payload),
           })
 
+          console.log('[StockHandler] Response status:', response.status, response.statusText)
+
           if (!response.ok) {
             const errorText = await response.text()
+            console.log('[StockHandler] Error response:', errorText)
             throw new Error(errorText || `Failed with status ${response.status}`)
           }
 
           const result = await response.json()
+          console.log('[StockHandler] API response:', result)
 
           // Save to stock queue with is_sync=1 (already synced)
           try {
@@ -96,7 +104,7 @@ export class StockIpcHandler {
 
           return { success: true, data: result }
         } catch (error: any) {
-          console.error('Error broadcasting stock:', error)
+          console.error('[StockHandler] Error broadcasting stock:', error.message)
           throw error
         }
       }

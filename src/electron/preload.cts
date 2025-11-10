@@ -47,6 +47,44 @@ contextBridge.exposeInMainWorld('electron', {
     getUnsyncedAndToday: () => invoke('stock-queue:getUnsyncedAndToday'),
   },
 
+  // Sales Management
+  sales: {
+    create: (payload: any) => invoke('sales:create', payload),
+    get: (saleId: number) => invoke('sales:get', saleId),
+    getByCustomer: (phoneNumber: string) => invoke('sales:getByCustomer', phoneNumber),
+    getByDateRange: (fromDate: string, toDate: string) =>
+      invoke('sales:getByDateRange', { fromDate, toDate }),
+    getAll: (limit?: number, offset?: number) =>
+      invoke('sales:getAll', { limit: limit || 100, offset: offset || 0 }),
+    getUnsynced: () => invoke('sales:getUnsynced'),
+    getUnsyncedCount: () => invoke('sales:getUnsyncedCount'),
+    markSynced: (saleId: number) => invoke('sales:markSynced', saleId),
+    getStats: (fromDate?: string, toDate?: string) =>
+      invoke('sales:getStats', { fromDate, toDate }),
+    delete: (saleId: number) => invoke('sales:delete', saleId),
+    syncAll: () => invoke('sales:syncAll'),
+    syncSingle: (saleId: number) => invoke('sales:syncSingle', saleId),
+    retryFailed: () => invoke('sales:retryFailed'),
+  },
+
+  // Batch Management
+  batches: {
+    getByProduct: (productId: number) => invoke('batches:getByProduct', productId),
+    getAvailable: (productId: number) => invoke('batches:getAvailable', productId),
+    getByStatus: (status: string) => invoke('batches:getByStatus', status),
+    getExpiring: (expDate: string) => invoke('batches:getExpiring', expDate),
+    getAll: (limit?: number, offset?: number) =>
+      invoke('batches:getAll', { limit: limit || 100, offset: offset || 0 }),
+    updateStatus: (batchId: number, status: string) =>
+      invoke('batches:updateStatus', { batchId, status }),
+  },
+
+  // Sale Items
+  saleItems: {
+    getBySale: (saleId: number) => invoke('sale-items:getBySale', saleId),
+    getBySaleWithProduct: (saleId: number) => invoke('sale-items:getBySaleWithProduct', saleId),
+  },
+
   // Socket.IO connection status
   socket: {
     isConnected: () => invoke('socket:isConnected'),

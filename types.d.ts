@@ -158,6 +158,40 @@ interface Window {
       }>
       getRecent: (limit?: number) => Promise<any[]>
       getUnsyncedCount: () => Promise<number>
+      getUnsyncedAndToday: () => Promise<any[]>
+    }
+
+    // Sales Management
+    sales: {
+      create: (payload: any) => Promise<any>
+      get: (saleId: number) => Promise<any>
+      getByCustomer: (phoneNumber: string) => Promise<any[]>
+      getByDateRange: (fromDate: string, toDate: string) => Promise<any[]>
+      getAll: (limit?: number, offset?: number) => Promise<any[]>
+      getUnsynced: () => Promise<any[]>
+      getUnsyncedCount: () => Promise<number>
+      markSynced: (saleId: number) => Promise<void>
+      getStats: (fromDate?: string, toDate?: string) => Promise<any>
+      delete: (saleId: number) => Promise<void>
+      syncAll: () => Promise<any>
+      syncSingle: (saleId: number) => Promise<any>
+      retryFailed: () => Promise<any>
+    }
+
+    // Batch Management
+    batches: {
+      getByProduct: (productId: number) => Promise<any[]>
+      getAvailable: (productId: number) => Promise<any[]>
+      getByStatus: (status: string) => Promise<any[]>
+      getExpiring: (expDate: string) => Promise<any[]>
+      getAll: (limit?: number, offset?: number) => Promise<any[]>
+      updateStatus: (batchId: number, status: string) => Promise<any>
+    }
+
+    // Sale Items
+    saleItems: {
+      getBySale: (saleId: number) => Promise<any[]>
+      getBySaleWithProduct: (saleId: number) => Promise<any[]>
     }
 
     // socket.io connection

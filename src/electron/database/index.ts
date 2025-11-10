@@ -1,7 +1,11 @@
 export * from './repositories/base.repository'
+export * from './repositories/batches.repository'
 export * from './repositories/category.repository'
 export * from './repositories/company.repository'
 export * from './repositories/product.repository'
+export * from './repositories/sale-items.repository'
+export * from './repositories/sales.repository'
+export * from './repositories/stock-queue.repository'
 export * from './repositories/sync-queue.repository'
 
 export * from './migrations/migration.registry'
