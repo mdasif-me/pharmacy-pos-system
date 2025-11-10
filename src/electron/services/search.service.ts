@@ -51,6 +51,7 @@ export class SearchService {
 
   /**
    * autocomplete search (for search suggestions)
+   * Prioritize products starting with the query alphabetically.
    */
   autocomplete(query: string, limit = 10): string[] {
     if (!query || query.length < 2) {
@@ -65,6 +66,7 @@ export class SearchService {
       LIMIT ?
     `
 
+    // Prioritize products starting with the query
     const results = this.db.prepare(sql).all(`${query}%`, limit) as Array<{ product_name: string }>
     return results.map((r) => r.product_name)
   }

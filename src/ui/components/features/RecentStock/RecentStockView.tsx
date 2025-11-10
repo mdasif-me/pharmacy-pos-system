@@ -20,6 +20,7 @@ interface StockQueueItem {
   created_at: string
   synced_at?: string | null
   error_message?: string | null
+  quantity?: string
 }
 
 interface SyncResult {
@@ -50,15 +51,25 @@ export const RecentStockView: React.FC = () => {
   const [syncingItemId, setSyncingItemId] = useState<number | null>(null)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
-  console.log('[RecentStock] Component rendered, items count:', recentStock.length)
+  console.log('[RecentStock] Component rendered, items count:', recentStock)
 
   const loadRecentStock = useCallback(async () => {
     try {
       console.log('[RecentStock] Loading recent stock...')
       // Get all recently added stock items (last 100, most recent first)
       const items = await window.electron.stockQueue.getRecent()
-      console.log('[RecentStock] Loaded items:', items.length)
-      setRecentStock(items)
+      console.log('[RecentStock] Loaded items:', items)
+
+      // Filter items from the last 24 hours
+      const now = new Date()
+      const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+      const filteredItems = items.filter((item) => {
+        const createdAt = new Date(item.created_at)
+        return createdAt >= last24Hours
+      })
+
+      setRecentStock(filteredItems)
     } catch (error) {
       console.error('Failed to load recent stock:', error)
     }
@@ -222,11 +233,13 @@ export const RecentStockView: React.FC = () => {
                 <tr key={item.id} className={item.is_sync === 0 ? 'unsynced' : 'synced'}>
                   <td>
                     <div className="product-info">
-                      <strong>{item.product_name || `Product #${item.product_id}`}</strong>
+                      <strong>
+                        {item.product_name || `Product #${item.product_id}`}{' '}
+                        <span style={{ fontWeight: 'normal' }}>
+                          {item.quantity && `${item.quantity}`}
+                        </span>
+                      </strong>
                       {item.type && <span className="product-type">{item.type}</span>}
-                      {item.generic_name && (
-                        <div className="product-generic">{item.generic_name}</div>
-                      )}
                     </div>
                   </td>
                   <td>{item.company_name || '—'}</td>

@@ -545,66 +545,6 @@ export const Products: React.FC<ProductsProps> = ({ user, syncRequestId, onSyncS
     }
   }
 
-  // Handle sale mode toggle
-  const handleSaleModeToggle = async () => {
-    if (!isOnline) {
-      setErrorMessage(
-        'আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন! সেল মোড পরিবর্তন করতে আপনাকে অনলাইনে থাকতে হবে।'
-      )
-      alert('Please check your internet connection! You have to be online to change sale mode.')
-      return
-    }
-
-    const newMode = saleMode === 0 ? 1 : 0
-    const newModeLabel = newMode === 0 ? 'Discount' : 'Peak-Hour'
-
-    // Show confirmation dialog
-    const result = await showModeChangeConfirmation('sale mode', newModeLabel)
-
-    if (result.isConfirmed) {
-      try {
-        await window.electron.businessSetup.updateSaleMode(newMode)
-        setSaleMode(newMode)
-        setErrorMessage('')
-      } catch (error) {
-        console.error('Failed to update sale mode:', error)
-        const message = error instanceof Error ? error.message : 'Failed to update sale mode'
-        setErrorMessage(message)
-        alert(message)
-      }
-    }
-  }
-
-  // Handle bill mode toggle
-  const handleBillModeToggle = async () => {
-    if (!isOnline) {
-      setErrorMessage(
-        'আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন! বিল মোড পরিবর্তন করতে আপনাকে অনলাইনে থাকতে হবে।'
-      )
-      alert('Please check your internet connection! You have to be online to change bill mode.')
-      return
-    }
-
-    const newMode = billMode === 0 ? 1 : 0
-    const newModeLabel = newMode === 0 ? 'Discount' : 'Peak-Hour'
-
-    // Show confirmation dialog
-    const result = await showModeChangeConfirmation('bill mode', newModeLabel)
-
-    if (result.isConfirmed) {
-      try {
-        await window.electron.businessSetup.updateBillMode(newMode)
-        setBillMode(newMode)
-        setErrorMessage('')
-      } catch (error) {
-        console.error('Failed to update bill mode:', error)
-        const message = error instanceof Error ? error.message : 'Failed to update bill mode'
-        setErrorMessage(message)
-        alert(message)
-      }
-    }
-  }
-
   // Pagination calculations
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
   const startIndex = (currentPage - 1) * itemsPerPage

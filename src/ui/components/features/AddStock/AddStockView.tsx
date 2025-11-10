@@ -290,7 +290,7 @@ export const AddStockView: React.FC = () => {
   // Auto-generate BTC for single form when expiry changes and autoBtc is checked
   useEffect(() => {
     if (singleForm.autoBtc && singleForm.expiry) {
-      const formattedDate = singleForm.expiry.replace(/-/g, '/')
+      const formattedDate = singleForm.expiry.replace(/-/g, '-')
       const btcValue = `GB-${formattedDate}`
       setSingleForm((previous) => {
         if (previous.btcDate !== btcValue) {
@@ -766,7 +766,7 @@ export const AddStockView: React.FC = () => {
                       type="text"
                       value={singleForm.btcDate}
                       onChange={handleSingleChange('btcDate')}
-                      placeholder="GB-YYYY/MM/DD"
+                      placeholder="GB-YYYY-MM-DD"
                       required
                     />
                   </div>

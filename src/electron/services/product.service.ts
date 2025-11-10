@@ -277,6 +277,17 @@ export class ProductService {
    * map api product to our schema
    */
   private mapApiProduct(apiProduct: any): Partial<ProductEntity> {
+    const formatDateTime = (date: Date) => {
+      const pad = (n: number) => (n < 10 ? `0${n}` : n)
+      const month = pad(date.getMonth() + 1)
+      const day = pad(date.getDate())
+      const year = date.getFullYear()
+      const hours = pad(date.getHours())
+      const minutes = pad(date.getMinutes())
+      const seconds = pad(date.getSeconds())
+      return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}`
+    }
+
     return {
       id: apiProduct.id,
       product_name: apiProduct.productName || apiProduct.product_name,
@@ -296,7 +307,7 @@ export class ProductService {
       cover_image: apiProduct.coverImage || apiProduct.cover_image,
       image_path: apiProduct.product_cover_image_path || apiProduct.image_path,
       version: 1,
-      last_synced_at: apiProduct.last_sync_at,
+      last_synced_at: apiProduct.last_sync_at || formatDateTime(new Date()),
       last_modified_at: apiProduct.updated_at,
       is_dirty: 0,
       raw_data: JSON.stringify(apiProduct),
