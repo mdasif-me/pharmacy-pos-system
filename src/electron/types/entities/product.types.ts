@@ -40,6 +40,9 @@ export interface ProductEntity {
 
   // Full JSON for extensibility
   raw_data?: string
+
+  // computed field for display
+  updated_at?: string
 }
 
 export interface ProductCreateDTO {
