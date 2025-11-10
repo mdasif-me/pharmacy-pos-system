@@ -28,7 +28,7 @@ export const PosView: React.FC = () => {
           <h2>ADD</h2>
         </div>
         <div className='price-bar'>
-          <h2>$</h2>
+          <h1>$</h1>
           <input type="number"
           />
           <h2>10%</h2>
@@ -121,6 +121,26 @@ export const PosView: React.FC = () => {
       {/* bottom section  */}
       <section className='bottom-section'>
       <div className="order-section">
+        <div className='user-section'>
+          <div className='user-number-search'>
+            <input type="search"
+            placeholder='search user by phone number'
+            />
+            <div className='user-search-icon'>
+              <img src={Search} alt="" />
+              </div>
+          </div>
+        <div className='user-button'>
+          <button className='user-exit-section'>
+            <img src="src/assets/user-exit.svg" alt="" />
+          <span>User Exit</span>
+          </button>
+          <button className='not-exit-section'>
+            <img src="src/assets/not-exit.svg" alt="" />
+            <span>Not Exit</span>
+            </button>
+        </div>
+        </div>
       <div className="input-order">
         <div className='input-order-bill'>
           <div className="input-order-section">
@@ -135,17 +155,22 @@ export const PosView: React.FC = () => {
 
                 {/* === Bottom Info Bar === */}
                 <div className="bottom-info">
-                  <div>
+                  <div className='return-checkbox'>
                     <input type="checkbox" />
                   <label className="return-label">Return</label>
                   </div>
-                  <span className="phone">📞 01616815056</span>
-                  <span className="delivery">🛒 Home-Delivery</span>
+                  <div className="phone">
+                    <img src="src/assets/user-alt.svg" alt="" />
+                    <p>01616815056</p>
+                    </div>
+                  <div className="delivery">
+                    <img src="src/assets/vector.svg" alt="" />
+                     <p>Home-Delivery</p>
+                     </div>
                 </div>
              </div>
                 <div className="bill-section">
-                    <span className="bill-amount">1025</span>
-                    <span className="bill-text">Bill</span>
+                    <span>1025</span>
                   </div>
 
            </div>
