@@ -9,7 +9,6 @@ import { SocketStatus } from '../../common/SocketStatus'
 import { AddStockView } from '../AddStock'
 import { PosView } from '../PosView/PosView'
 import { Products } from '../Products'
-import { SalesView } from '../Sales'
 import './Dashboard.css'
 
 type DashboardView = 'pos' | 'all-stock' | 'add-stock' | 'sales'
@@ -57,8 +56,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         return <AddStockView />
       case 'all-stock':
         return <Products user={user} />
-      case 'sales':
-        return <SalesView />
       default:
         return null
     }
