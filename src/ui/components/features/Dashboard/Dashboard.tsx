@@ -23,7 +23,6 @@ const menuItems: MenuItem[] = [
   { id: 'pos', label: 'POS', icon: pos },
   { id: 'all-stock', label: 'All Stock', icon: stock },
   { id: 'add-stock', label: 'Add Stock', icon: addStock },
-  { id: 'sales', label: 'Sales', icon: stock },
 ]
 
 interface DashboardProps {

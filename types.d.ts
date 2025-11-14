@@ -231,5 +231,8 @@ interface Window {
     onPriceUpdated: (
       callback: (data: { productId: number; discountPrice: number; peakHourPrice: number }) => void
     ) => () => void
+
+    // order methods
+    searchOrder: (orderNumber: string) => Promise<OrderDetail[]>
   }
 }
