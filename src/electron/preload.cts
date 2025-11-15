@@ -50,6 +50,8 @@ contextBridge.exposeInMainWorld('electron', {
   // Sales Management
   sales: {
     create: (payload: any) => invoke('sales:create', payload),
+    createOfflineSale: (payload: any) => invoke('sales:createOfflineSale', payload),
+    createDirectOffline: (payload: any) => invoke('sales:createDirectOffline', payload),
     get: (saleId: number) => invoke('sales:get', saleId),
     getByCustomer: (phoneNumber: string) => invoke('sales:getByCustomer', phoneNumber),
     getByDateRange: (fromDate: string, toDate: string) =>
@@ -101,6 +103,15 @@ contextBridge.exposeInMainWorld('electron', {
       invoke('business-setup:updatePrice', productId, discountPrice, peakHourPrice),
     getSaleMode: () => invoke('business-setup:getSaleMode'),
     getBillMode: () => invoke('business-setup:getBillMode'),
+    getSalePrice: (productId: number, customSalePrice?: number) =>
+      invoke('business-setup:getSalePrice', productId, customSalePrice),
+  },
+
+  // Order Management - Search and online sale
+  orders: {
+    searchByNumber: (orderNumber: string) => invoke('orders:searchByNumber', orderNumber),
+    getDetails: (orderId: number) => invoke('orders:getDetails', orderId),
+    createOnlineSale: (payload: any) => invoke('orders:createOnlineSale', payload),
   },
 
   // Event listeners for real-time updates

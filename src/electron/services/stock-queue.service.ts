@@ -37,8 +37,12 @@ export class StockQueueService {
   addStockOffline(payload: AddStockPayload): StockQueueEntity {
     console.log('[StockQueueService] Adding stock to offline queue:', payload.product_id)
 
+    // Validate stock_alert - must be a reasonable small number
+    const validatedStockAlert = this.validateStockAlert(payload.stock_alert)
+
     const stockEntry: Omit<StockQueueEntity, 'id'> = {
       ...payload,
+      stock_alert: validatedStockAlert,
       is_sync: 0,
       created_at: new Date().toISOString(),
       synced_at: null,
@@ -52,15 +56,53 @@ export class StockQueueService {
   }
 
   /**
+   * Validate and normalize stock_alert value
+   * Should be a small integer (typically 5-100)
+   */
+  private validateStockAlert(value?: number): number {
+    // Default to 10 if not provided
+    if (value === undefined || value === null) {
+      return 10
+    }
+
+    // Convert to number if string
+    const numValue = Number(value)
+
+    // If NaN, return default
+    if (Number.isNaN(numValue)) {
+      console.warn('[StockQueueService] Invalid stock_alert value:', value, '- using default 10')
+      return 10
+    }
+
+    // Clamp to reasonable range (0-1000)
+    // If value is way too high (> 1000), it's likely a mistake
+    if (numValue < 0) {
+      console.warn('[StockQueueService] Negative stock_alert:', value, '- using 10')
+      return 10
+    }
+
+    if (numValue > 1000) {
+      console.warn('[StockQueueService] Unusually high stock_alert:', value, '- capping at 100')
+      return 100
+    }
+
+    return Math.floor(numValue)
+  }
+
+  /**
    * Add already-synced stock to queue (for online mode)
    * Used when stock is added online and synced immediately
    */
   addStockSynced(payload: AddStockPayload): StockQueueEntity {
     console.log('[StockQueueService] Adding synced stock to queue:', payload.product_id)
 
+    // Validate stock_alert - must be a reasonable small number
+    const validatedStockAlert = this.validateStockAlert(payload.stock_alert)
+
     const now = new Date().toISOString()
     const stockEntry: Omit<StockQueueEntity, 'id'> = {
       ...payload,
+      stock_alert: validatedStockAlert,
       is_sync: 1,
       created_at: now,
       synced_at: now,
@@ -167,6 +209,9 @@ export class StockQueueService {
 
     const endpoint = `${API_CONFIG.baseURL}/pharmacy/real-time-add-stock-and-broadcast`
 
+    // Validate stock_alert before sending
+    const validatedStockAlert = this.validateStockAlert(stock.stock_alert)
+
     const payload = {
       product_id: stock.product_id,
       stock_mrp: stock.stock_mrp,
@@ -178,7 +223,7 @@ export class StockQueueService {
       batch_no: stock.batch_no,
       expire_date: stock.expire_date,
       qty: stock.qty,
-      stock_alert: stock.stock_alert,
+      stock_alert: validatedStockAlert,
       shelf: stock.shelf,
     }
 

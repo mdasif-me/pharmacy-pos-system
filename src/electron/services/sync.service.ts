@@ -186,6 +186,16 @@ export class SyncService {
       const mappedProducts: Partial<ProductEntity>[] = apiProducts.map((product) => {
         const company = this.companyRepo.getOrCreate(product.company?.name || 'Unknown')
 
+        // Ensure stock_alert is a valid small integer
+        let stockAlert = 10 // Default value
+        if (product.current_stock?.stock_alert) {
+          const alertValue = Number(product.current_stock.stock_alert)
+          // Validate: stock_alert should be a small number (0-100 reasonable range)
+          if (!Number.isNaN(alertValue) && alertValue >= 0 && alertValue <= 1000) {
+            stockAlert = alertValue
+          }
+        }
+
         return {
           id: product.id,
           product_name: product.productName,
@@ -198,7 +208,7 @@ export class SyncService {
           peak_hour_price: product.current_stock?.peak_hour_price,
           mediboy_offer_price: product.current_stock?.mediboy_offer_price,
           in_stock: product.current_stock?.in_stock || 0,
-          stock_alert: product.current_stock?.stock_alert || 10,
+          stock_alert: stockAlert,
           type: product.type,
           prescription: product.prescription === 'yes' ? 1 : 0,
           status: product.status || 'active',

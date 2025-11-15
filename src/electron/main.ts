@@ -5,14 +5,8 @@ import { DATABASE_CONFIG } from './core/config/database.config'
 import { DatabaseManager } from './database/core/connection.manager'
 import { MigrationManager } from './database/core/migration.manager'
 import { ProductRepository } from './database/repositories/product.repository'
-import { AuthIpcHandler } from './ipc/handlers/auth.handler'
-import { BusinessSetupIpcHandler } from './ipc/handlers/business-setup.handler'
-import { ProductIpcHandler } from './ipc/handlers/product.handler'
-import { SearchIpcHandler } from './ipc/handlers/search.handler'
 import { SocketIpcHandler } from './ipc/handlers/socket.handler'
-import { StockQueueIpcHandler } from './ipc/handlers/stock-queue.handler'
-import { StockIpcHandler } from './ipc/handlers/stock.handler'
-import { SyncIpcHandler } from './ipc/handlers/sync.handler'
+import { registerIpcHandlers } from './ipc/register'
 import { getPreloadPath, getUIPath } from './pathResolver'
 import { SocketService } from './services/socket.service'
 import { isDev } from './util'
@@ -47,13 +41,7 @@ async function initializeDatabase() {
 function initializeIpcHandlers() {
   if (!db) throw new Error('Database not initialized')
   console.log('Initializing IPC handlers...')
-  new ProductIpcHandler(db)
-  new AuthIpcHandler(API_CONFIG.baseURL)
-  new SyncIpcHandler(db)
-  new SearchIpcHandler(db)
-  new StockIpcHandler(db)
-  new StockQueueIpcHandler(db)
-  new BusinessSetupIpcHandler(db)
+  registerIpcHandlers(db, API_CONFIG.baseURL)
   console.log('IPC handlers initialized')
 }
 

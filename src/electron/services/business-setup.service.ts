@@ -170,4 +170,63 @@ export class BusinessSetupService {
   getBillMode(): number {
     return this.businessSetupRepo.getBillMode()
   }
+
+  /**
+   * Get sale price for a product based on current sale_mode
+   * If sale_mode = 0: use discount_price
+   * If sale_mode = 1: use peak_hour_price
+   * Can be overridden with custom sale_price if provided
+   */
+  getSalePrice(
+    productId: number,
+    customSalePrice?: number
+  ): { salePrice: number; basedOn: 'custom' | 'discount' | 'peak_hour' } {
+    // If custom sale price is provided, validate it
+    if (customSalePrice !== undefined && customSalePrice > 0) {
+      const product = this.productRepo.findById(productId)
+      if (!product) {
+        throw new Error('Product not found')
+      }
+
+      const mediboyOfferPrice = product.mediboy_offer_price || 0
+
+      // Validate: sale_price must be > mediboy_offer_price
+      if (mediboyOfferPrice > 0 && customSalePrice <= mediboyOfferPrice) {
+        throw new Error(
+          `Sale price (${customSalePrice}) must be greater than mediboy offer price (${mediboyOfferPrice})`
+        )
+      }
+
+      return {
+        salePrice: customSalePrice,
+        basedOn: 'custom',
+      }
+    }
+
+    // Get sale mode
+    const saleMode = this.getSaleMode()
+    const product = this.productRepo.findById(productId)
+
+    if (!product) {
+      throw new Error('Product not found')
+    }
+
+    let priceToUse: number
+    let basedOn: 'discount' | 'peak_hour'
+
+    if (saleMode === 0) {
+      // Discount mode
+      priceToUse = product.discount_price || product.sale_price || product.mrp
+      basedOn = 'discount'
+    } else {
+      // Peak hour mode (saleMode === 1)
+      priceToUse = product.peak_hour_price || product.sale_price || product.mrp
+      basedOn = 'peak_hour'
+    }
+
+    return {
+      salePrice: priceToUse,
+      basedOn,
+    }
+  }
 }

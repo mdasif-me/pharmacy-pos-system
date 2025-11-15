@@ -128,5 +128,80 @@ export class SalesIpcHandler {
         throw error
       }
     })
+
+    // Create offline sale and broadcast
+    ipcMain.handle(
+      IPC_CHANNELS.SALES.CREATE_OFFLINE_SALE,
+      async (
+        _,
+        {
+          grandTotal,
+          grandDiscountTotal,
+          customerPhoneNumber,
+          saleItems,
+        }: {
+          grandTotal: number
+          grandDiscountTotal: number
+          customerPhoneNumber: string
+          saleItems: Array<{
+            product_id: number
+            max_retail_price: number
+            sale_price: number
+            quantity: number
+          }>
+        }
+      ) => {
+        try {
+          const result = await this.salesService.createOfflineSaleAndBroadcast(
+            grandTotal,
+            grandDiscountTotal,
+            customerPhoneNumber,
+            saleItems
+          )
+          return result
+        } catch (error: any) {
+          console.error('[SalesIpcHandler] Error creating offline sale:', error)
+          throw error
+        }
+      }
+    )
+
+    // Create direct offline sale (for non-registered customers)
+    ipcMain.handle(
+      IPC_CHANNELS.SALES.CREATE_DIRECT_OFFLINE,
+      async (
+        _,
+        {
+          grandTotal,
+          grandDiscountTotal,
+          customerPhoneNumber,
+          saleItems,
+        }: {
+          grandTotal: number
+          grandDiscountTotal: number
+          customerPhoneNumber: string
+          saleItems: Array<{
+            product_id: number
+            max_retail_price: number
+            sale_price: number
+            quantity: number
+          }>
+        }
+      ) => {
+        try {
+          console.log('[SalesIpcHandler] Creating direct offline sale')
+          const result = await this.salesService.createDirectOfflineSale(
+            grandTotal,
+            grandDiscountTotal,
+            customerPhoneNumber,
+            saleItems
+          )
+          return result
+        } catch (error: any) {
+          console.error('[SalesIpcHandler] Error creating direct offline sale:', error)
+          throw error
+        }
+      }
+    )
   }
 }

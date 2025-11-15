@@ -1,9 +1,11 @@
 import { Database } from 'better-sqlite3'
+import { API_CONFIG } from '../core/config/api.config'
 import { BatchesRepository } from '../database/repositories/batches.repository'
 import { SaleItemsRepository } from '../database/repositories/sale-items.repository'
 import { SalesRepository } from '../database/repositories/sales.repository'
 import { SaleItemEntity } from '../types/entities/sale-item.types'
 import { SaleEntity } from '../types/entities/sale.types'
+import { StorageService } from './storage.service'
 
 export interface CreateSalePayload {
   customer_phone_number?: string
@@ -26,11 +28,13 @@ export class SalesService {
   private salesRepo: SalesRepository
   private saleItemsRepo: SaleItemsRepository
   private batchesRepo: BatchesRepository
+  private storageService: StorageService
 
   constructor(private db: Database) {
     this.salesRepo = new SalesRepository(db)
     this.saleItemsRepo = new SaleItemsRepository(db)
     this.batchesRepo = new BatchesRepository(db)
+    this.storageService = new StorageService()
   }
 
   /**
@@ -254,5 +258,232 @@ export class SalesService {
   getUnsyncedCount(): number {
     const unsynced = this.getUnsyncedSales()
     return unsynced.length
+  }
+
+  /**
+   * Helper: Create payload for sale API
+   */
+  private createSalePayload(
+    grandTotal: number,
+    grandDiscountTotal: number,
+    customerPhoneNumber: string,
+    saleItems: Array<{
+      product_id: number
+      max_retail_price: number
+      sale_price: number
+      quantity: number
+    }>
+  ) {
+    return {
+      grand_total: grandTotal,
+      customer_phoneNumber: customerPhoneNumber,
+      grand_discount_total: grandDiscountTotal,
+      saleItems: saleItems.map((item) => ({
+        product_id: item.product_id,
+        max_retail_price: item.max_retail_price,
+        sale_price: item.sale_price,
+        quantity: item.quantity,
+      })),
+    }
+  }
+
+  /**
+   * Helper: Create local sale record in database
+   */
+  private createLocalSaleRecord(
+    customerPhoneNumber: string,
+    grandTotal: number,
+    grandDiscountTotal: number,
+    saleItems: Array<{
+      product_id: number
+      max_retail_price: number
+      sale_price: number
+      quantity: number
+    }>,
+    isSynced: 0 | 1 = 0
+  ): number {
+    const transaction = this.db.transaction(() => {
+      const saleData: Omit<SaleEntity, 'id' | 'created_at' | 'updated_at'> = {
+        customer_phone_number: customerPhoneNumber,
+        grand_total: grandTotal,
+        grand_discount_total: grandDiscountTotal,
+        is_sync: isSynced,
+        sale_date: new Date().toISOString().split('T')[0],
+        ...(isSynced === 1 && { synced_at: new Date().toISOString() }),
+      }
+
+      const sale = this.salesRepo.create(saleData)
+
+      // Create sale items
+      for (const saleItem of saleItems) {
+        if (saleItem.quantity > 0) {
+          this.allocateSaleItemsFromBatches(
+            sale.id,
+            saleItem.product_id,
+            saleItem.quantity,
+            saleItem.max_retail_price,
+            saleItem.sale_price
+          )
+        }
+      }
+
+      return sale.id
+    })
+
+    return transaction()
+  }
+
+  /**
+   * Create offline sale and broadcast to server
+   * Used for direct sales to non-registered customers
+   */
+  async createOfflineSaleAndBroadcast(
+    grandTotal: number,
+    grandDiscountTotal: number,
+    customerPhoneNumber: string,
+    saleItems: Array<{
+      product_id: number
+      max_retail_price: number
+      sale_price: number
+      quantity: number
+    }>
+  ): Promise<{ success: boolean; saleId?: number; message: string }> {
+    const token = this.storageService.getToken()
+    if (!token) {
+      throw new Error('Authentication required')
+    }
+
+    const payload = this.createSalePayload(
+      grandTotal,
+      grandDiscountTotal,
+      customerPhoneNumber,
+      saleItems
+    )
+    console.log('[SalesService] Broadcasting offline sale to server:', payload)
+
+    const endpoint = `${API_CONFIG.baseURL}/pharmacy/real-time-offline-sale-and-broadcast`
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('[SalesService] Broadcast failed:', errorText)
+
+        // Still create local sale even if broadcast fails
+        const saleId = this.createLocalSaleRecord(
+          customerPhoneNumber,
+          grandTotal,
+          grandDiscountTotal,
+          saleItems,
+          0
+        )
+
+        return {
+          success: false,
+          saleId,
+          message: 'Sale saved locally but failed to broadcast. Will retry on next sync.',
+        }
+      }
+
+      // Create local sale record with synced status
+      const saleId = this.createLocalSaleRecord(
+        customerPhoneNumber,
+        grandTotal,
+        grandDiscountTotal,
+        saleItems,
+        1
+      )
+
+      console.log('[SalesService] Sale created and broadcasted successfully. Sale ID:', saleId)
+
+      return {
+        success: true,
+        saleId,
+        message: 'Sale completed and sent to server',
+      }
+    } catch (error: any) {
+      console.error('[SalesService] Error broadcasting sale:', error)
+
+      // Create local sale even if network error
+      const saleId = this.createLocalSaleRecord(
+        customerPhoneNumber,
+        grandTotal,
+        grandDiscountTotal,
+        saleItems,
+        0
+      )
+
+      throw new Error(
+        `Failed to broadcast sale (saved locally). ${error.message}. Sale ID: ${saleId}`
+      )
+    }
+  }
+
+  /**
+   * Create direct offline sale and broadcast to API
+   * For direct sales to non-registered customers (no local save, API only)
+   */
+  async createDirectOfflineSale(
+    grandTotal: number,
+    grandDiscountTotal: number,
+    customerPhoneNumber: string,
+    saleItems: Array<{
+      product_id: number
+      max_retail_price: number
+      sale_price: number
+      quantity: number
+    }>
+  ): Promise<{ success: boolean; saleId?: string; message: string }> {
+    const token = this.storageService.getToken()
+    if (!token) {
+      throw new Error('Authentication required')
+    }
+
+    const endpoint = `${API_CONFIG.baseURL}/pharmacy/real-time-offline-sale-and-broadcast`
+    const payload = this.createSalePayload(
+      grandTotal,
+      grandDiscountTotal,
+      customerPhoneNumber,
+      saleItems
+    )
+
+    console.log('[SalesService] Broadcasting direct offline sale to server:', payload)
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('[SalesService] Direct broadcast failed:', errorText)
+        throw new Error(`Failed to broadcast sale: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log('[SalesService] Direct sale broadcasted successfully:', data)
+
+      return {
+        success: true,
+        saleId: data.id || data.sale_id,
+        message: 'Sale created and broadcasted successfully',
+      }
+    } catch (error: any) {
+      console.error('[SalesService] Error broadcasting direct sale:', error)
+      throw error
+    }
   }
 }

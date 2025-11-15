@@ -3,6 +3,9 @@ import { migration_001 } from '../migrations/001_initial_schema'
 import { migration_002 } from '../migrations/002_add_indexes'
 import { migration_003 } from '../migrations/003_add_stock_queue'
 import { migration_004 } from '../migrations/004_create_business_setups'
+import { migration_005 } from '../migrations/005_create_batches_table'
+import { migration_006 } from '../migrations/006_create_sales_table'
+import { migration_007 } from '../migrations/007_create_sale_items_table'
 
 export interface Migration {
   id: number
@@ -39,6 +42,27 @@ export class MigrationManager {
       name: migration_004.name,
       up: (db) => {
         migration_004.up.forEach((sql) => db.exec(sql))
+      },
+    },
+    {
+      id: 5,
+      name: migration_005.name,
+      up: (db) => {
+        migration_005.up.forEach((sql) => db.exec(sql))
+      },
+    },
+    {
+      id: 6,
+      name: migration_006.name,
+      up: (db) => {
+        migration_006.up.forEach((sql) => db.exec(sql))
+      },
+    },
+    {
+      id: 7,
+      name: migration_007.name,
+      up: (db) => {
+        migration_007.up.forEach((sql) => db.exec(sql))
       },
     },
   ]

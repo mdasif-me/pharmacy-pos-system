@@ -99,6 +99,58 @@ type StoredAuthData = {
   }
 }
 
+type OrderItem = {
+  id: number
+  product_id: number
+  product_name: string
+  generic_name: string
+  company_name: string
+  max_retail_price: number
+  sale_price: number
+  quantity: number
+  batch_number?: string
+}
+
+type OrderSearchResult = {
+  id: number
+  order_number: string
+  customer_name: string
+  customer_phone: string
+  customer_email: string
+  order_status: string
+  order_type: string
+  total_amount: number
+  created_at: string
+}
+
+type OrderDetailResponse = {
+  id: number
+  order_number: string
+  order_status: string
+  order_type: string
+  customer: {
+    id: number
+    name: string
+    phone: string
+    email: string
+    address?: string
+  }
+  items: OrderItem[]
+  total_amount: number
+  created_at: string
+}
+
+type OnlineSalePayload = {
+  orderId: number
+  pickupValue: 'self_pick' | 'rider_pick'
+  saleItems: Array<{
+    product_id: number
+    max_retail_price: number
+    sale_price: number
+    quantity: number
+  }>
+}
+
 type EventPayloadMapping = {
   // pharmacy pos api methods
   login: LoginResponse
@@ -164,6 +216,12 @@ interface Window {
     // Sales Management
     sales: {
       create: (payload: any) => Promise<any>
+      createOfflineSale: (
+        payload: any
+      ) => Promise<{ success: boolean; saleId?: number; message: string }>
+      createDirectOffline: (
+        payload: any
+      ) => Promise<{ success: boolean; saleId?: string; message: string }>
       get: (saleId: number) => Promise<any>
       getByCustomer: (phoneNumber: string) => Promise<any[]>
       getByDateRange: (fromDate: string, toDate: string) => Promise<any[]>
@@ -215,6 +273,10 @@ interface Window {
       ) => Promise<{ success: boolean }>
       getSaleMode: () => Promise<number>
       getBillMode: () => Promise<number>
+      getSalePrice: (
+        productId: number,
+        customSalePrice?: number
+      ) => Promise<{ salePrice: number; basedOn: 'custom' | 'discount' | 'peak_hour' }>
     }
 
     // Real-time event listeners
@@ -232,7 +294,13 @@ interface Window {
       callback: (data: { productId: number; discountPrice: number; peakHourPrice: number }) => void
     ) => () => void
 
-    // order methods
-    searchOrder: (orderNumber: string) => Promise<OrderDetail[]>
+    // Order Management - Search and online sale
+    orders: {
+      searchByNumber: (orderNumber: string) => Promise<OrderSearchResult[]>
+      getDetails: (orderId: number) => Promise<OrderDetailResponse>
+      createOnlineSale: (
+        payload: OnlineSalePayload
+      ) => Promise<{ success: boolean; message: string; saleId?: string }>
+    }
   }
 }

@@ -93,6 +93,19 @@ export class BusinessSetupIpcHandler {
         throw error
       }
     })
+
+    // Get sale price for a product based on sale mode
+    ipcMain.handle(
+      IPC_CHANNELS.BUSINESS_SETUP.GET_SALE_PRICE,
+      async (_, productId: number, customSalePrice?: number) => {
+        try {
+          return this.businessSetupService.getSalePrice(productId, customSalePrice)
+        } catch (error: any) {
+          console.error('Error getting sale price:', error)
+          throw error
+        }
+      }
+    )
   }
 
   /**

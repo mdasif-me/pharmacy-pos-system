@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
+import Mobile from '../../../assets/mobile.svg'
 import Search from '../../../assets/search.svg'
+import { generateAndDownloadPDF } from '../../../utils/pdfGenerator'
 import './PosView.css'
 
 interface Product {
@@ -12,11 +14,16 @@ interface Product {
   type: string
   quantity?: string
   generic_name?: string
+  discount_price?: number
+  peak_hour_price?: number
+  mediboy_offer_price?: number
 }
 
 interface CartItem extends Product {
   cartQuantity: number
   total: number
+  salePrice: number // The actual price used for this sale
+  selectedBatch?: any // Store selected batch info
 }
 
 interface StatCardProps {
@@ -52,9 +59,14 @@ export const PosView: React.FC = () => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingQuantity, setEditingQuantity] = useState('')
   const [orderSearchTerm, setOrderSearchTerm] = useState('')
-  const [orderDetails, setOrderDetails] = useState<OrderDetail[]>([])
+  const [orderDetails, setOrderDetails] = useState<any>(null)
+  const [availableBatches, setAvailableBatches] = useState<any[]>([])
+  const [selectedBatch, setSelectedBatch] = useState<any | null>(null)
+  const [isLoadingBatches, setIsLoadingBatches] = useState(false)
   const searchDebounceRef = useRef<number | undefined>(undefined)
   const searchCloseTimeoutRef = useRef<number | undefined>(undefined)
+  const orderSearchDebounceRef = useRef<number | undefined>(undefined)
+  const orderSearchCloseTimeoutRef = useRef<number | undefined>(undefined)
 
   const handleSearchFocus = () => {
     if (searchCloseTimeoutRef.current) {
@@ -97,19 +109,107 @@ export const PosView: React.FC = () => {
     setSuggestions([])
   }, [])
 
-  const handleSelectProduct = (product: Product) => {
+  const handleSelectProduct = async (product: Product) => {
     setSelectedProduct(product)
     setSearchTerm(product.product_name ?? '')
     setQuantityInput('')
+    setSelectedBatch(null)
     closeSuggestions()
+
+    // Fetch available batches for this product
+    try {
+      setIsLoadingBatches(true)
+      const response: any = await window.electron.batches.getAvailable(product.id)
+      console.log('[PosView] Batch response:', response, 'Type:', typeof response)
+
+      // Handle both direct array and wrapped response object
+      let batchesArray: any[] = []
+      if (Array.isArray(response)) {
+        batchesArray = response
+      } else if (response && typeof response === 'object' && response.data) {
+        batchesArray = Array.isArray(response.data) ? response.data : []
+      }
+
+      console.log(
+        '[PosView] Setting batches:',
+        batchesArray,
+        'IsArray:',
+        Array.isArray(batchesArray)
+      )
+      setAvailableBatches(batchesArray)
+    } catch (error) {
+      console.error('Error fetching batches:', error)
+      setAvailableBatches([])
+    } finally {
+      setIsLoadingBatches(false)
+    }
   }
 
-  const handleAddToCart = () => {
+  const [priceModalOpen, setPriceModalOpen] = useState(false)
+  const [pendingCartItem, setPendingCartItem] = useState<{
+    product: Product
+    qty: number
+    baseSalePrice: number
+    basedOn: 'custom' | 'discount' | 'peak_hour'
+  } | null>(null)
+  const [priceModalError, setPriceModalError] = useState('')
+  const [priceModalWarning, setPriceModalWarning] = useState('')
+  const [priceModalInput, setPriceModalInput] = useState('')
+
+  // Helper function to validate price in real-time
+  const validatePriceInput = (value: string) => {
+    if (!pendingCartItem) return
+
+    const price = Number.parseFloat(value)
+    const mrp = pendingCartItem.product.mrp
+    const mediboyPrice = pendingCartItem.product.mediboy_offer_price || 0
+    const basePrice = pendingCartItem.baseSalePrice
+
+    // Clear previous messages
+    setPriceModalError('')
+    setPriceModalWarning('')
+
+    if (value === '' || Number.isNaN(price)) {
+      return // Allow empty input, validate on confirm
+    }
+
+    if (price <= 0) {
+      setPriceModalError('Price must be greater than 0')
+      return
+    }
+
+    if (price > mrp) {
+      setPriceModalError(`❌ Price cannot exceed MRP (৳${mrp.toFixed(2)})`)
+      return
+    }
+
+    if (mediboyPrice > 0 && price <= mediboyPrice) {
+      setPriceModalError(`❌ Price must be > Mediboy Price (৳${mediboyPrice.toFixed(2)})`)
+      return
+    }
+
+    if (price < basePrice) {
+      setPriceModalWarning(
+        `⚠️ Below base price (৳${basePrice.toFixed(2)}) - You'll need to confirm`
+      )
+    }
+  }
+
+  const handleAddToCart = async () => {
     if (!selectedProduct) {
       Swal.fire({
         icon: 'error',
         title: 'No Product Selected',
         text: 'Please select a product before adding to the cart.',
+      })
+      return
+    }
+
+    if (Array.isArray(availableBatches) && availableBatches.length > 0 && !selectedBatch) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Batch Required',
+        text: 'Please select a batch for this product before adding to the cart.',
       })
       return
     }
@@ -145,16 +245,93 @@ export const PosView: React.FC = () => {
       return
     }
 
+    // Get sale price based on sale mode
+    try {
+      const priceInfo = await window.electron.businessSetup.getSalePrice(selectedProduct.id)
+      setPendingCartItem({
+        product: selectedProduct,
+        qty,
+        baseSalePrice: priceInfo.salePrice,
+        basedOn: priceInfo.basedOn,
+      })
+      setPriceModalInput(priceInfo.salePrice.toString())
+      setPriceModalError('')
+      setPriceModalOpen(true)
+    } catch (error: any) {
+      console.error('Error getting sale price:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Price Error',
+        text: error.message || 'Unable to determine sale price',
+      })
+    }
+  }
+
+  const handlePriceConfirm = async () => {
+    if (!pendingCartItem) return
+
+    const customPrice = Number.parseFloat(priceModalInput)
+
+    // Validation: Price must be a valid number greater than 0
+    if (Number.isNaN(customPrice) || customPrice <= 0) {
+      setPriceModalError('Please enter a valid price greater than 0')
+      return
+    }
+
+    // Validation: Price cannot exceed MRP
+    const mrp = pendingCartItem.product.mrp
+    if (customPrice > mrp) {
+      setPriceModalError(`Sale price cannot exceed MRP (৳${mrp.toFixed(2)})`)
+      return
+    }
+
+    // Validation: Sale price must be > mediboy offer price (if set)
+    const mediboyOfferPrice = pendingCartItem.product.mediboy_offer_price || 0
+    if (mediboyOfferPrice > 0 && customPrice <= mediboyOfferPrice) {
+      setPriceModalError(
+        `Sale price must be greater than mediboy offer price (৳${mediboyOfferPrice.toFixed(2)})`
+      )
+      return
+    }
+
+    // Validation: Sale price should not be less than base sale price (warning - allowed but informed)
+    if (customPrice < pendingCartItem.baseSalePrice) {
+      const confirmed = await Swal.fire({
+        icon: 'warning',
+        title: 'Price Below Base Price',
+        html: `<p>Sale price (৳${customPrice.toFixed(
+          2
+        )}) is below the base sale price (৳${pendingCartItem.baseSalePrice.toFixed(
+          2
+        )}).</p><p>Do you want to proceed?</p>`,
+        confirmButtonText: 'Yes, Proceed',
+        cancelButtonText: 'No, Edit',
+        showCancelButton: true,
+      })
+
+      if (!confirmed.isConfirmed) {
+        return
+      }
+    }
+
     const newItem: CartItem = {
-      ...selectedProduct,
-      cartQuantity: qty,
-      total: qty * (selectedProduct.mrp ?? 0),
+      ...pendingCartItem.product,
+      cartQuantity: pendingCartItem.qty,
+      salePrice: customPrice,
+      total: pendingCartItem.qty * customPrice,
+      selectedBatch: selectedBatch,
     }
     setCartItems([...cartItems, newItem])
 
     setQuantityInput('')
     setSelectedProduct(null)
     setSearchTerm('')
+    setSelectedBatch(null)
+    setAvailableBatches([])
+    setPriceModalOpen(false)
+    setPendingCartItem(null)
+    setPriceModalInput('')
+    setPriceModalError('')
   }
 
   const handleRemoveFromCart = (index: number) => {
@@ -186,22 +363,274 @@ export const PosView: React.FC = () => {
 
     const updatedCart = [...cartItems]
     updatedCart[index].cartQuantity = newQty
-    updatedCart[index].total = newQty * (item.mrp ?? 0)
+    updatedCart[index].total = newQty * updatedCart[index].salePrice
     setCartItems(updatedCart)
     setEditingIndex(null)
   }
 
-  const handleOrderSearch = async () => {
+  const handleOrderSearchFocus = () => {
+    if (orderSearchCloseTimeoutRef.current) {
+      window.clearTimeout(orderSearchCloseTimeoutRef.current)
+      orderSearchCloseTimeoutRef.current = undefined
+    }
+    setIsOrderSearchOpen(true)
+  }
+
+  const handleOrderSearchBlur = () => {
+    if (orderSearchCloseTimeoutRef.current) {
+      window.clearTimeout(orderSearchCloseTimeoutRef.current)
+    }
+    orderSearchCloseTimeoutRef.current = window.setTimeout(() => {
+      setIsOrderSearchOpen(false)
+      setOrderSearchResults([])
+    }, 150)
+  }
+
+  const handleOrderSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      setIsOrderSearchOpen(false)
+      setOrderSearchResults([])
+    }
+  }
+
+  const handleOrderSearchByNumber = useCallback(async (search: string) => {
+    if (search.length < 4) {
+      setOrderSearchResults([])
+      setIsOrderSearchOpen(false)
+      return
+    }
+    setIsOrderSearching(true)
+    setIsOrderSearchOpen(true) // Open immediately when searching starts
     try {
-      const orders = await window.electron.searchOrder(orderSearchTerm)
-      setOrderDetails(orders)
-    } catch (error) {
-      console.error('Order search failed:', error)
+      const results = await window.electron.orders.searchByNumber(search)
+      console.log('[PosView] Order search results:', results)
+      console.log('[PosView] Setting results and opening dropdown')
+      setOrderSearchResults(results || [])
+      setIsOrderSearchOpen(true) // Ensure it stays open after results
+    } catch (error: any) {
+      console.error('Error searching orders:', error)
       Swal.fire({
         icon: 'error',
-        title: 'Search Failed',
-        text: 'Unable to fetch order details. Please try again.',
+        title: 'Search Error',
+        text: 'Failed to search orders. Please try again.',
       })
+      setOrderSearchResults([])
+      setIsOrderSearchOpen(true)
+    } finally {
+      setIsOrderSearching(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (orderSearchDebounceRef.current) {
+      window.clearTimeout(orderSearchDebounceRef.current)
+    }
+
+    if (orderSearchTerm.length < 4) {
+      setOrderSearchResults([])
+      setIsOrderSearchOpen(false)
+      return
+    }
+
+    setIsOrderSearching(true)
+    orderSearchDebounceRef.current = window.setTimeout(() => {
+      handleOrderSearchByNumber(orderSearchTerm)
+    }, 500)
+
+    return () => {
+      if (orderSearchDebounceRef.current) {
+        window.clearTimeout(orderSearchDebounceRef.current)
+      }
+    }
+  }, [orderSearchTerm, handleOrderSearchByNumber])
+
+  const selectOrder = async (order: any) => {
+    setSelectedOrder(order)
+    setIsLoadingOrderDetails(true)
+    try {
+      const response: any = await window.electron.orders.getDetails(order.id)
+      console.log('[PosView] Order details response:', response)
+
+      // Handle nested response structure: { order: [{...}] }
+      let orderData = response
+      if (
+        response &&
+        response.order &&
+        Array.isArray(response.order) &&
+        response.order.length > 0
+      ) {
+        orderData = response.order[0]
+      }
+
+      // Transform API response to match component expectations
+      const transformedDetails = {
+        id: orderData.id,
+        order_number: orderData.orderNo || orderData.order_number,
+        order_status: orderData.status || orderData.order_status,
+        order_type: orderData.type || orderData.order_type,
+        customer: {
+          id: orderData.user_id || orderData.users?.id,
+          name: `${orderData.users?.firstName || ''} ${orderData.users?.lastName || ''}`.trim(),
+          phone: orderData.users?.phoneNumber || '',
+          email: orderData.users?.email || '',
+        },
+        items: orderData.order_items || orderData.items || [],
+        total_amount: orderData.offer_grandTotal || orderData.total_amount,
+        created_at: orderData.created_at,
+      }
+
+      // Transform order items to match component expectations
+      transformedDetails.items = transformedDetails.items.map((item: any) => ({
+        id: item.id,
+        product_id: item.product_id,
+        product_name: item.product?.productName || item.product_name,
+        generic_name: item.product?.generic_name || '',
+        company_name: item.product?.company?.name || item.company_name,
+        max_retail_price: item.product?.mrp || item.discount_unit_price || 0,
+        sale_price: item.offer_unit_price || item.sale_price || 0,
+        quantity: item.quantity,
+        batch_number: item.batch_number,
+      }))
+
+      setOrderDetails(transformedDetails)
+      setContactPhone(transformedDetails.customer.phone)
+
+      // Determine pickup method based on order type and status
+      if (
+        transformedDetails.order_type &&
+        transformedDetails.order_type.toLowerCase() === 'self_pickup'
+      ) {
+        setPickupMethod('self_pick')
+      } else if (
+        transformedDetails.order_type &&
+        transformedDetails.order_type.toLowerCase() === 'home_delivery'
+      ) {
+        if (
+          transformedDetails.order_status &&
+          transformedDetails.order_status.toLowerCase() === 'processing'
+        ) {
+          setPickupMethod('rider_pick')
+        }
+      }
+    } catch (error: any) {
+      console.error('Error fetching order details:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load order details. Please try again.',
+      })
+    } finally {
+      setIsLoadingOrderDetails(false)
+    }
+    setOrderSearchResults([])
+    setIsOrderSearchOpen(false)
+  }
+
+  const handleOrderSale = async () => {
+    if (!selectedOrder || !orderDetails) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Please select an order first.',
+      })
+      return
+    }
+
+    if (!pickupMethod) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Pickup method not determined from order details.',
+      })
+      return
+    }
+
+    if (cartItems.length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Empty Cart',
+        text: 'Please add items to the cart before completing the sale.',
+      })
+      return
+    }
+
+    const { grandTotal: calcTotal, grandDiscountTotal: calcDiscount } = calculateTotals()
+
+    // Prepare sale items
+    const saleItems = cartItems
+      .filter((item) => item.cartQuantity > 0)
+      .map((item) => ({
+        product_id: item.id,
+        max_retail_price: item.mrp,
+        sale_price: item.salePrice,
+        quantity: item.cartQuantity,
+      }))
+
+    if (saleItems.length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Sale',
+        text: 'No valid items in cart to process.',
+      })
+      return
+    }
+
+    setIsSalesProcessing(true)
+
+    try {
+      const result = await window.electron.orders.createOnlineSale({
+        orderId: selectedOrder.id,
+        pickupValue: pickupMethod,
+        saleItems,
+      })
+
+      if (result.success) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Online Sale Completed',
+          html: `
+            <div style="text-align: left; font-size: 14px;">
+              <p><strong>Order Number:</strong> ${selectedOrder.order_number}</p>
+              <p><strong>Sale ID:</strong> ${result.saleId}</p>
+              <p><strong>Total MRP:</strong> ৳${calcTotal.toFixed(2)}</p>
+              <p><strong>Total Discount:</strong> ৳${calcDiscount.toFixed(2)}</p>
+              <p><strong>Pickup Method:</strong> ${
+                pickupMethod === 'self_pick' ? 'Self-Pick' : 'Rider Pick'
+              }</p>
+              <p style="color: #28a745; margin-top: 10px;">
+                ${result.message}
+              </p>
+            </div>
+          `,
+          confirmButtonText: 'OK',
+        }).then(() => {
+          // Reset form
+          setCartItems([])
+          setSelectedOrder(null)
+          setOrderDetails(null)
+          setOrderSearchTerm('')
+          setPickupMethod(null)
+          setSelectedProduct(null)
+          setQuantityInput('')
+          setSearchTerm('')
+        })
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Sale Partially Completed',
+          text: result.message || 'Sale was completed but with warnings.',
+        })
+      }
+    } catch (error: any) {
+      console.error('Error completing online sale:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Sale Error',
+        text: error.message || 'Failed to complete the online sale. Please try again.',
+      })
+    } finally {
+      setIsSalesProcessing(false)
     }
   }
 
@@ -256,27 +685,276 @@ export const PosView: React.FC = () => {
     setSuggestions([])
   }, [isSearchOpen])
 
+  // Order search and online sale state
+  const [selectedOrder, setSelectedOrder] = useState<any>(null)
+  const [isLoadingOrderDetails, setIsLoadingOrderDetails] = useState(false)
+  const [pickupMethod, setPickupMethod] = useState<'self_pick' | 'rider_pick' | null>(null)
+  const [orderSearchResults, setOrderSearchResults] = useState<any[]>([])
+  const [isOrderSearching, setIsOrderSearching] = useState(false)
+  const [isOrderSearchOpen, setIsOrderSearchOpen] = useState(false)
+
+  const [contactPhone, setContactPhone] = useState('')
+  const [isSalesProcessing, setIsSalesProcessing] = useState(false)
+
   const calculateTotals = () => {
-    const total = cartItems.reduce((sum, item) => sum + item.total, 0)
-    const discount = total * 0.1 // Assuming a 10% discount
-    const net = total - discount
-    return { total, discount, net }
+    if (cartItems.length === 0) {
+      return { grandTotal: 0, grandDiscountTotal: 0, netPrice: 0 }
+    }
+
+    // Grand Total MRP = sum of (MRP * quantity) for all items
+    const grandTotal = cartItems.reduce((sum, item) => {
+      return sum + item.mrp * item.cartQuantity
+    }, 0)
+
+    // Grand Discount Total = sum of ((MRP - sale_price) * quantity) for all items
+    const grandDiscountTotal = cartItems.reduce((sum, item) => {
+      const discountPerUnit = item.mrp - item.salePrice
+      return sum + discountPerUnit * item.cartQuantity
+    }, 0)
+
+    // Net Price = Grand Total - Grand Discount Total
+    const netPrice = grandTotal - grandDiscountTotal
+
+    return { grandTotal, grandDiscountTotal, netPrice }
   }
 
-  const { total, discount, net } = calculateTotals()
+  const handleSoldOut = async () => {
+    if (cartItems.length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Empty Cart',
+        text: 'Please add items to the cart before completing the sale.',
+      })
+      return
+    }
+
+    if (!contactPhone.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Information',
+        text: 'Please enter customer phone number for the sale.',
+      })
+      return
+    }
+
+    const { grandTotal, grandDiscountTotal, netPrice } = calculateTotals()
+
+    // Prepare sale items
+    const saleItems = cartItems
+      .filter((item) => item.cartQuantity > 0)
+      .map((item) => ({
+        product_id: item.id,
+        max_retail_price: item.mrp,
+        sale_price: item.salePrice,
+        quantity: item.cartQuantity,
+      }))
+
+    if (saleItems.length === 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Sale',
+        text: 'No valid items in cart to process.',
+      })
+      return
+    }
+
+    setIsSalesProcessing(true)
+
+    try {
+      const result = await window.electron.sales.createDirectOffline({
+        grandTotal,
+        grandDiscountTotal,
+        customerPhoneNumber: contactPhone.trim(),
+        saleItems,
+      })
+
+      if (result.success) {
+        // Show success message with bill details
+        Swal.fire({
+          icon: 'success',
+          title: 'Sale Completed Successfully',
+          html: `
+            <div style="text-align: left; font-size: 14px;">
+              <p><strong>Sale ID:</strong> ${result.saleId}</p>
+              <p><strong>Total MRP:</strong> ৳${grandTotal.toFixed(2)}</p>
+              <p><strong>Total Discount:</strong> ৳${grandDiscountTotal.toFixed(2)}</p>
+              <p><strong>Net Amount:</strong> ৳${netPrice.toFixed(2)}</p>
+              <p><strong>Customer:</strong> ${contactPhone}</p>
+              <p style="color: #28a745; margin-top: 10px;">
+                ${result.message}
+              </p>
+            </div>
+          `,
+          confirmButtonText: 'Download PDF Bill',
+          cancelButtonText: 'New Sale',
+          showCancelButton: true,
+        }).then((confirmResult) => {
+          if (confirmResult.isConfirmed) {
+            // Generate and download PDF bill
+            try {
+              generateAndDownloadPDF(
+                {
+                  saleId: result.saleId,
+                  customerPhone: contactPhone,
+                  items: cartItems.map((item) => ({
+                    product_name: item.product_name,
+                    company_name: item.company_name,
+                    quantity: item.cartQuantity,
+                    mrp: item.mrp,
+                    salePrice: item.salePrice,
+                    total: item.total,
+                    selectedBatch: item.selectedBatch,
+                  })),
+                  grandTotal,
+                  grandDiscountTotal,
+                  netPrice,
+                  saleDate: new Date().toLocaleString('en-BD'),
+                },
+                'Mediboy Pharmacy'
+              ).catch((error: any) => {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'PDF Generation Error',
+                  text: 'Failed to generate PDF bill. Please try again.',
+                })
+                console.error('PDF generation error:', error)
+              })
+            } catch (error) {
+              console.error('Error generating PDF:', error)
+            }
+          }
+
+          // Reset cart and form
+          setCartItems([])
+          setContactPhone('')
+          setQuantityInput('')
+          setSelectedProduct(null)
+          setSearchTerm('')
+        })
+      } else {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Sale Saved Locally',
+          html: `
+            <div style="text-align: left; font-size: 14px;">
+              <p><strong>Sale ID:</strong> ${result.saleId}</p>
+              <p><strong>Status:</strong> ${result.message}</p>
+              <p><strong>Total MRP:</strong> ৳${grandTotal.toFixed(2)}</p>
+              <p><strong>Total Discount:</strong> ৳${grandDiscountTotal.toFixed(2)}</p>
+              <p><strong>Net Amount:</strong> ৳${netPrice.toFixed(2)}</p>
+              <p style="color: #ff9800; margin-top: 10px;">
+                Will sync when connection is available
+              </p>
+            </div>
+          `,
+          confirmButtonText: 'Download PDF Bill',
+          cancelButtonText: 'New Sale',
+          showCancelButton: true,
+        }).then((confirmResult) => {
+          if (confirmResult.isConfirmed) {
+            // Generate and download PDF bill for local save
+            try {
+              generateAndDownloadPDF(
+                {
+                  saleId: result.saleId,
+                  customerPhone: contactPhone,
+                  items: cartItems.map((item) => ({
+                    product_name: item.product_name,
+                    company_name: item.company_name,
+                    quantity: item.cartQuantity,
+                    mrp: item.mrp,
+                    salePrice: item.salePrice,
+                    total: item.total,
+                    selectedBatch: item.selectedBatch,
+                  })),
+                  grandTotal,
+                  grandDiscountTotal,
+                  netPrice,
+                  saleDate: new Date().toLocaleString('en-BD'),
+                },
+                'Mediboy Pharmacy'
+              ).catch((error: any) => {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'PDF Generation Error',
+                  text: 'Failed to generate PDF bill. Please try again.',
+                })
+                console.error('PDF generation error:', error)
+              })
+            } catch (error) {
+              console.error('Error generating PDF:', error)
+            }
+          }
+
+          // Reset cart and form
+          setCartItems([])
+          setContactPhone('')
+          setQuantityInput('')
+          setSelectedProduct(null)
+          setSearchTerm('')
+        })
+      }
+    } catch (error: any) {
+      console.error('Error completing sale:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Sale Error',
+        text: error.message || 'Failed to complete the sale. Please try again.',
+      })
+    } finally {
+      setIsSalesProcessing(false)
+    }
+  }
+
+  const { grandTotal, grandDiscountTotal, netPrice } = calculateTotals()
 
   return (
     <main>
       <section className="pos-header">
         <div className="select-batch-bar">
           <h2>BTC</h2>
-          <input type="search" placeholder="select batch  " />
-          <h2>ADD</h2>
-        </div>
-        <div className="price-bar">
-          <h1>$</h1>
-          <input type="number" />
-          <h2>10%</h2>
+          <select
+            value={selectedBatch ? selectedBatch.id : ''}
+            onChange={(e) => {
+              const batchId = e.target.value
+              if (batchId && Array.isArray(availableBatches)) {
+                const batch = availableBatches.find((b) => b.id === Number(batchId))
+                setSelectedBatch(batch || null)
+              } else {
+                setSelectedBatch(null)
+              }
+            }}
+            disabled={
+              isLoadingBatches ||
+              !Array.isArray(availableBatches) ||
+              availableBatches.length === 0 ||
+              !selectedProduct
+            }
+            style={{
+              padding: '8px 12px',
+              borderRadius: '4px',
+              border: '1px solid #ddd',
+              backgroundColor:
+                !Array.isArray(availableBatches) || availableBatches.length === 0
+                  ? '#f5f5f5'
+                  : 'white',
+              cursor:
+                !Array.isArray(availableBatches) || availableBatches.length === 0
+                  ? 'not-allowed'
+                  : 'pointer',
+              fontSize: '14px',
+              minWidth: '200px',
+            }}
+          >
+            <option value="">{isLoadingBatches ? 'Loading batches...' : 'Select a batch'}</option>
+            {Array.isArray(availableBatches) && availableBatches.length > 0
+              ? availableBatches.map((batch) => (
+                  <option key={batch.id} value={batch.id}>
+                    {batch.batch_no} (Available: {batch.available}, Exp: {batch.exp})
+                  </option>
+                ))
+              : null}
+          </select>
         </div>
       </section>
       <section>
@@ -353,12 +1031,191 @@ export const PosView: React.FC = () => {
               Add
             </button>
           </div>
+
+          {/* Price Modal */}
+          {priceModalOpen && pendingCartItem && (
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                zIndex: 10000,
+              }}
+              onClick={() => {
+                setPriceModalOpen(false)
+                setPendingCartItem(null)
+                setPriceModalError('')
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '8px',
+                  padding: '24px',
+                  maxWidth: '400px',
+                  width: '90%',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h2 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: 600 }}>
+                  Set Sale Price
+                </h2>
+
+                <div style={{ marginBottom: '16px' }}>
+                  <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+                    <strong>Product:</strong> {pendingCartItem.product.product_name}
+                  </p>
+                  <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+                    <strong>MRP:</strong> ৳{pendingCartItem.product.mrp}
+                  </p>
+                  <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>
+                    <strong>Base Sale Price ({pendingCartItem.basedOn}):</strong> ৳
+                    {pendingCartItem.baseSalePrice.toFixed(2)}
+                  </p>
+                  {pendingCartItem.product.mediboy_offer_price && (
+                    <p style={{ fontSize: '14px', color: '#d97706', marginBottom: '8px' }}>
+                      <strong>⚠️ Mediboy Offer Price (Min Required):</strong> ৳
+                      {pendingCartItem.product.mediboy_offer_price.toFixed(2)}
+                    </p>
+                  )}
+                  <p style={{ fontSize: '12px', color: '#999', marginBottom: '0px' }}>
+                    💡 Hint: Price must be between Mediboy Price & MRP
+                  </p>
+                </div>
+
+                <label style={{ display: 'block', marginBottom: '16px' }}>
+                  <span
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: 500,
+                      display: 'block',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    Sale Price (BDT)
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={priceModalInput}
+                    onChange={(e) => {
+                      setPriceModalInput(e.target.value)
+                      validatePriceInput(e.target.value)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      border: priceModalError
+                        ? '2px solid #ef4444'
+                        : priceModalWarning
+                        ? '2px solid #f59e0b'
+                        : '1px solid #d1d5db',
+                      borderRadius: '4px',
+                      fontSize: '14px',
+                      boxSizing: 'border-box',
+                      backgroundColor: priceModalError
+                        ? '#fef2f2'
+                        : priceModalWarning
+                        ? '#fffbf0'
+                        : 'white',
+                    }}
+                    onFocus={(e) => e.target.select()}
+                  />
+                </label>
+
+                {priceModalError && (
+                  <div
+                    style={{
+                      marginBottom: '16px',
+                      padding: '12px',
+                      backgroundColor: '#fee2e2',
+                      border: '1px solid #fecaca',
+                      borderRadius: '4px',
+                      color: '#dc2626',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {priceModalError}
+                  </div>
+                )}
+
+                {!priceModalError && priceModalWarning && (
+                  <div
+                    style={{
+                      marginBottom: '16px',
+                      padding: '12px',
+                      backgroundColor: '#fffbf0',
+                      border: '1px solid #fcd34d',
+                      borderRadius: '4px',
+                      color: '#d97706',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    {priceModalWarning}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => {
+                      setPriceModalOpen(false)
+                      setPendingCartItem(null)
+                      setPriceModalError('')
+                      setPriceModalInput('')
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#e5e7eb',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handlePriceConfirm}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 500,
+                    }}
+                  >
+                    Confirm
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="pos-account-section">
-            <h1>{net.toFixed(2)}</h1>
+            <h1>{netPrice.toFixed(2)}</h1>
             <div className="input-account">
-              <input type="text" placeholder="Contact number for retarget-sale" />
+              <input
+                type="text"
+                placeholder="Contact number"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+              />
               <div className="search-icon">
-                <img src={Search} alt="" />
+                <img src={Mobile} alt="" />
               </div>
             </div>
           </div>
@@ -420,9 +1277,14 @@ export const PosView: React.FC = () => {
                           <p style={{ fontSize: '0.8rem', color: '#666', margin: '2px 0 0 0' }}>
                             {item.company_name}
                           </p>
+                          {item.selectedBatch && (
+                            <p style={{ fontSize: '0.75rem', color: '#999', margin: '2px 0 0 0' }}>
+                              Batch: {item.selectedBatch.batch_no}
+                            </p>
+                          )}
                         </div>
                       </td>
-                      <td>৳{item.mrp}</td>
+                      <td>৳{item.salePrice.toFixed(2)}</td>
                       <td>
                         {editingIndex === index ? (
                           <input
@@ -506,23 +1368,56 @@ export const PosView: React.FC = () => {
           <div className="input-order">
             <div className="input-order-bill">
               <div className="input-order-section">
-                <div className="product-order-search">
-                  <input
-                    type="search"
-                    placeholder="Order Number ?"
-                    value={orderSearchTerm}
-                    onChange={(e) => setOrderSearchTerm(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleOrderSearch()
-                      }
-                    }}
-                  />
-                  <div className="search-icon">
+                <div className="formSearch">
+                  <div className="searchIcon">
                     <img src={Search} alt="search" />
                   </div>
+                  <input
+                    type="text"
+                    placeholder="Search by order number..."
+                    value={orderSearchTerm}
+                    onChange={(event) => setOrderSearchTerm(event.target.value)}
+                    onFocus={handleOrderSearchFocus}
+                    onBlur={handleOrderSearchBlur}
+                    onKeyDown={handleOrderSearchKeyDown}
+                    autoComplete="off"
+                  />
+                  {isOrderSearchOpen && (
+                    <ul className="search-suggestions">
+                      {isOrderSearching && orderSearchResults.length === 0 && (
+                        <li className="search-suggestion loading">searching...</li>
+                      )}
+                      {!isOrderSearching && orderSearchResults.length === 0 && (
+                        <li className="search-suggestion empty">no orders found</li>
+                      )}
+                      {orderSearchResults.map((order: any) => {
+                        return (
+                          <li
+                            key={order.id}
+                            className="search-suggestion"
+                            onMouseDown={(event) => {
+                              event.preventDefault()
+                              selectOrder(order)
+                            }}
+                          >
+                            <div className="search-suggestion-main">
+                              <span className="search-suggestion-name">{order.order_number}</span>
+                            </div>
+                            <div className="search-suggestion-details">
+                              <span className="search-suggestion-company">
+                                {order.customer_name}
+                              </span>
+                              <span className="search-suggestion-price">৳{order.total_amount}</span>
+                            </div>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
                 </div>
-                <button className="input-order-button">Return Confirm</button>
+                <button className="input-order-button" disabled>
+                  Return Confirm
+                </button>
               </div>
 
               {/* === Bottom Info Bar === */}
@@ -533,16 +1428,68 @@ export const PosView: React.FC = () => {
                 </div>
                 <div className="phone">
                   <img src="src/assets/user-alt.svg" alt="" />
-                  <p>01616815056</p>
+                  <p>
+                    {selectedOrder && orderDetails ? (
+                      <span>
+                        {orderDetails.customer.name} ({orderDetails.customer.phone})
+                      </span>
+                    ) : (
+                      '0123456789'
+                    )}
+                  </p>
                 </div>
-                <div className="delivery">
+                {/* <div className="delivery">
                   <img src="src/assets/vector.svg" alt="" />
-                  <p>Home-Delivery</p>
-                </div>
+                  <p>
+                    {selectedOrder && orderDetails
+                      ? orderDetails.order_type === 'self_pickup'
+                        ? 'Self-Pickup'
+                        : 'Home-Delivery'
+                      : 'N/A'}
+                  </p>
+                </div> */}
+                <img src="src/assets/vector.svg" alt="" />
+                {pickupMethod === 'self_pick' ? (
+                  <button
+                    onClick={handleOrderSale}
+                    disabled={isSalesProcessing || cartItems.length === 0}
+                    style={{
+                      width: 'fit-content',
+                      padding: '3px',
+                      backgroundColor: '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: isSalesProcessing ? 'not-allowed' : 'pointer',
+                      fontWeight: 400,
+                      opacity: isSalesProcessing ? 0.6 : 1,
+                    }}
+                  >
+                    {isSalesProcessing ? 'Processing...' : 'Self-Picked'}
+                  </button>
+                ) : pickupMethod === 'rider_pick' ? (
+                  <button
+                    onClick={handleOrderSale}
+                    disabled={isSalesProcessing || cartItems.length === 0}
+                    style={{
+                      width: 'fit-content',
+                      padding: '3px',
+                      backgroundColor: '#0ea5e9',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '3px',
+                      cursor: isSalesProcessing ? 'not-allowed' : 'pointer',
+                      fontWeight: 400,
+                      opacity: isSalesProcessing ? 0.6 : 1,
+                    }}
+                  >
+                    {isSalesProcessing ? 'Processing...' : 'Rider-Picked'}
+                  </button>
+                ) : null}
               </div>
             </div>
             <div className="bill-section">
-              <span>1025</span>
+              <span>{selectedOrder && orderDetails ? orderDetails.order_number : '000000'}</span>
             </div>
           </div>
 
@@ -559,24 +1506,29 @@ export const PosView: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {orderDetails.length === 0 ? (
+                {!selectedOrder || !orderDetails ? (
                   <tr>
-                    <td>No product selected</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td colSpan={5} style={{ textAlign: 'center' }}>
+                      No order selected
+                    </td>
                   </tr>
-                ) : (
-                  orderDetails.map((order, index) => (
+                ) : orderDetails.items && orderDetails.items.length > 0 ? (
+                  // Show order items from selected order
+                  orderDetails.items.map((item: any, index: number) => (
                     <tr key={index}>
-                      <td>{order.productDescription}</td>
-                      <td>{order.companyName}</td>
-                      <td>{order.rate}</td>
-                      <td>{order.quantity}</td>
-                      <td>{order.total}</td>
+                      <td>{item.product_name}</td>
+                      <td>{item.company_name}</td>
+                      <td>৳{item.max_retail_price}</td>
+                      <td>{item.quantity}</td>
+                      <td>৳{(item.max_retail_price * item.quantity).toFixed(2)}</td>
                     </tr>
                   ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center' }}>
+                      No items in selected order
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -586,11 +1538,21 @@ export const PosView: React.FC = () => {
           <p className="border"></p>
           <div className="Order-price">
             <div className="total">
-              <span>Total: ৳{total.toFixed(2)}</span>
-              <span>Discount: ৳{discount.toFixed(2)}</span>
-              <span>Net: ৳{net.toFixed(2)}</span>
+              <span>Total MRP: ৳{grandTotal.toFixed(2)}</span>
+              <span>Total Discount: ৳{grandDiscountTotal.toFixed(2)}</span>
+              <span>Net Price: ৳{netPrice.toFixed(2)}</span>
             </div>
-            <h2 className="sold-out-btn">SOLD OUT</h2>
+            <button
+              className="sold-out-btn"
+              onClick={handleSoldOut}
+              disabled={isSalesProcessing || cartItems.length === 0}
+              style={{
+                cursor: isSalesProcessing ? 'not-allowed' : 'pointer',
+                opacity: isSalesProcessing ? 0.6 : 1,
+              }}
+            >
+              {isSalesProcessing ? 'Processing...' : 'SOLD OUT'}
+            </button>
           </div>
         </div>
       </section>

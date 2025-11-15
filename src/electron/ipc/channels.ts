@@ -62,6 +62,8 @@ export const IPC_CHANNELS = {
   // sales channels
   SALES: {
     CREATE: 'sales:create',
+    CREATE_OFFLINE_SALE: 'sales:createOfflineSale',
+    CREATE_DIRECT_OFFLINE: 'sales:createDirectOffline',
     GET: 'sales:get',
     GET_BY_CUSTOMER: 'sales:getByCustomer',
     GET_BY_DATE_RANGE: 'sales:getByDateRange',
@@ -105,6 +107,14 @@ export const IPC_CHANNELS = {
     UPDATE_PRICE: 'business-setup:updatePrice',
     GET_SALE_MODE: 'business-setup:getSaleMode',
     GET_BILL_MODE: 'business-setup:getBillMode',
+    GET_SALE_PRICE: 'business-setup:getSalePrice',
+  },
+
+  // order channels
+  ORDERS: {
+    SEARCH_BY_NUMBER: 'orders:searchByNumber',
+    GET_DETAILS: 'orders:getDetails',
+    CREATE_ONLINE_SALE: 'orders:createOnlineSale',
   },
 } as const
 
