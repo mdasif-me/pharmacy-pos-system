@@ -477,6 +477,7 @@ export const PosView: React.FC = () => {
         },
         items: orderData.order_items || orderData.items || [],
         total_amount: orderData.offer_grandTotal || orderData.total_amount,
+        offer_total_amount: orderData.offer_total_amount,
         created_at: orderData.created_at,
       }
 
@@ -1489,7 +1490,9 @@ export const PosView: React.FC = () => {
               </div>
             </div>
             <div className="bill-section">
-              <span>{selectedOrder && orderDetails ? orderDetails.order_number : '000000'}</span>
+              <span>
+                {selectedOrder && orderDetails ? orderDetails.offer_total_amount : '000000'}
+              </span>
             </div>
           </div>
 
