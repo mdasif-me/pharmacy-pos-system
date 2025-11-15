@@ -116,6 +116,15 @@ export const IPC_CHANNELS = {
     GET_DETAILS: 'orders:getDetails',
     CREATE_ONLINE_SALE: 'orders:createOnlineSale',
   },
+
+  // user channels
+  USER: {
+    SEARCH_BY_PHONE: 'user:searchByPhoneNumber',
+    GET_BY_ID: 'user:getById',
+    GET_ALL: 'user:getAll',
+    SEARCH: 'user:search',
+    CACHE_LOCALLY: 'user:cacheLocally',
+  },
 } as const
 
 export type IpcChannel = string

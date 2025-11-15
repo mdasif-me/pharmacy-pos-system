@@ -613,6 +613,10 @@ export const PosView: React.FC = () => {
           setOrderSearchTerm('')
           setPickupMethod(null)
           setSelectedProduct(null)
+          setFoundUser(null)
+          setUserNotFound(false)
+          setUserSearchTerm('')
+          setContactPhone('')
           setQuantityInput('')
           setSearchTerm('')
         })
@@ -696,6 +700,10 @@ export const PosView: React.FC = () => {
 
   const [contactPhone, setContactPhone] = useState('')
   const [isSalesProcessing, setIsSalesProcessing] = useState(false)
+  const [userSearchTerm, setUserSearchTerm] = useState('')
+  const [foundUser, setFoundUser] = useState<any>(null)
+  const [isSearchingUser, setIsSearchingUser] = useState(false)
+  const [userNotFound, setUserNotFound] = useState(false)
 
   const calculateTotals = () => {
     if (cartItems.length === 0) {
@@ -717,6 +725,62 @@ export const PosView: React.FC = () => {
     const netPrice = grandTotal - grandDiscountTotal
 
     return { grandTotal, grandDiscountTotal, netPrice }
+  }
+
+  /**
+   * Search user by phone number
+   */
+  const handleSearchUserByPhone = async () => {
+    const phoneNumber = userSearchTerm.trim()
+
+    if (!phoneNumber) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Input Required',
+        text: 'Please enter a phone number to search',
+      })
+      return
+    }
+
+    setIsSearchingUser(true)
+    setUserNotFound(false)
+    setFoundUser(null)
+
+    try {
+      const result: any = await window.electron.users.searchByPhoneNumber(phoneNumber)
+      console.log('[PosView] User search response:', result)
+
+      if (result.success && result.user) {
+        setFoundUser(result.user)
+        setContactPhone(result.user.phoneNumber)
+        setUserSearchTerm('')
+        Swal.fire({
+          icon: 'success',
+          title: 'User Found',
+          text: `${result.user.firstName} ${result.user.lastName}`,
+          timer: 1500,
+        })
+      } else {
+        setUserNotFound(true)
+        setFoundUser(null)
+        Swal.fire({
+          icon: 'info',
+          title: 'User Not Found',
+          text: result.message || 'No user found with this phone number',
+          timer: 2000,
+        })
+      }
+    } catch (error: any) {
+      console.error('[PosView] Error searching user:', error)
+      Swal.fire({
+        icon: 'error',
+        title: 'Search Error',
+        text: 'Failed to search user. Please try again.',
+      })
+      setUserNotFound(true)
+    } finally {
+      setIsSearchingUser(false)
+    }
   }
 
   const handleSoldOut = async () => {
@@ -762,12 +826,156 @@ export const PosView: React.FC = () => {
     setIsSalesProcessing(true)
 
     try {
-      const result = await window.electron.sales.createDirectOffline({
-        grandTotal,
-        grandDiscountTotal,
-        customerPhoneNumber: contactPhone.trim(),
-        saleItems,
-      })
+      let result: any
+      const { grandTotal, grandDiscountTotal, netPrice } = calculateTotals()
+
+      // If user was found, use real-time direct sale API, otherwise use offline API
+      if (foundUser && foundUser.id) {
+        console.log('[PosView] Creating direct online sale for user ID:', foundUser.id)
+
+        // Get auth token
+        const authTokenData = await window.electron.getAuthToken()
+        if (!authTokenData || !authTokenData.token) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Authentication Error',
+            text: 'No authentication token found. Please login again.',
+          })
+          setIsSalesProcessing(false)
+          return
+        }
+
+        const authToken = authTokenData.token
+        console.log('[PosView] Using auth token for API request')
+
+        // Prepare payload for online direct sale (with correct field names)
+        const onlineSalePayload = {
+          grand_total: grandTotal,
+          customer_phoneNumber: contactPhone.trim(),
+          user_id: foundUser.id,
+          grand_discount_total: grandDiscountTotal,
+          saleItems: saleItems.map((item) => ({
+            product_id: item.product_id,
+            max_retail_price: item.max_retail_price,
+            sale_price: item.sale_price,
+            quantity: item.quantity,
+          })),
+        }
+
+        try {
+          const response = await fetch(
+            `${
+              import.meta.env.VITE_API_BASE_URL
+            }/pharmacy/real-time-direct-sale-on-mediboy-user-and-broadcast`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${authToken}`,
+              },
+              body: JSON.stringify(onlineSalePayload),
+            }
+          )
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error('[PosView] Online sale API error:', response.status, errorText)
+            throw new Error(`API error: ${response.status} ${response.statusText}`)
+          }
+
+          const onlineResult = await response.json()
+          console.log('[PosView] Online sale response:', onlineResult)
+
+          result = {
+            success: onlineResult.success || onlineResult.success === 'success',
+            saleId: onlineResult.id || onlineResult.sale_id || onlineResult.saleId,
+            message: onlineResult.message || 'Online sale created successfully',
+          }
+        } catch (apiError: any) {
+          console.error('[PosView] Online sale API error:', apiError)
+          Swal.fire({
+            icon: 'error',
+            title: 'Online Sale Failed',
+            text: `Failed to create online sale: ${apiError.message}. Creating offline record instead.`,
+          })
+
+          // Fallback to offline sale if online fails
+          result = await window.electron.sales.createDirectOffline({
+            grandTotal,
+            grandDiscountTotal,
+            customerPhoneNumber: contactPhone.trim(),
+            saleItems,
+            mediboy_customer_id: foundUser?.id || null,
+          })
+        }
+      } else {
+        // User not found - create offline sale via API
+        console.log('[PosView] User not found - Creating offline sale via API')
+
+        const authTokenData = await window.electron.getAuthToken()
+        if (!authTokenData || !authTokenData.token) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Authentication Error',
+            text: 'No authentication token found. Please login again.',
+          })
+          setIsSalesProcessing(false)
+          return
+        }
+
+        const authToken = authTokenData.token
+
+        // Prepare payload for offline sale
+        const offlineSalePayload = {
+          grand_total: grandTotal,
+          customer_phoneNumber: contactPhone.trim(),
+          grand_discount_total: grandDiscountTotal,
+          saleItems: saleItems.map((item) => ({
+            product_id: item.product_id,
+            max_retail_price: item.max_retail_price,
+            sale_price: item.sale_price,
+            quantity: item.quantity,
+          })),
+        }
+
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_API_BASE_URL}/pharmacy/real-time-offline-sale-and-broadcast`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${authToken}`,
+              },
+              body: JSON.stringify(offlineSalePayload),
+            }
+          )
+
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error('[PosView] Offline sale API error:', response.status, errorText)
+            throw new Error(`API error: ${response.status} ${response.statusText}`)
+          }
+
+          const offlineResult = await response.json()
+          console.log('[PosView] Offline sale response:', offlineResult)
+
+          result = {
+            success: offlineResult.success || offlineResult.success === 'success',
+            saleId: offlineResult.id || offlineResult.sale_id || offlineResult.saleId,
+            message: offlineResult.message || 'Offline sale created successfully',
+          }
+        } catch (apiError: any) {
+          console.error('[PosView] Offline sale API error:', apiError)
+          Swal.fire({
+            icon: 'error',
+            title: 'Offline Sale Failed',
+            text: `Failed to create offline sale: ${apiError.message}. Please try again.`,
+          })
+          setIsSalesProcessing(false)
+          return
+        }
+      }
 
       if (result.success) {
         // Show success message with bill details
@@ -831,6 +1039,9 @@ export const PosView: React.FC = () => {
           setQuantityInput('')
           setSelectedProduct(null)
           setSearchTerm('')
+          setFoundUser(null)
+          setUserNotFound(false)
+          setUserSearchTerm('')
         })
       } else {
         Swal.fire({
@@ -893,6 +1104,9 @@ export const PosView: React.FC = () => {
           setQuantityInput('')
           setSelectedProduct(null)
           setSearchTerm('')
+          setFoundUser(null)
+          setUserNotFound(false)
+          setUserSearchTerm('')
         })
       }
     } catch (error: any) {
@@ -1208,6 +1422,8 @@ export const PosView: React.FC = () => {
 
           <div className="pos-account-section">
             <h1>{netPrice.toFixed(2)}</h1>
+
+            {/* Contact Phone Input */}
             <div className="input-account">
               <input
                 type="text"
@@ -1350,20 +1566,37 @@ export const PosView: React.FC = () => {
         <div className="order-section">
           <div className="user-section">
             <div className="user-number-search">
-              <input type="search" placeholder="search user by phone number" />
-              <div className="user-search-icon">
-                <img src={Search} alt="" />
+              <input
+                type="search"
+                placeholder="search user by phone number"
+                value={userSearchTerm}
+                onChange={(e) => setUserSearchTerm(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchUserByPhone()
+                  }
+                }}
+              />
+              <div
+                className="user-search-icon"
+                onClick={handleSearchUserByPhone}
+                style={{ cursor: isSearchingUser ? 'not-allowed' : 'pointer' }}
+              >
+                <img src={Search} alt="search" />
               </div>
             </div>
             <div className="user-button">
-              <button className="user-exit-section">
-                <img src="src/assets/user-exit.svg" alt="" />
-                <span>User Exit</span>
-              </button>
-              <button className="not-exit-section">
-                <img src="src/assets/not-exit.svg" alt="" />
-                <span>Not Exit</span>
-              </button>
+              {foundUser ? (
+                <button className="user-exit-section" disabled={!foundUser}>
+                  <img src="src/assets/user-exit.svg" alt="" />
+                  <span>{'User Exit'}</span>
+                </button>
+              ) : (
+                <button className="not-exit-section" disabled={!userNotFound}>
+                  <img src="src/assets/not-exit.svg" alt="" />
+                  <span>{'Not Exit'}</span>
+                </button>
+              )}
             </div>
           </div>
           <div className="input-order">
@@ -1416,9 +1649,9 @@ export const PosView: React.FC = () => {
                     </ul>
                   )}
                 </div>
-                <button className="input-order-button" disabled>
+                {/* <button className="input-order-button" disabled>
                   Return Confirm
-                </button>
+                </button> */}
               </div>
 
               {/* === Bottom Info Bar === */}

@@ -272,9 +272,10 @@ export class SalesService {
       max_retail_price: number
       sale_price: number
       quantity: number
-    }>
+    }>,
+    mediboy_customer_id?: number | null
   ) {
-    return {
+    const payload: any = {
       grand_total: grandTotal,
       customer_phoneNumber: customerPhoneNumber,
       grand_discount_total: grandDiscountTotal,
@@ -285,6 +286,13 @@ export class SalesService {
         quantity: item.quantity,
       })),
     }
+
+    // Include mediboy_customer_id if provided
+    if (mediboy_customer_id) {
+      payload.mediboy_user_id = mediboy_customer_id
+    }
+
+    return payload
   }
 
   /**
@@ -440,7 +448,8 @@ export class SalesService {
       max_retail_price: number
       sale_price: number
       quantity: number
-    }>
+    }>,
+    mediboy_customer_id?: number | null
   ): Promise<{ success: boolean; saleId?: string; message: string }> {
     const token = this.storageService.getToken()
     if (!token) {
@@ -452,7 +461,8 @@ export class SalesService {
       grandTotal,
       grandDiscountTotal,
       customerPhoneNumber,
-      saleItems
+      saleItems,
+      mediboy_customer_id
     )
 
     console.log('[SalesService] Broadcasting direct offline sale to server:', payload)

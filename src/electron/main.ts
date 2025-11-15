@@ -6,14 +6,18 @@ import { DatabaseManager } from './database/core/connection.manager'
 import { MigrationManager } from './database/core/migration.manager'
 import { ProductRepository } from './database/repositories/product.repository'
 import { SocketIpcHandler } from './ipc/handlers/socket.handler'
+import { UserIpcHandler } from './ipc/handlers/user.handler'
 import { registerIpcHandlers } from './ipc/register'
 import { getPreloadPath, getUIPath } from './pathResolver'
 import { SocketService } from './services/socket.service'
+import { StorageService } from './services/storage.service'
+import { UserService } from './services/user.service'
 import { isDev } from './util'
 
 let mainWindow: BrowserWindow | null = null
 let db: any = null
 let socketService: SocketService | null = null
+let userService: UserService | null = null
 
 function setupGlobalErrorHandlers() {
   process.on('uncaughtException', (error) => {
@@ -81,6 +85,25 @@ function initializeSocketService() {
         console.error('[Main] Failed to create fallback socket service:', fallbackError)
       }
     }
+  }
+}
+
+function initializeUserService() {
+  console.log('[Main] Initializing User service...')
+
+  try {
+    console.log('[Main] Creating StorageService...')
+    const storageService = new StorageService()
+
+    console.log('[Main] Creating UserService instance (API only)...')
+    userService = new UserService(storageService)
+
+    console.log('[Main] Registering User IPC handlers...')
+    new UserIpcHandler(userService)
+
+    console.log('[Main] User service initialized successfully')
+  } catch (error) {
+    console.error('[Main] Error initializing user service:', error)
   }
 }
 
@@ -197,6 +220,13 @@ app.on('ready', async () => {
     } catch (socketError) {
       console.error('[Main] Socket initialization failed, but continuing:', socketError)
       // Don't fail the entire app if socket fails
+    }
+
+    console.log('[Main] Initializing user service...')
+    try {
+      initializeUserService()
+    } catch (userError) {
+      console.error('[Main] User service initialization failed, but continuing:', userError)
     }
 
     console.log('[Main] Creating main window...')

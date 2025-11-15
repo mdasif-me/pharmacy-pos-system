@@ -114,6 +114,11 @@ contextBridge.exposeInMainWorld('electron', {
     createOnlineSale: (payload: any) => invoke('orders:createOnlineSale', payload),
   },
 
+  // User Management - Direct API calls to Mediboy
+  users: {
+    searchByPhoneNumber: (phoneNumber: string) => invoke('user:searchByPhoneNumber', phoneNumber),
+  },
+
   // Event listeners for real-time updates
   onStockUpdated: (callback: (data: any) => void) => {
     ipcRenderer.on('stock-updated', (_, data) => callback(data))

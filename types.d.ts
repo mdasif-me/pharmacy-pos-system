@@ -302,5 +302,12 @@ interface Window {
         payload: OnlineSalePayload
       ) => Promise<{ success: boolean; message: string; saleId?: string }>
     }
+
+    // User Management - Direct Mediboy API calls (no local storage)
+    users: {
+      searchByPhoneNumber: (
+        phoneNumber: string
+      ) => Promise<{ success: boolean; user?: any; message: string; error?: string }>
+    }
   }
 }

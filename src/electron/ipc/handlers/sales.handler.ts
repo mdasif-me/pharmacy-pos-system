@@ -176,10 +176,12 @@ export class SalesIpcHandler {
           grandDiscountTotal,
           customerPhoneNumber,
           saleItems,
+          mediboy_customer_id,
         }: {
           grandTotal: number
           grandDiscountTotal: number
           customerPhoneNumber: string
+          mediboy_customer_id?: number | null
           saleItems: Array<{
             product_id: number
             max_retail_price: number
@@ -194,7 +196,8 @@ export class SalesIpcHandler {
             grandTotal,
             grandDiscountTotal,
             customerPhoneNumber,
-            saleItems
+            saleItems,
+            mediboy_customer_id
           )
           return result
         } catch (error: any) {
