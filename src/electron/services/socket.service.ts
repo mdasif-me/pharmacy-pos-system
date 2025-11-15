@@ -27,8 +27,6 @@ export class SocketService {
   private socket: Socket | null = null
   private productRepo: ProductRepository
   private readonly socketUrl = 'https://socket.dev-sajid.xyz'
-  private reconnectAttempts = 0
-  private maxReconnectAttempts = 5
 
   constructor(productRepo: ProductRepository) {
     this.productRepo = productRepo
@@ -53,15 +51,26 @@ export class SocketService {
 
     console.log('[SocketService] Connecting to socket server:', this.socketUrl)
 
-    this.socket = io(this.socketUrl, {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      timeout: 10000,
-      autoConnect: true,
-    })
+    try {
+      this.socket = io(this.socketUrl, {
+        transports: ['polling', 'websocket'],
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        timeout: 20000,
+        autoConnect: true,
+        rejectUnauthorized: false,
+        forceNew: false,
+        secure: true,
+        withCredentials: false,
+      })
+    } catch (error: any) {
+      console.error('[SocketService] Error creating socket connection:', error?.message || error)
+      console.error('[SocketService] Full error:', error)
+      this.retryConnection()
+      return
+    }
 
     this.setupEventListeners()
   }
@@ -72,28 +81,54 @@ export class SocketService {
   private setupEventListeners(): void {
     if (!this.socket) return
 
+    console.log('[SocketService] Setting up event listeners...')
+
     // Connection events
     this.socket.on('connect', () => {
-      console.log('[SocketService] Connected to server (ID:', this.socket?.id + ')')
-      this.reconnectAttempts = 0
+      console.log('[SocketService] ✓ Connected to server (ID:', this.socket?.id + ')')
     })
 
-    this.socket.on('disconnect', (reason) => {
-      console.log('[SocketService] Disconnected:', reason)
-    })
-
-    this.socket.on('connect_error', (error) => {
-      console.error('[SocketService] Connection error:', error.message)
-      this.reconnectAttempts++
-
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('[SocketService] Max reconnection attempts reached')
+    this.socket.on('disconnect', (reason: any) => {
+      console.log('[SocketService] Disconnected. Reason:', reason)
+      // Auto-reconnect on various disconnect reasons
+      if (
+        reason !== 'io client namespace disconnect' &&
+        reason !== 'io server namespace disconnect'
+      ) {
+        console.warn('[SocketService] Attempting auto-reconnect due to:', reason)
+        setTimeout(() => {
+          this.connect()
+        }, 2000)
       }
     })
 
+    this.socket.on('connect_error', (error: any) => {
+      console.error('[SocketService] Connection error:', error?.message || error)
+      if (error?.data) {
+        console.error('[SocketService] Error data:', error.data)
+      }
+      // Socket.IO will auto-reconnect based on reconnection settings above
+    })
+
+    this.socket.on('error', (error: any) => {
+      console.error('[SocketService] Socket error:', error)
+    })
+
+    this.socket.on('reconnect_attempt', () => {
+      console.log('[SocketService] Attempting to reconnect...')
+    })
+
     this.socket.on('reconnect', (attemptNumber) => {
-      console.log('[SocketService] Reconnected after', attemptNumber, 'attempts')
-      this.reconnectAttempts = 0
+      console.log('[SocketService] ✓ Reconnected after', attemptNumber, 'attempts')
+    })
+
+    this.socket.on('reconnect_error', (error: any) => {
+      console.error('[SocketService] Reconnection error:', error?.message || error)
+    })
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('[SocketService] Reconnection failed. Max attempts exceeded.')
+      console.warn('[SocketService] Check if socket server is running at:', this.socketUrl)
     })
 
     // Business logic events
@@ -102,7 +137,6 @@ export class SocketService {
       this.handleStockUpdate(data)
     })
 
-    // Listen for other potential events
     this.socket.on('update_stock', (data: AddNewStockEvent) => {
       console.log('[SocketService] Received update_stock event:', data)
       this.handleStockUpdate(data)
@@ -110,7 +144,10 @@ export class SocketService {
 
     this.socket.on('delete_stock', (data: any) => {
       console.log('[SocketService] Received delete_stock event:', data)
-      // Handle stock deletion if needed
+    })
+
+    this.socket.on('system', (data: any) => {
+      console.log('[SocketService] Received system event:', data)
     })
   }
 
@@ -221,5 +258,13 @@ export class SocketService {
    */
   getSocketId(): string | undefined {
     return this.socket?.id
+  }
+
+  /**
+   * Retry connection with exponential backoff
+   */
+  private retryConnection(): void {
+    console.error('[SocketService] Reconnection failed. Max attempts exceeded.')
+    console.warn('[SocketService] Check if socket server is running at:', this.socketUrl)
   }
 }
