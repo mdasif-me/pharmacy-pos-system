@@ -550,12 +550,20 @@ section:not(.bottom-section) {
 
 .header-products-table td,
 .products-table td {
-  padding: 1rem;
+  padding: 1rem 1.2rem;
   border: none;
   background-color: #ffffff;
   font-size: 0.9rem;
   color: #333;
-  text-align: center;
+  text-align: left;
+}
+
+.products-table tbody tr td {
+  text-align: left;
+}
+
+.products-table tbody tr td:first-child {
+  text-align: left;
 }
 
 .header-products-table tbody tr td:first-child,
